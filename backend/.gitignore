@@ -1,0 +1,4 @@
+core/.my_pgpass
+core/.pg_service.conf
+core/__pycache__
+backend/users/migrations
