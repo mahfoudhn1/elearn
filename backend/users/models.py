@@ -27,7 +27,7 @@ class Speciality(models.Model):
     name = models.CharField(max_length=100)
 
     def __str__(self):
-        return self.name
+        return self.nameg
 
 class Teacher(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -41,3 +41,4 @@ class Teacher(models.Model):
 class Student(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     grade = models.ForeignKey(Grade, on_delete=models.SET_NULL, null=True)
+    speciality = models.ForeignKey(Speciality, on_delete=models.SET_NULL, null=True, blank=True)

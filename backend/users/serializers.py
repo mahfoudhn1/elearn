@@ -33,29 +33,95 @@ class TeacherSerializer(serializers.ModelSerializer):
     class Meta:
         model = Teacher
         fields = ["id","user","profile_privet","modules","grades","specialities","created_at","updated_at"]
+        read_only_fields = ['user']
     
     def create(self, validated_data):
-            user = self.context['request'].user
-            teacher = Teacher.objects.create(user=user, **validated_data)
-            return teacher
+        request = self.context.get('request')
+        user = request.user
+
+        modules_data = validated_data.pop('modules', [])
+        grades_data = validated_data.pop('grades', [])
+        specialities_data = validated_data.pop('specialities', [])
+
+        teacher = Teacher.objects.create(user=user, **validated_data)
+
+        for module_data in modules_data:
+            module, created = Module.objects.get_or_create(**module_data)
+            teacher.modules.add(module)
+
+        for grade_data in grades_data:
+            grade, created = Grade.objects.get_or_create(**grade_data)
+            teacher.grades.add(grade)
+
+        for speciality_data in specialities_data:
+            speciality, created = Speciality.objects.get_or_create(**speciality_data)
+            teacher.specialities.add(speciality)
+        
+        return teacher
+    
+    def update(self, instance, validated_data):
+        modules_data = validated_data.pop('modules', [])
+        grades_data = validated_data.pop('grades', [])
+        specialities_data = validated_data.pop('specialities', [])
+
+        instance.profile_privet = validated_data.get('profile_privet', instance.profile_privet)
+        instance.save()
+
+        module_ids = []
+        for module_data in modules_data:
+            module, created = Module.objects.get_or_create(**module_data)
+            module_ids.append(module.id)
+        instance.modules.set(module_ids)
+
+        grade_ids = []
+        for grade_data in grades_data:
+            grade, created = Grade.objects.get_or_create(**grade_data)
+            grade_ids.append(grade.id)
+        instance.grades.set(grade_ids)
+
+        speciality_ids = []
+        for speciality_data in specialities_data:
+            speciality, created = Speciality.objects.get_or_create(**speciality_data)
+            speciality_ids.append(speciality.id)
+        instance.specialities.set(speciality_ids)
+
+        return instance
 
 class StudentSerializer(serializers.ModelSerializer):
     grade = GradeSerializer()
+    speciality = SpecialitySerializer()
 
     class Meta:
         model = Student
-        fields = ['id', 'user', 'grade']
+        fields = ['id', 'user', 'grade', 'speciality']
+        read_only_fields = ['user']
 
     def create(self, validated_data):
-        grade_data = validated_data.pop('grade')
-        grade = Grade.objects.get_or_create(**grade_data)[0]
-        student = Student.objects.create(grade=grade, **validated_data)
+        request = self.context.get('request')
+        user = request.user
+
+        grade_data = validated_data.pop('grade', None)
+        speciality_data = validated_data.pop('speciality', None)
+
+        grade = Grade.objects.get_or_create(**grade_data)[0] if grade_data else None
+        speciality = Speciality.objects.get_or_create(**speciality_data)[0] if speciality_data else None
+
+        student = Student.objects.create(user=user, grade=grade, speciality=speciality, **validated_data)
+
         return student
-    
+
     def update(self, instance, validated_data):
-        grade_data = validated_data.pop('grade')
-        grade = Grade.objects.get_or_create(**grade_data)[0]
-        instance.grade = grade
+        grade_data = validated_data.pop('grade', None)
+        speciality_data = validated_data.pop('speciality', None)
+
+        if grade_data:
+            instance.grade, _ = Grade.objects.get_or_create(**grade_data)
+        if speciality_data:
+            instance.speciality, _ = Speciality.objects.get_or_create(**speciality_data)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
         instance.save()
         return instance
     
