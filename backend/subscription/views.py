@@ -1,14 +1,14 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .models import Subscription
-from .serializers import SubscriptionSerializer
+from .serializers import SubscriptionSerialize
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from users.models import Student
 
 class SubscriptionViewSet(viewsets.ModelViewSet):
     queryset = Subscription.objects.all()
-    serializer_class = SubscriptionSerializer
+    serializer_class = SubscriptionSerialize
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
