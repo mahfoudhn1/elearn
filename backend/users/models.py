@@ -27,7 +27,7 @@ class Speciality(models.Model):
     name = models.CharField(max_length=100)
 
     def __str__(self):
-        return self.nameg
+        return self.name
 
 class Teacher(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

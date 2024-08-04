@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'users',
-    'subscription'
+    'subscription',
+    'livestream'
 ]
 
 MIDDLEWARE = [
@@ -140,3 +141,8 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+APPEND_SLASH=False 
+
+ZOOM_CLIENT_ID = ""
+ZOOM_CLIENT_SECRET = ""
+ZOOM_REDIRECT_URI = 'http://localhost:8000/api/livestream/oauth/oauth_callback/'
