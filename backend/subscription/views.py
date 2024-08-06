@@ -15,13 +15,12 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
         serializer.save()
 
     def list(self, request, *args, **kwargs):
-       
         user = request.user
         try:
             student = Student.objects.get(user=user)
         except Student.DoesNotExist:
             return Response({'error': 'The authenticated user is not a student'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         subscriptions = Subscription.objects.filter(student=student)
         serializer = self.get_serializer(subscriptions, many=True)
         return Response(serializer.data)

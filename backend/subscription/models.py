@@ -6,11 +6,20 @@ class Subscription(models.Model):
     
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    group = models.ForeignKey(
+        'groups.Group',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
     start_date = models.DateField(auto_now_add=True)
     end_date = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=False)
-    subs_history = models.JSONField(default=list)
+    subs_history = models.JSONField(default=list, null=True, blank=True)
 
+    def is_active_subscription(self):
+        return self.is_active and self.end_date >= timezone.now().date()
+    
     def renew(self):
         self.start_date = timezone.now().date()
         self.end_date =  self.start_date + timezone.timedelta(days=30)

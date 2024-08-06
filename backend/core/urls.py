@@ -25,5 +25,6 @@ urlpatterns = [
     path("api/subscriptions/", include("subscription.urls")),
     path("api/livestream/", include("livestream.urls")),
     path("api/courses/", include("courses.urls")),
+    path("api/groups/", include("groups.urls")),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
