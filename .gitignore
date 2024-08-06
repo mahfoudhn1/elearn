@@ -1,0 +1,74 @@
+
+# Python bytecode files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# Django-specific files
+*.sqlite3
+db.sqlite3
+*.log
+
+# Environment variables and configuration files
+.env
+.env.*
+
+# Virtual environment directory
+venv/
+ENV/
+env/
+
+# IDE/editor specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Migrations
+migrations/
+
+# Static files
+staticfiles/
+
+# Media files
+media/
+
+# Test output
+coverage.xml
+nosetests.xml
+*.cover
+*.tox
+*.nox
+*.coverage
+*.hypothesis/
+
+# Local settings
+local_settings.py
+
+# Build directories
+build/
+dist/
+*.egg-info/
+
+# Pytest cache
+.cache/
+
+# PyCharm project files
+.idea/
+
+# Jupyter Notebook files
+.ipynb_checkpoints/
+
+# MySQL database files
+*.sql
+*.db
+
+# Docker files (optional)
+*.docker
+
+# macOS Finder metadata
+.DS_Store
+
+# Windows thumbs.db
+Thumbs.db

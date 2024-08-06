@@ -1,8 +1,0 @@
-core/.my_pgpass
-core/.pg_service.conf
-core/__pycache__
-backend/users/migrations
-/home/user/projects/elearn/backend/subscription/migrations
-/home/user/projects/elearn/backend/livestream/migrations
-backend/users/__pycache__
-backend/livestream/__pycache__

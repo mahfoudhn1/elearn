@@ -29,6 +29,18 @@ class Speciality(models.Model):
     def __str__(self):
         return self.name
 
+class StudentClass(models.TextChoices):
+    FIRST_YEAR = 'F1', 'First Year'
+    SECOND_YEAR = 'F2', 'Second Year'
+    THIRD_YEAR = 'F3', 'Third Year'
+
+class StudentBranch(models.TextChoices):
+    MATHEMATICS = 'SM', 'Science and Mathematics'
+    SCIENCE = 'ST', 'Science '
+    ECONOMICS = 'EC', 'Economics'
+    LITERARY = 'LI', 'Literary'
+    TECHNICAL = 'TC', 'Technical'
+
 class Teacher(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_privet = models.BooleanField(default=True)
@@ -40,5 +52,11 @@ class Teacher(models.Model):
 
 class Student(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    grade = models.ForeignKey(Grade, on_delete=models.SET_NULL, null=True)
-    speciality = models.ForeignKey(Speciality, on_delete=models.SET_NULL, null=True, blank=True)
+    branch = models.CharField(
+        max_length=10,
+        choices = StudentBranch.choices
+        )
+    student_class = models.CharField(
+        max_length=10,
+        choices = StudentClass.choices
+        )

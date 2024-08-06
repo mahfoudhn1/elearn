@@ -88,40 +88,26 @@ class TeacherSerializer(serializers.ModelSerializer):
         return instance
 
 class StudentSerializer(serializers.ModelSerializer):
-    grade = GradeSerializer()
-    speciality = SpecialitySerializer()
+
 
     class Meta:
         model = Student
-        fields = ['id', 'user', 'grade', 'speciality']
+        fields = ['id', 'user', 'branch', 'student_class']
         read_only_fields = ['user']
 
     def create(self, validated_data):
         request = self.context.get('request')
         user = request.user
 
-        grade_data = validated_data.pop('grade', None)
-        speciality_data = validated_data.pop('speciality', None)
 
-        grade = Grade.objects.get_or_create(**grade_data)[0] if grade_data else None
-        speciality = Speciality.objects.get_or_create(**speciality_data)[0] if speciality_data else None
-
-        student = Student.objects.create(user=user, grade=grade, speciality=speciality, **validated_data)
+        student = Student.objects.create(user=user, **validated_data)
 
         return student
 
     def update(self, instance, validated_data):
-        grade_data = validated_data.pop('grade', None)
-        speciality_data = validated_data.pop('speciality', None)
 
-        if grade_data:
-            instance.grade, _ = Grade.objects.get_or_create(**grade_data)
-        if speciality_data:
-            instance.speciality, _ = Speciality.objects.get_or_create(**speciality_data)
-
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        
+        instance.branch = validated_data.get('branch', instance.branch)
+        instance.student_class = validated_data.get('student_class', instance.student_class)
         instance.save()
         return instance
     
