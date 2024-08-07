@@ -6,12 +6,6 @@ class Subscription(models.Model):
     
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    group = models.ForeignKey(
-        'groups.Group',
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True
-    )
     start_date = models.DateField(auto_now_add=True)
     end_date = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=False)

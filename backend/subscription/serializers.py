@@ -5,11 +5,11 @@ from datetime import datetime, timedelta
 
 class SubscriptionSerialize(serializers.ModelSerializer):
     teacher = serializers.PrimaryKeyRelatedField(queryset=Teacher.objects.all())
-    student = serializers.PrimaryKeyRelatedField(read_only=True)  # Read-only as it's set in the create method
+    student = serializers.PrimaryKeyRelatedField(read_only=True) 
 
     class Meta:
         model = Subscription
-        fields = ['id', 'teacher', 'student', 'group', 'start_date', 'end_date', 'is_active', 'subs_history']
+        fields = ['id', 'teacher', 'student',  'start_date', 'end_date', 'is_active', 'subs_history']
         read_only_fields = ['student', 'start_date', 'end_date', 'is_active', 'subs_history']
 
     def create(self, validated_data):
@@ -22,6 +22,9 @@ class SubscriptionSerialize(serializers.ModelSerializer):
             raise serializers.ValidationError("The authenticated user is not a student")
 
         teacher = validated_data.pop('teacher')
+        print(teacher)
+
+        print(teacher.id)
         subscription = Subscription.objects.create(student=student,
                                                     teacher=teacher,
                                                     **validated_data)

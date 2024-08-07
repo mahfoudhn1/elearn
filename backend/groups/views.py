@@ -35,6 +35,7 @@ class StudentGroupRequestViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
+        # Ensure the user is a student
         if self.request.user.role != 'student':
             raise serializers.ValidationError("Only students can send group join requests.")
 
@@ -44,20 +45,32 @@ class StudentGroupRequestViewSet(viewsets.ModelViewSet):
         except Student.DoesNotExist:
             raise serializers.ValidationError("User does not have an associated Student instance.")
 
-        # Check if the student is subscribed to the teacher associated with the group
+        # Get group ID from the request data
         group_id = self.request.data.get('group')
         if not group_id:
             raise serializers.ValidationError("Group ID must be provided.")
 
         try:
+            # Fetch the group and teacher associated with the group
             group = Group.objects.get(id=group_id)
-            teacher = group.admin
-            subscription = Subscription.objects.filter(student=student, teacher=teacher, is_active=True).exists()
-            if not subscription:
+
+            teacher = group.admin # Adjust based on how teachers are associated with the group
+
+
+            if not teacher:
+                raise serializers.ValidationError("Group does not have an associated teacher.")
+
+            # Check if the student is subscribed to the teacher
+            
+            subscription_exists = Subscription.objects.filter(student=student, teacher=teacher, is_active=True).exists()
+            print(student, teacher)
+            if not subscription_exists:
                 raise serializers.ValidationError("You must be subscribed to the teacher to join their group.")
+            
         except Group.DoesNotExist:
             raise serializers.ValidationError("Group does not exist.")
-
+        
+        # Save the group join request with the student
         serializer.save(student=student)
 
 class TeacherGroupRequestViewSet(viewsets.ModelViewSet):

@@ -11,7 +11,7 @@ GROUP_STATUS_CHOICES = [
 class Group(models.Model):
     name = models.CharField(max_length=200)
     admin = models.ForeignKey("users.Teacher", on_delete=models.CASCADE)
-    students = models.ManyToManyField("users.Student", through=Subscription)
+    students = models.ManyToManyField("users.Student")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     branch = models.CharField(

@@ -11,8 +11,12 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
     serializer_class = SubscriptionSerialize
     permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
-        serializer.save()
+    def post(self, request, *args, **kwargs):
+            serializer = SubscriptionSerialize(data=request.data, context={'request': request})
+            if serializer.is_valid():
+                subscription = serializer.save()
+                return Response(SubscriptionSerialize(subscription).data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request, *args, **kwargs):
         user = request.user
