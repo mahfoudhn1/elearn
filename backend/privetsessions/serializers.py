@@ -11,4 +11,4 @@ class PrivetSessionSerializer(serializers.ModelSerializer):
 class PrivateSessionRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = PrivateSessionRequest
-        fields = ['id', 'student', 'teacher', 'requested_at', 'session_date', 'status']
+        fields = ['id', 'teacher', 'requested_at', 'session_date', 'status']

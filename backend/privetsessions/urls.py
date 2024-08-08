@@ -1,12 +1,10 @@
-from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import *
+from .views import PrivateSessionRequestViewSet, PrivateSessionViewSet
 
 router = DefaultRouter()
-
-router.register(r'', PrivateSessionViewSet, basename='privetsession')
-router.register(r'req-privet', PrivateSessionRequestViewSet, basename='privetsessionreq')
+router.register(r'session-requests', PrivateSessionRequestViewSet, basename="privetreq")
+router.register(r'', PrivateSessionViewSet, basename="privetSe")
 
 urlpatterns = [
-    path('', include(router.urls)),
-]
+    # other URL patterns
+] + router.urls

@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     'subscription',
     'livestream',
     "courses", 
-    "groups"
+    "groups",
+    "privetsessions"
 ]
 
 MIDDLEWARE = [
