@@ -32,7 +32,7 @@ class TeacherSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Teacher
-        fields = ["id","user","profile_privet","modules","grades","specialities","created_at","updated_at"]
+        fields = ["id","user","first_name" ,"last_name", "phone_number", "profile_privet","modules","grades","specialities","created_at","updated_at"]
         read_only_fields = ['user']
     
     def create(self, validated_data):
@@ -92,7 +92,7 @@ class StudentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Student
-        fields = ['id', 'user', 'branch', 'student_class']
+        fields = ['id', 'user',"first_name" ,"last_name", "phone_number",'branch', 'student_class']
         read_only_fields = ['user']
 
     def create(self, validated_data):
