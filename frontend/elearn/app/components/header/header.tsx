@@ -73,7 +73,11 @@ const Header: React.FC = () => {
               </svg>
             </button>
           </div>
-          <div className="text-xl text-center font-bold">Eduzed</div>
+          <div className='relative items-center w-1/3 mx-auto text-center group'>
+            <div className="text-3xl text-gray-dark font-bold">منبت</div>
+            <span className="absolute left-0 bottom-0 w-full h-2.5 bg-green bg-opacity-80 transform scale-y-100  transition-all duration-300"></span>
+
+          </div>
 
           <ul className="flex flex-col items-center space-y-4 mt-8">
             <li className="relative group ">

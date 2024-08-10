@@ -31,9 +31,9 @@ const Hero: React.FC = () => {
   return (
     <>
     {!isMobile ? 
-     <div className='flex flex-raw'>
+     <div className='flex flex-raw relative'>
 
-     <section className={` flex flex-raw mr-10 space-x-2 w-2/3 pt-20`}>
+     <section className={` flex flex-raw mr-10 space-x-2 w-2/3 pt-4`}>
  
      <div onMouseEnter={enterMouse} onMouseLeave={leaveMouse} 
      className={`relative teacherbanner h-[29rem] w-36 mx-2 overflow-hidden rounded-lg shadow-lg transition-all duration-500 ease-in-out group hover:w-96
@@ -115,7 +115,7 @@ const Hero: React.FC = () => {
     
     <div className='flex flex-raw'>
       {/* mobile section  */}
-      <section className={` flex flex-col mx-10 space-x-2 space-y-3 w-full pt-20`}>
+      <section className={` flex flex-col mx-10 space-x-2 space-y-3 w-full pt-10`}>
  
       <div  
           className={`relative teacherbanner h-36 w-52 mx-2 overflow-hidden rounded-lg shadow-lg transition-all duration-500 ease-in-out group 
