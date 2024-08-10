@@ -101,6 +101,15 @@ const Hero: React.FC = () => {
          <h1>دعم،</h1>
          <h1>و دورات</h1>
        </section>
+       <section className='absolute bottom-2 drop-shadow-xl overflow-hidden right-1/2 bg-gray-dark -translate-x-7 '>
+       <div className='relative group cursor-pointer'>
+          <button className='px-7 py-10 font-semibold text-lg text-white '>
+            أبدء التعلم
+          </button>
+          <span className="absolute left-0 bottom-0 w-full h-0 bg-green bg-opacity-80 transform scale-y-0 group-hover:h-40 group-hover:scale-y-100 transition-all duration-300"></span>
+
+       </div>
+       </section>
        </div>
     :
     
