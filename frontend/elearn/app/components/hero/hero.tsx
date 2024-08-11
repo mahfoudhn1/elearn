@@ -5,8 +5,11 @@ const Hero: React.FC = () => {
 
   const [isMobile, setIsMobile] = useState(false); // 768px is a common breakpoint for tablets
   
-   
+
+    
     useEffect(() => {
+      
+  
       const checkIsMobile = () => {
         setIsMobile(window.innerWidth <= 768);
       };
@@ -113,12 +116,12 @@ const Hero: React.FC = () => {
        </div>
     :
     
-    <div className='flex flex-raw'>
+    <div className='flex flex-raw w-full'>
       {/* mobile section  */}
-      <section className={` flex flex-col mx-10 space-x-2 space-y-3 w-full pt-10`}>
+      <section className={` flex flex-col mx-auto items-center justify-center space-y-3 w-full pt-10`}>
  
       <div  
-          className={`relative teacherbanner h-36 w-52 mx-2 overflow-hidden rounded-lg shadow-lg transition-all duration-500 ease-in-out group 
+          className={`relative teacherbanner h-44 w-3/4 mx-2 overflow-hidden rounded-lg shadow-lg transition-all duration-500 ease-in-out group 
             `}>
         <div
           className=" absolute inset-0 bg-cover w-full bg-center "
@@ -130,7 +133,7 @@ const Hero: React.FC = () => {
         </div>
      </div>
      <div  
-          className={`relative teacherbanner h-36 w-52 mx-2 overflow-hidden rounded-lg shadow-lg transition-all duration-500 ease-in-out group 
+          className={`relative teacherbanner h-44 w-3/4 mx-2 overflow-hidden rounded-lg shadow-lg transition-all duration-500 ease-in-out group 
             `}>
         <div
           className=" absolute inset-0 bg-cover w-full bg-center "
@@ -142,7 +145,7 @@ const Hero: React.FC = () => {
         </div>
      </div>
      <div  
-          className={`relative teacherbanner h-36 w-52 mx-2 overflow-hidden rounded-lg shadow-lg transition-all duration-500 ease-in-out group 
+          className={`relative teacherbanner h-44 w-3/4 mx-2 overflow-hidden rounded-lg shadow-lg transition-all duration-500 ease-in-out group 
             `}>
         <div
           className=" absolute inset-0 bg-cover w-full bg-center "
