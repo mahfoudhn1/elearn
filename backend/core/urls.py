@@ -21,6 +21,7 @@ from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
     path("api/", include("users.urls")),
     path("api/subscriptions/", include("subscription.urls")),
     path("api/livestream/", include("livestream.urls")),

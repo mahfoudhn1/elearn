@@ -3,6 +3,7 @@ import React, {useState} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store/store';
 import { login } from '../../store/authThunks';
+import Link from 'next/link';
 
 const Loginpage = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -18,7 +19,15 @@ const Loginpage = () => {
   };
   
   return (
-    <div className="flex items-center justify-center min-h-screen ">
+    <div className="flex flex-col items-center justify-center min-h-screen ">
+        <div className='w-full border-none items-center justify-center text-center mb-5'>
+        <Link href='/register'
+            className=" py-2 px-5 border-none bg-gray-dark text-center text-white font-semibold rounded-lg shadow-md hover:bg-green focus:outline-none "
+          >
+            انشاء حساب جديد
+
+          </Link>
+        </div>
       <div className="w-full max-w-md p-8 bg-white shadow-md rounded-lg">
         <h1 className="text-2xl font-bold mb-6 text-center">سجل الدخول</h1>
         <form onSubmit={handleSubmit}>

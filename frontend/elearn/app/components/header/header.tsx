@@ -2,15 +2,25 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 
+import { useRouter } from 'next/navigation';
+
 import './Header.css'
 
 const Header: React.FC = () => {
+  
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const toggleMenu =()=>{
+    setIsMenuOpen(!isMenuOpen)
+  }
+  
+  const router = useRouter()
+  const handleClick = () => {
 
-    const [isMenuOpen, setIsMenuOpen] = useState(false)
-    const toggleMenu =()=>{
-        setIsMenuOpen(!isMenuOpen)
-    }
-
+    router.push('/login'); 
+    setIsMenuOpen(false)
+    
+  };
+    
   return (
     <header className="header flex justify-between items-center py-4 bg-transparent px-20  w-full text-black">
     <div className='relative group'>
@@ -23,7 +33,7 @@ const Header: React.FC = () => {
       <ul className="flex flex-row text-lg justify-center space-x-6">
         <li></li>
         <li className="relative group">
-          <Link href="#home">
+          <Link href="/">
           الرئيسية
             <span className="absolute left-0 bottom-0 w-full h-0 bg-green bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
           </Link>
@@ -49,7 +59,10 @@ const Header: React.FC = () => {
         </li>
       </ul>
     </nav>
-    <button className="hidden md:flex relative overflow-hidden px-6 py-2 text-white bg-gray-dark border-none rounded-lg focus:outline-none transition-all duration-300 hover:bg-green">
+    <button 
+        onClick={handleClick}
+    
+    className="hidden md:flex relative overflow-hidden px-6 py-2 text-white bg-gray-dark border-none rounded-lg focus:outline-none transition-all duration-300 hover:bg-green">
       <span className="relative z-10">تسجيل الدخول</span>
     </button>
     <button
@@ -81,36 +94,40 @@ const Header: React.FC = () => {
           </div>
 
           <ul className="flex flex-col items-center space-y-4 mt-8">
-            <li className="relative group ">
-              <Link href="#home">
+            <li className="relative group "
+            onClick={()=>setIsMenuOpen(false)}
+          >
+          
+              <Link href="/">
               الرئيسية
                 <span className="absolute left-0 bottom-0 w-full h-2 bg-green bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
               </Link>
             </li>
-            <li className="relative group ">
+            <li className="relative group "  onClick={()=>setIsMenuOpen(false)}>
               <Link href="#about">
               من نحن
                 <span className="absolute left-0 bottom-0 w-full h-0 bg-green bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
               </Link>
             </li>
-            <li className="relative group ">
+            <li className="relative group " onClick={()=>setIsMenuOpen(false)}>
               <Link href="#services">
               خدماتنا
                 <span className="absolute left-0 bottom-0 w-full h-0 bg-green bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
               </Link>
             </li>
-            <li className="relative group ">
+            <li className="relative group " onClick={()=>setIsMenuOpen(false)}>
               <Link href="#contact">
                 اتصل بنا
                 <span className="absolute left-0 bottom-0 w-full h-0 bg-green bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
               </Link>
             </li>
             <li>
+            
               <button
-                className="relative overflow-hidden px-6 py-2 text-white bg-gray-dark border-none rounded-lg focus:outline-none transition-all duration-300 hover:bg-green"
-                onClick={() => { /* Handle login click */ }}
-              >
-                <span className="relative z-10">تسجيل الدخول</span>
+                className="relative overflow-hidden px-6 py-3 text-white bg-gray-dark border-none rounded-lg focus:outline-none transition-all duration-300 hover:bg-green"
+                onClick={handleClick}
+                >
+                تسجيل الدخول
               </button>
             </li>
           </ul>

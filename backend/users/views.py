@@ -1,10 +1,20 @@
+from django.http import HttpResponseRedirect
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .models import User, Teacher, Student, Module, Grade, Speciality
-from .serializers import  LoginSerializer, UserSerializer, TeacherSerializer, StudentSerializer, ModuleSerializer, GradeSerializer, SpecialitySerializer, RegisterSerializer
+from .serializers import AuthSerializer, LoginSerializer, UserSerializer, TeacherSerializer, StudentSerializer, ModuleSerializer, GradeSerializer, SpecialitySerializer, RegisterSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.conf import settings
+from google.oauth2 import id_token
+from rest_framework.decorators import api_view
+import requests as req
+from google.auth.transport import requests
+import logging
+from rest_framework_simplejwt.tokens import RefreshToken
+
+
 
 class MyTokenObtainPairView(TokenObtainPairView):
     # Optionally customize the behavior
@@ -34,6 +44,65 @@ class RegisterView(viewsets.ModelViewSet):
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+
+logger = logging.getLogger(__name__)
+
+
+def get_tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    }
+
+class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
+    def list(self, request, *args, **kwargs):
+        code = request.query_params.get('code')
+        if not code:
+            return Response({'error': 'Authorization code missing'}, status=status.HTTP_400_BAD_REQUEST)
+
+        token_url = 'https://oauth2.googleapis.com/token'
+        data = {
+            'code': code,
+            'client_id': "",
+            'client_secret': "",
+            'redirect_uri': 'http://localhost:8000/api/auth/callback/google/',
+            'grant_type': 'authorization_code',
+        }
+        try:
+            response = req.post(token_url, data=data)
+            response.raise_for_status()
+            response_data = response.json()
+        except req.exceptions.RequestException as e:
+            logger.error(f"Token exchange failed: {e}")
+            return Response({'error': 'Failed to exchange authorization code for tokens'}, status=status.HTTP_400_BAD_REQUEST)
+
+        access_token = response_data.get('id_token')
+        if not access_token:
+            return Response({'error': 'Access token not found in response'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            id_info = id_token.verify_oauth2_token(access_token, requests.Request(), settings.GOOGLE_CLIENT_ID)
+            user_email = id_info.get('email')
+
+            User = get_user_model()
+            user, created = User.objects.get_or_create(email=user_email)
+            if created:
+                # Optionally handle new user creation here
+                pass
+
+            tokens = get_tokens_for_user(user)
+            tokens = get_tokens_for_user(user)
+            response = HttpResponseRedirect('http://localhost:3000')
+
+            response.set_cookie('access_token', tokens['access'], httponly=True, secure=False)
+            response.set_cookie('refresh_token', tokens['refresh'], httponly=True, secure=False)
+
+            return response
+
+        except ValueError as e:
+            logger.error(f"Token verification failed: {e}")
+            return Response({'error': 'Token verification failed'}, status=status.HTTP_400_BAD_REQUEST)
 
 class TeacherViewSet(viewsets.ModelViewSet):
     queryset = Teacher.objects.all()
@@ -72,4 +141,3 @@ class AuthViewSet(viewsets.GenericViewSet):
             'user': UserSerializer(user).data,
             'token': serializer.data['token']
         }, status=status.HTTP_200_OK)
-

@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import RegisterView, AuthViewSet, UserViewSet, TeacherViewSet, StudentViewSet, ModuleViewSet, GradeViewSet, SpecialityViewSet, MyTokenObtainPairView, MyTokenRefreshView
+from .views import RegisterView, UserViewSet,AuthViewSet, TeacherViewSet, StudentViewSet, ModuleViewSet, GradeViewSet, SpecialityViewSet, MyTokenObtainPairView, MyTokenRefreshView, GoogleOAuthCallbackViewSet
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
@@ -12,10 +12,13 @@ router.register(r'grades', GradeViewSet, basename='grade')
 router.register(r'specialities', SpecialityViewSet, basename='specialitie')
 router.register(r'auth', AuthViewSet, basename='auth')
 
+router.register(r'auth/callback/google', GoogleOAuthCallbackViewSet, basename='google_callback')
+
 
 
 urlpatterns = [
     path('', include(router.urls)),
+
     path('token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', MyTokenRefreshView.as_view(), name='token_refresh'),
 ]

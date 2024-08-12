@@ -42,6 +42,7 @@ interface AuthState {
       loginFailure(state, action: PayloadAction<{ message: string }>) {
         state.loginStatus = action.payload.message;
       },
+    
     },
   });
 

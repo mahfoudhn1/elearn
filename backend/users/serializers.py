@@ -4,7 +4,11 @@ from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 
+class AuthSerializer(serializers.Serializer):
+    code = serializers.CharField(required=False)
+    error = serializers.CharField(required=False)
 
+    
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -164,3 +168,4 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Both username and password are required")
 
         return data
+    

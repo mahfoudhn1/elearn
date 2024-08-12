@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 import os
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -42,7 +43,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
+    
     'rest_framework_simplejwt',
+    'rest_framework.authtoken',
     'users',
     'subscription',
     'livestream',
@@ -64,6 +67,14 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'core.urls'
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+)
+SITE_ID = 1
+
+
+
 
 TEMPLATES = [
     {
@@ -168,3 +179,6 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,  # Optional: Blacklist old refresh tokens
     # Add other settings as needed
 }
+GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
+

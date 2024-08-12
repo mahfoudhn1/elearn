@@ -26,7 +26,6 @@ if (isLoading) {
 }
   return (
     <div> 
-      <Header/>
       <Hero />
       <Whyus />
       <TeacherSection />

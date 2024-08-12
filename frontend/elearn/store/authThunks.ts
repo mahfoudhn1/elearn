@@ -12,9 +12,29 @@ export const register = createAsyncThunk(
         const response = await axiosInstance.post('/register/', userData);
         const { message } = response.data;
         dispatch(registerSuccess({ message }));
+        return { success: true }; // Return success status
       } catch (error) {
         dispatch(registerFailure({ message: 'Registration failed' }));
         console.error('Registration failed', error);
+        return { success: false }; 
+      }
+    }
+  );
+  export const registerWithGoogle = createAsyncThunk(
+    'auth/registerWithGoogle',
+    async ({ access_token }: { access_token: string }, { dispatch }) => {
+      try {
+        console.log(access_token);
+        
+        const response = await axiosInstance.post('/google-register/', { access_token });
+        
+        const { message } = response.data;
+        dispatch(registerSuccess({ message }));
+        return { success: true };
+      } catch (error) {
+        dispatch(registerFailure({ message: 'Google registration failed' }));
+        console.error('Google registration failed', error);
+        return { success: false };
       }
     }
   );
