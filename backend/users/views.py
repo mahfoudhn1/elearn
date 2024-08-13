@@ -1,4 +1,4 @@
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .models import User, Teacher, Student, Module, Grade, Speciality
@@ -8,12 +8,12 @@ from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.conf import settings
 from google.oauth2 import id_token
-from rest_framework.decorators import api_view
 import requests as req
 from google.auth.transport import requests
 import logging
 from rest_framework_simplejwt.tokens import RefreshToken
 
+import json
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -64,8 +64,8 @@ class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
         token_url = 'https://oauth2.googleapis.com/token'
         data = {
             'code': code,
-            'client_id': "",
-            'client_secret': "",
+            'client_id': settings.GOOGLE_CLIENT_ID,
+            'client_secret': settings.GOOGLE_CLIENT_SECRET,
             'redirect_uri': 'http://localhost:8000/api/auth/callback/google/',
             'grant_type': 'authorization_code',
         }
@@ -137,7 +137,32 @@ class AuthViewSet(viewsets.GenericViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
-        return Response({
+        
+        # Generate tokens
+        tokens = get_tokens_for_user(user)
+        # Create the response
+        response = HttpResponse()
+        
+        # Set cookies
+        response.set_cookie(
+            'access_token',
+            tokens['access'],
+            httponly=True,
+            secure= False,  # Use secure cookies if HTTPS is enabled
+        )
+        response.set_cookie(
+            'refresh_token',
+            tokens['refresh'],
+            httponly=True,
+            secure= False,
+        )
+        
+        # Optionally include user data in the response body
+        response_data = {
             'user': UserSerializer(user).data,
-            'token': serializer.data['token']
-        }, status=status.HTTP_200_OK)
+            'message': 'Authentication successful'
+        }
+        response.content = json.dumps(response_data)
+        response['Content-Type'] = 'application/json'
+
+        return response

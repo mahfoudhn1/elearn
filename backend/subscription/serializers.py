@@ -22,9 +22,7 @@ class SubscriptionSerialize(serializers.ModelSerializer):
             raise serializers.ValidationError("The authenticated user is not a student")
 
         teacher = validated_data.pop('teacher')
-        print(teacher)
 
-        print(teacher.id)
         subscription = Subscription.objects.create(student=student,
                                                     teacher=teacher,
                                                     **validated_data)

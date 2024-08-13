@@ -4,6 +4,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store/store';
 import { login } from '../../store/authThunks';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import GoogleButton from 'react-google-button';
+
 
 const Loginpage = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -11,13 +14,16 @@ const Loginpage = () => {
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-
+  const router = useRouter()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     dispatch(login({ username, password }));
   };
-  
+  const handleGoogleSuccess = () => {
+    return router.push(`https://accounts.google.com/o/oauth2/auth?client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent('http://localhost:8000/api/auth/callback/google/')}&response_type=code&scope=profile email`)
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen ">
         <div className='w-full border-none items-center justify-center text-center mb-5'>
@@ -59,6 +65,13 @@ const Loginpage = () => {
             سجل الدخول
 
           </button>
+          <div className=' mt-6 items-center text-center mx-auto ' >
+          <GoogleButton 
+          label='استخدم حساب جوجل'
+          type="light" 
+           onClick={handleGoogleSuccess} />
+
+          </div>
         </form>
       </div>
     </div>

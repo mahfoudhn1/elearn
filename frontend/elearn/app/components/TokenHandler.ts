@@ -13,8 +13,10 @@ const TokenHandler: React.FC = () => {
         })
           .then(response => response.json())
           .then(data => {
+            console.log(data);
+            
             if (data.user) {
-             dispatch(loginSuccess({ token: data.access_token, user: data.user }));
+             dispatch(loginSuccess(data.user));
              window.location.href = '/'; // Adjust redirection as needed
             }
           })

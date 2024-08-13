@@ -3,11 +3,8 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api/',
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  baseURL: 'http://localhost:8000/api/', // Your backend URL
+  withCredentials: true, // Include cookies with requests
 });
 
 // // Request interceptor to add JWT token if available

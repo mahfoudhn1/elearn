@@ -32,7 +32,6 @@ class PrivateSessionRequestViewSet(viewsets.ModelViewSet):
 
         # Extract the teacher ID from the request data
         teacher_id = self.request.data.get('teacher')
-        print(self.request.data)
         if not teacher_id:
             return Response({'detail': 'Teacher ID is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -42,7 +41,6 @@ class PrivateSessionRequestViewSet(viewsets.ModelViewSet):
         except teacher.DoesNotExist:
             return Response({'detail': 'Teacher not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-        print(student)
         # Save the new PrivateSessionRequest with the current user as the student and the provided teacher
         private_session_request = serializer.save(student=student, teacher=teacher)
         print(f"Saved PrivateSessionRequest: {private_session_request}")

@@ -44,38 +44,8 @@ const RegisterPage: React.FC = () => {
     }
   };
 
-  const handleGoogleSuccess = async (response: any) => {
-    if (response.credential) {
-        const access_token = response.credential;
-        console.log(access_token);
-        
-
-          try {
-            const userData = {access_token:access_token}
-            console.log(userData);
-            const response = await axiosInstance.post('/google-register/', userData);
-            const data = await response.data;
-            console.log(response);
-            
-            if (data.success) {
-                console.log('Authentication successful', data);
-                // Handle successful login here
-            } else {
-                console.error('Authentication failed', data);
-            }
-        } catch (error) {
-            console.error('Error during authentication', error);
-        }
-  
-
-    } else {
-        console.error('No credential found');
-    }
-};
-
-
-  const handleGoogleError = (error: any) => {
-    console.error('Google login error', error);
+  const handleGoogleSuccess = () => {
+    return router.push(`https://accounts.google.com/o/oauth2/auth?client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent('http://localhost:8000/api/auth/callback/google/')}&response_type=code&scope=profile email`)
   };
 
   return (
@@ -94,7 +64,7 @@ const RegisterPage: React.FC = () => {
                     console.log('Login Failed');
                   }}
                 /> */}
-              <GoogleButton onClick={() => signIn('google')} />
+              <GoogleButton onClick={handleGoogleSuccess} />
               </div>
             </div>
             <div className="mt-4 text-sm text-gray text-center">
