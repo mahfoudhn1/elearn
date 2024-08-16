@@ -28,10 +28,9 @@ export const register = createAsyncThunk(
       try {
         const response = await axiosInstance.post('/auth/', userData);
         const {  user } = response.data;
-        console.log(response.data);
         
-
-        dispatch(loginSuccess(user));
+        
+        dispatch(loginSuccess({user}));
       } catch (error) {
         dispatch(loginFailure({ message: 'Login failed' }));
         console.error('Login failed', error);

@@ -16,7 +16,7 @@ from django.shortcuts import redirect
 from rest_framework.exceptions import NotFound
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import TeacherFilter
-
+from django.core.exceptions import PermissionDenied
 import json
 
 
@@ -45,6 +45,18 @@ class TeacherProfileView(viewsets.ModelViewSet):
             raise NotFound(detail="Teacher profile not found for this user.")
         serializer = TeacherSerializer(teacher)
         return Response(serializer.data)
+    def update(self, request, *args, **kwargs):
+        user = request.user
+        teacher = Teacher.objects.get(pk=kwargs['pk'])
+        
+        if teacher.user != user:
+            raise PermissionDenied(detail="You do not have permission to edit this profile.")
+
+        serializer = TeacherSerializer(teacher, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
 
 class RegisterView(viewsets.ModelViewSet):
     serializer_class = RegisterSerializer
@@ -100,10 +112,22 @@ class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
         try:
             id_info = id_token.verify_oauth2_token(access_token, requests.Request(), settings.GOOGLE_CLIENT_ID)
             user_email = id_info.get('email')
-
+            user_name = id_info.get('name', '')
+            profile_picture = id_info.get('picture', '')
+            
+            names = user_name.split(' ', 1)
+            first_name = names[0]
+            last_name = names[1] if len(names) > 1 else ''
+            username = user_email.split('@')[0]
             User = get_user_model()
-            user, created = User.objects.get_or_create(email=user_email)
+            user, created = User.objects.get_or_create(email=user_email )
             if created:
+                user.username = username
+                user.first_name = first_name
+                user.last_name = last_name
+                user.avatar = profile_picture
+                user.save()
+
                 response = redirect('complete-profile')  # Replace with actual profile completion URL
                 response.set_cookie('access_token', tokens['access'], httponly=True, secure=False)
                 response.set_cookie('refresh_token', tokens['refresh'], httponly=True, secure=False)
@@ -143,7 +167,7 @@ class AuthViewSet(viewsets.GenericViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
-        
+
         # Generate tokens
         tokens = get_tokens_for_user(user)
         # Create the response
@@ -168,6 +192,7 @@ class AuthViewSet(viewsets.GenericViewSet):
             'user': UserSerializer(user).data,
             'message': 'Authentication successful'
         }
+        print()
         response.content = json.dumps(response_data)
         response['Content-Type'] = 'application/json'
 

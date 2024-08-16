@@ -2,11 +2,12 @@
 import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUniversity, faChalkboardTeacher, faLocationPin } from '@fortawesome/free-solid-svg-icons';
-import axiosInstance from '../../../../store/axiosInstance';
-import Sidebar from '../../../components/sidebar';
+import axiosInstance from '../../../store/axiosInstance';
+import { RootState } from '../../../store/store';
+import { useSelector } from 'react-redux';
 
-export interface User {
-
+export interface Teacher {
+  user: number;
   first_name: string;
   last_name: string;
   email: string;
@@ -18,33 +19,45 @@ export interface User {
 }
 
 
-interface UserProps {
+interface TeacherProps {
   params: {
     id: string; // Assuming you're getting an ID from the params to fetch the user
   };
 }
+interface teacherProfileProps {
+  userId: number;
+  teacherData: Teacher; 
+}
 
-const Profile: React.FC<UserProps> = ({ params }) =>{
+const Profile: React.FC<TeacherProps> = ({ params }) =>{
 
     const [isPopupVisible, setPopupVisible] = useState(false);
     
-    const [user, setUser] = useState<User | null>(null); 
+    const [teacher, setTeacher] = useState<Teacher | null>(null); 
+
+    const currentUser = useSelector((state: RootState) => state.auth.user); 
+    
+
+    
     useEffect(() => {
-      const fetchUser = async () => {
+      const fetchTeacher = async () => {
         try {
-          const response = await axiosInstance.get<User>(`http://localhost:8000/api/teachers/${params.id}/`);
-          setUser(response.data);
+          const response = await axiosInstance.get<Teacher>(`http://localhost:8000/api/teachers/${params.id}/`);
           console.log(response.data);
+          setTeacher(response.data);
           
         } catch (error) {
           console.error('Error fetching user data:', error);
         }
       };
   
-      fetchUser();
+      fetchTeacher();
     }, [params.id]);
-  
-  
+
+    const isOwner = currentUser && teacher && currentUser.id === teacher.user; 
+
+    console.log(isOwner);
+    
     const handleSubscribe = () => {
       // Logic for subscription
       setPopupVisible(true); // Show the popup after subscription
@@ -72,10 +85,10 @@ const Profile: React.FC<UserProps> = ({ params }) =>{
           </div>
           <div className="relative">
             <div className="w-48 h-48 bg-indigo-100 mx-auto rounded-full shadow-2xl absolute overflow-hidden inset-x-0 top-0 -mt-24 flex items-center justify-center text-indigo-500">
-            {user &&
-              user.avatar? 
+            {teacher &&
+              teacher.avatar? 
                 <img
-                  src={`${user.avatar}`}
+                  src={`${teacher.avatar}`}
                   alt="Profile"
                   className=" object-cover rounded-full" // Adjust styles as needed
                 />
@@ -115,22 +128,22 @@ const Profile: React.FC<UserProps> = ({ params }) =>{
         <div className="mt-20 text-center  border-b pb-12">
           <div>
             <h1 className="text-4xl font-medium text-gray-700"> <span className="font-light text-gray-dark">الأستاذ: </span>
-              {user?.first_name} {user?.last_name} {user?.email}
+              {teacher?.first_name} {teacher?.last_name} {teacher?.email}
             </h1>
             
             <p className="font-light text-gray-600 mt-3">
             <FontAwesomeIcon className='w-4 h-4 mx-2 text-gray ' icon={faLocationPin} />
 
-            {user?.wilaya} </p>
+            {teacher?.wilaya} </p>
           </div>
           <div className='flex flex-col mt-4 space-y-4 justify-center'>
            <div className='text-center flex justify-center '>
             <FontAwesomeIcon className='w-6 h-6 mx-2 text-gray ' icon={faChalkboardTeacher} /> 
-            <p className="text-gray-500">أستاذ {user?.profession} </p>
+            <p className="text-gray-500">أستاذ {teacher?.profession} </p>
             </div>
             <div className=' text-center flex justify-center '>
             <FontAwesomeIcon className=' w-6 h-6 mx-2 text-gray' icon={faUniversity} /> 
-            <p className="text-gray-500">{user?.degree}- {user?.university}</p>
+            <p className="text-gray-500">{teacher?.degree}- {teacher?.university}</p>
             </div>
           </div>
  
@@ -146,6 +159,15 @@ const Profile: React.FC<UserProps> = ({ params }) =>{
             </p>
    
         </div>
+        {isOwner ? (
+            <div className="profile-edit">
+              <button>Edit Profile</button>
+              <button>Create Group</button>
+            </div>
+          ) : (
+            <button >Subscribe</button>
+          )}
+
         {isPopupVisible&&( 
                 <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center z-50">
                 <div className="bg-white p-8 rounded-lg shadow-lg">

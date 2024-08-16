@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useEffect, ChangeEvent } from 'react';
 import axiosInstance from '../../store/axiosInstance';
-import axios from 'axios';
+import Link from 'next/link';
 
 
 interface CityProps {
@@ -29,7 +29,6 @@ interface Teacher {
     teaching_subjects: string;
 }
 
-// Convert Filters object to Record<string, string>
 const filtersToQueryParams = (filters: Filters): Record<string, string> => {
     const queryParams: Record<string, string> = {};
     for (const [key, value] of Object.entries(filters)) {
@@ -46,7 +45,6 @@ const fetchTeachers = async (filters: Filters): Promise<Teacher[]> => {
     if (!response) {
         throw new Error('Network response was not ok');
     }
-    console.log(response.data);
     
     return response.data;
 };
@@ -78,13 +76,7 @@ const TeacherFilter: React.FC = () => {
     const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setFilters({ ...filters, [e.target.name]: e.target.value });
     };
-    const fetchCities = async (): Promise<string[]> => {
-        const response = await axios.get('/api/cities');
-        if (!response) {
-            throw new Error('Network response was not ok');
-        }
-        return response.data;
-    };
+
     
     return (
 <div className="p-6 bg-gray-100 min-h-screen mt-8">
@@ -152,6 +144,8 @@ const TeacherFilter: React.FC = () => {
 
     <ul className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {teachers.map((teacher) => (
+            <Link key={teacher.id} href={`/teachers/${teacher.id}`}>
+
             <li key={teacher.id} className="bg-white rounded-lg shadow-md p-8 overflow-hidden">
                 <div className='cardhead'>
                 <div className="relative">
@@ -178,6 +172,7 @@ const TeacherFilter: React.FC = () => {
                 </div>
 
             </li>
+            </Link>
         ))}
     </ul>
 </div>
