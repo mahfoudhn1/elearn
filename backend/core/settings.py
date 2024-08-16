@@ -151,7 +151,10 @@ USE_TZ = True
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'core.authentications.JWTAuthenticationWithCookies',  # Custom JWT authentication class
+
     ),
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
 
 CSRF_TRUSTED_ORIGINS = [
@@ -196,7 +199,11 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # Refresh token validity
     'ROTATE_REFRESH_TOKENS': True,  # Optional: Rotate refresh tokens
     'BLACKLIST_AFTER_ROTATION': True,  # Optional: Blacklist old refresh tokens
-    # Add other settings as needed
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'AUTH_COOKIE': 'access_token',  # Cookie name for the JWT
+    'AUTH_COOKIE_SECURE': False,  # Set to True in production
+    'AUTH_COOKIE_HTTP_ONLY': True,  # True to prevent JavaScript access
 }
 
 

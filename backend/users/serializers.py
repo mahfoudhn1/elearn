@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Student, Teacher, Grade, Speciality, Module
+from .models import User, Student, Teacher
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
@@ -14,80 +14,28 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'role']
 
-class ModuleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model= Module
-        fields = ['id', 'name']
 
-class SpecialitySerializer(serializers.ModelSerializer):
-    class Meta:
-        model= Speciality
-        fields = ['id', 'name']
-
-class GradeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model= Grade
-        fields = ['id', 'name']
 
 class TeacherSerializer(serializers.ModelSerializer):
-    modules = ModuleSerializer(many = True)
-    grades = GradeSerializer(many = True)
-    specialities = SpecialitySerializer(many = True)
 
     class Meta:
         model = Teacher
-        fields = ["id","user","first_name" ,"last_name", "phone_number", "profile_privet","modules","grades","specialities","created_at","updated_at"]
+        fields = ["id","user","first_name" ,"last_name","price", "phone_number","avatar","profession" ,"degree" ,"university", "profile_privet","teaching_level","teaching_subjects","wilaya","created_at","updated_at"]
         read_only_fields = ['user']
     
     def create(self, validated_data):
         request = self.context.get('request')
         user = request.user
 
-        modules_data = validated_data.pop('modules', [])
-        grades_data = validated_data.pop('grades', [])
-        specialities_data = validated_data.pop('specialities', [])
-
         teacher = Teacher.objects.create(user=user, **validated_data)
 
-        for module_data in modules_data:
-            module, created = Module.objects.get_or_create(**module_data)
-            teacher.modules.add(module)
-
-        for grade_data in grades_data:
-            grade, created = Grade.objects.get_or_create(**grade_data)
-            teacher.grades.add(grade)
-
-        for speciality_data in specialities_data:
-            speciality, created = Speciality.objects.get_or_create(**speciality_data)
-            teacher.specialities.add(speciality)
-        
         return teacher
     
     def update(self, instance, validated_data):
-        modules_data = validated_data.pop('modules', [])
-        grades_data = validated_data.pop('grades', [])
-        specialities_data = validated_data.pop('specialities', [])
+
 
         instance.profile_privet = validated_data.get('profile_privet', instance.profile_privet)
         instance.save()
-
-        module_ids = []
-        for module_data in modules_data:
-            module, created = Module.objects.get_or_create(**module_data)
-            module_ids.append(module.id)
-        instance.modules.set(module_ids)
-
-        grade_ids = []
-        for grade_data in grades_data:
-            grade, created = Grade.objects.get_or_create(**grade_data)
-            grade_ids.append(grade.id)
-        instance.grades.set(grade_ids)
-
-        speciality_ids = []
-        for speciality_data in specialities_data:
-            speciality, created = Speciality.objects.get_or_create(**speciality_data)
-            speciality_ids.append(speciality.id)
-        instance.specialities.set(speciality_ids)
 
         return instance
 

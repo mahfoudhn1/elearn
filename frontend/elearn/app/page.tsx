@@ -1,14 +1,13 @@
 'use client'
 
 import react, { useState } from 'react'
-import Navbar from './components/navbar'
-import Hero from './components/hero/hero'
-import Header from './components/header/header'
-import Whyus from './components/whyus/whyus'
-import Mission from './components/ourmission/Mission'
-import Review from './components/ourClients/Review'
-import TeacherSection from './components/teacher/teacher'
-import FAQ from './components/FAQ/FAQ'
+import Hero from './components/homecomponents/hero'
+import Header from './components/homecomponents/header'
+import Whyus from './components/homecomponents/whyus'
+import Mission from './components/homecomponents/Mission'
+import Review from './components/homecomponents/Review'
+import TeacherSection from './components/homecomponents/teacher'
+import FAQ from './components/homecomponents/FAQ'
 
 
 export default function page() {

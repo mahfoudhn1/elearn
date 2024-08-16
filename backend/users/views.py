@@ -1,8 +1,8 @@
 from django.http import HttpResponse, HttpResponseRedirect
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from .models import User, Teacher, Student, Module, Grade, Speciality
-from .serializers import AuthSerializer, LoginSerializer, UserSerializer, TeacherSerializer, StudentSerializer, ModuleSerializer, GradeSerializer, SpecialitySerializer, RegisterSerializer
+from .models import User, Teacher, Student
+from .serializers import AuthSerializer, LoginSerializer, UserSerializer, TeacherSerializer, StudentSerializer, RegisterSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -12,6 +12,10 @@ import requests as req
 from google.auth.transport import requests
 import logging
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.shortcuts import redirect
+from rest_framework.exceptions import NotFound
+from django_filters.rest_framework import DjangoFilterBackend
+from .filters import TeacherFilter
 
 import json
 
@@ -29,6 +33,18 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = RegisterSerializer
     permission_classes = [IsAuthenticated]
    
+class TeacherProfileView(viewsets.ModelViewSet):
+
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        user = request.user
+        try:
+            teacher = Teacher.objects.get(user=user)
+        except Teacher.DoesNotExist:
+            raise NotFound(detail="Teacher profile not found for this user.")
+        serializer = TeacherSerializer(teacher)
+        return Response(serializer.data)
 
 class RegisterView(viewsets.ModelViewSet):
     serializer_class = RegisterSerializer
@@ -88,8 +104,10 @@ class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
             User = get_user_model()
             user, created = User.objects.get_or_create(email=user_email)
             if created:
-                # Optionally handle new user creation here
-                pass
+                response = redirect('complete-profile')  # Replace with actual profile completion URL
+                response.set_cookie('access_token', tokens['access'], httponly=True, secure=False)
+                response.set_cookie('refresh_token', tokens['refresh'], httponly=True, secure=False)
+                return response
 
             tokens = get_tokens_for_user(user)
             tokens = get_tokens_for_user(user)
@@ -107,27 +125,15 @@ class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
 class TeacherViewSet(viewsets.ModelViewSet):
     queryset = Teacher.objects.all()
     serializer_class = TeacherSerializer
-    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = TeacherFilter
+
 
 class StudentViewSet(viewsets.ModelViewSet):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
     permission_classes = [IsAuthenticated]
 
-class ModuleViewSet(viewsets.ModelViewSet):
-    queryset = Module.objects.all()
-    serializer_class = ModuleSerializer
-    permission_classes = [IsAuthenticated]
-
-class GradeViewSet(viewsets.ModelViewSet):
-    queryset = Grade.objects.all()
-    serializer_class = GradeSerializer
-    permission_classes = [IsAuthenticated]
-
-class SpecialityViewSet(viewsets.ModelViewSet):
-    queryset = Speciality.objects.all()
-    serializer_class = SpecialitySerializer
-    permission_classes = [IsAuthenticated]
 
 class AuthViewSet(viewsets.GenericViewSet):
     serializer_class = LoginSerializer
