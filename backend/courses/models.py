@@ -1,7 +1,7 @@
 from django.db import models
 from users.models import Student
 from django.core.files.storage import FileSystemStorage
-from users.models import StudentBranch, StudentClass
+
 
 
     
@@ -13,14 +13,14 @@ class Course(models.Model):
     title = models.CharField(max_length=200)
     descitption = models.TextField()
     thumbnail = models.ImageField(upload_to='thumbnails/', null=True, blank=True)    
-    course_class = models.CharField(
-        max_length=50,
-        choices = StudentClass.choices
-        )
-    course_branch =  models.CharField(
-        max_length=50,
-        choices = StudentBranch.choices
-        )
+    # course_class = models.CharField(
+    #     max_length=50,
+    #     choices = StudentClass.choices
+    #     )
+    # course_branch =  models.CharField(
+    #     max_length=50,
+    #     choices = StudentBranch.choices
+    #     )
     
     def __str__(self):
         return self.title

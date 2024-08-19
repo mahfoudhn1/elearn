@@ -12,7 +12,7 @@ class AuthSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'role']
+        fields = ['id', 'username', 'email', "first_name" ,"last_name",'role']
 
 
 
@@ -20,7 +20,7 @@ class TeacherSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Teacher
-        fields = ["id","user","first_name" ,"last_name","price", "phone_number","avatar","profession" ,"degree" ,"university", "profile_privet","teaching_level","teaching_subjects","wilaya","created_at","updated_at"]
+        fields = ["id","user","price", "phone_number","avatar","profession" ,"degree" ,"university", "profile_privet","teaching_level","teaching_subjects","wilaya","created_at","updated_at"]
         read_only_fields = ['user']
     
     def create(self, validated_data):
@@ -44,7 +44,7 @@ class StudentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Student
-        fields = ['id', 'user',"first_name" ,"last_name", "phone_number",'branch', 'student_class']
+        fields = ['id', 'user',"avatar", "wilaya","school_level", "hightschool_speciality", "phone_number"]
         read_only_fields = ['user']
 
     def create(self, validated_data):
@@ -58,8 +58,6 @@ class StudentSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
 
-        instance.branch = validated_data.get('branch', instance.branch)
-        instance.student_class = validated_data.get('student_class', instance.student_class)
         instance.save()
         return instance
     
@@ -71,7 +69,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ('username', 'email', 'password', 'password2', 'role')
+        fields = ('username',"first_name","last_name", 'email', 'password', 'password2', 'role')
 
     def validate(self, data):
         if data['password'] != data['password2']:
@@ -81,6 +79,8 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = get_user_model().objects.create_user(
             username=validated_data['username'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
             email=validated_data['email'],
             password=validated_data['password'],
             role=validated_data['role']

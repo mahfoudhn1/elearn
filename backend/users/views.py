@@ -29,10 +29,28 @@ class MyTokenRefreshView(TokenRefreshView):
     pass
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = get_user_model().objects.all()
-    serializer_class = RegisterSerializer
+    serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
-   
+
+    def get_queryset(self):
+        return get_user_model().objects.filter(id=self.request.user.id)
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        self.object = self.get_object()  # Get the authenticated user
+        
+        # Create a data dictionary with the fields you want to update
+        data = {
+            'role': request.data.get('role', self.object.role),  # Update only the role, keep the existing values for others
+        }
+
+        serializer = self.get_serializer(self.object, data=data, partial=True)  # Use partial=True to allow partial updates
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
 class TeacherProfileView(viewsets.ModelViewSet):
 
     permission_classes = [IsAuthenticated]
@@ -66,6 +84,11 @@ class RegisterView(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+            if user.role == 'teacher':
+                Teacher.objects.create(user=user)
+            elif user.role == 'student':
+                Student.objects.create(user=user)
+
             return Response({
                 "user": serializer.data,
                 "message": "User created successfully."
@@ -84,8 +107,9 @@ def get_tokens_for_user(user):
     }
 
 class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
-    def list(self, request, *args, **kwargs):
-        code = request.query_params.get('code')
+    def create(self, request, *args, **kwargs):
+        code = request.data.get('code')
+        print(code)
         if not code:
             return Response({'error': 'Authorization code missing'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -94,13 +118,14 @@ class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
             'code': code,
             'client_id': settings.GOOGLE_CLIENT_ID,
             'client_secret': settings.GOOGLE_CLIENT_SECRET,
-            'redirect_uri': 'http://localhost:8000/api/auth/callback/google/',
+            'redirect_uri': 'http://localhost:3000/api/auth/google/callback/',
             'grant_type': 'authorization_code',
         }
         try:
             response = req.post(token_url, data=data)
             response.raise_for_status()
             response_data = response.json()
+
         except req.exceptions.RequestException as e:
             logger.error(f"Token exchange failed: {e}")
             return Response({'error': 'Failed to exchange authorization code for tokens'}, status=status.HTTP_400_BAD_REQUEST)
@@ -121,6 +146,7 @@ class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
             username = user_email.split('@')[0]
             User = get_user_model()
             user, created = User.objects.get_or_create(email=user_email )
+            
             if created:
                 user.username = username
                 user.first_name = first_name
@@ -128,23 +154,26 @@ class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
                 user.avatar = profile_picture
                 user.save()
 
-                response = redirect('complete-profile')  # Replace with actual profile completion URL
-                response.set_cookie('access_token', tokens['access'], httponly=True, secure=False)
-                response.set_cookie('refresh_token', tokens['refresh'], httponly=True, secure=False)
-                return response
-
             tokens = get_tokens_for_user(user)
-            tokens = get_tokens_for_user(user)
-            response = HttpResponseRedirect('http://localhost:3000')
+            response = HttpResponse()
 
             response.set_cookie('access_token', tokens['access'], httponly=True, secure=False)
             response.set_cookie('refresh_token', tokens['refresh'], httponly=True, secure=False)
-
+            
+            response_data = {
+                'user': UserSerializer(user).data,
+                'message': 'Authentication successful'
+            }
+            
+            response.content = json.dumps(response_data)
+            response['Content-Type'] = 'application/json'
+            
             return response
 
         except ValueError as e:
             logger.error(f"Token verification failed: {e}")
             return Response({'error': 'Token verification failed'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class TeacherViewSet(viewsets.ModelViewSet):
     queryset = Teacher.objects.all()
@@ -192,8 +221,14 @@ class AuthViewSet(viewsets.GenericViewSet):
             'user': UserSerializer(user).data,
             'message': 'Authentication successful'
         }
-        print()
         response.content = json.dumps(response_data)
         response['Content-Type'] = 'application/json'
 
         return response
+    
+def logout_view(request):
+    response = HttpResponse()
+    response.delete_cookie('access_token')
+    response.delete_cookie('refresh_token')
+    response.data = {'message': 'Successfully logged out'}
+    return response

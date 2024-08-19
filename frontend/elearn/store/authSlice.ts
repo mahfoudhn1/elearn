@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from './axiosInstance'
-
+import updateUserRole from './authThunks'
 
 interface User {
   id: number;
@@ -30,15 +30,16 @@ interface AuthState {
     name: 'auth',
     initialState,
     reducers: {
-      loginSuccess(state, action: PayloadAction<{ user: User }>) {
+      loginSuccess(state, action: PayloadAction<{ user: User, message: string }>) {
         state.user = action.payload.user;
-        console.log(state.user);
-        
         state.isAuthenticated = true;
+        state.loginStatus = action.payload.message;  // Update loginStatus here
+        state.registrationStatus = '';  
       },
       logout(state) {
         state.user = null;
         state.isAuthenticated = false;
+        state.loginStatus = '';  
       },
       registerSuccess(state, action: PayloadAction<{ message: string }>) {
         state.registrationStatus = action.payload.message;
@@ -51,7 +52,13 @@ interface AuthState {
       },
     
     },
-  });
+    extraReducers: (builder) => {
+      builder.addCase(updateUserRole.fulfilled, (state, action: PayloadAction<User>) => {
+        state.user = action.payload; // Update the user with the full object
+      });
+  
+  
+  }});
 
 export const { loginSuccess,loginFailure, logout, registerSuccess, registerFailure } = authSlice.actions;
 export default authSlice.reducer;

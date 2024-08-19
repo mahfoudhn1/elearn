@@ -6,8 +6,7 @@ import { AppDispatch, RootState } from '../../store/store';
 import { register } from '../../store/authThunks';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
-import axiosInstance from '../../store/axiosInstance';
+
 import GoogleButton from 'react-google-button';
 
 import { signIn } from 'next-auth/react'
@@ -18,12 +17,13 @@ const RegisterPage: React.FC = () => {
   const registrationStatus = useSelector((state: RootState) => state.auth.registrationStatus);
 
   const [username, setUsername] = useState('');
+  const [first_name, setFirst_name] = useState('');
+  const [last_name, setLast_name] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [password2, setPassword2] = useState('');
   const [role, setRole] = useState('');
 
-  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 
   const router = useRouter();
 
@@ -33,7 +33,7 @@ const RegisterPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const resultAction = await dispatch(register({ username, email, password, password2, role }));
+    const resultAction = await dispatch(register({ username, email, first_name, last_name, password, password2, role }));
 
     if (register.fulfilled.match(resultAction)) {
       if (resultAction.payload.success) {
@@ -45,7 +45,8 @@ const RegisterPage: React.FC = () => {
   };
 
   const handleGoogleSuccess = () => {
-    return router.push(`https://accounts.google.com/o/oauth2/auth?client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent('http://localhost:8000/api/auth/callback/google/')}&response_type=code&scope=profile email`)
+    const state = "random"
+    return router.push(`https://accounts.google.com/o/oauth2/auth?client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent('http://localhost:3000/api/auth/google/callback/')}&response_type=code&scope=profile email&state=${state}`)  
   };
 
   return (
@@ -78,6 +79,26 @@ const RegisterPage: React.FC = () => {
                   id="username"
                   name="username"
                   onChange={(e) => setUsername(e.target.value)}
+                  className="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray">الاسم</label>
+                <input
+                  type="text"
+                  id="first_name"
+                  name="first_name"
+                  onChange={(e) => setFirst_name(e.target.value)}
+                  className="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray">اللقب</label>
+                <input
+                  type="text"
+                  id="last_name"
+                  name="last_name"
+                  onChange={(e) => setLast_name(e.target.value)}
                   className="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300"
                 />
               </div>

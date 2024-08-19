@@ -43,7 +43,6 @@ const Profile: React.FC<TeacherProps> = ({ params }) =>{
       const fetchTeacher = async () => {
         try {
           const response = await axiosInstance.get<Teacher>(`http://localhost:8000/api/teachers/${params.id}/`);
-          console.log(response.data);
           setTeacher(response.data);
           
         } catch (error) {
@@ -54,6 +53,8 @@ const Profile: React.FC<TeacherProps> = ({ params }) =>{
       fetchTeacher();
     }, [params.id]);
 
+    console.log(currentUser);
+    
     const isOwner = currentUser && teacher && currentUser.id === teacher.user; 
 
     console.log(isOwner);

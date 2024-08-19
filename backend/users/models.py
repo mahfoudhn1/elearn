@@ -18,32 +18,22 @@ class SchoolChoice(models.TextChoices):
     HIGHER = 'HIGHER', 'Higher Education'
 
 class subjsctChoice(models.TextChoices):
-    MATHEMATICS = 'MATHEMATICS', 'Mathematics'
-    PHYSICS = 'PHYSICS', 'Physics'
-    CHEMISTRY = 'CHEMISTRY', 'Chemistry'
-    BIOLOGY = 'BIOLOGY', 'Biology'
-    FRENCH = 'FRENCH', 'French'
-    ARABIC = 'ARABIC', 'Arabic'
-    ENGLISH = 'ENGLISH', 'English'
-    HISTORY = 'HISTORY', 'History'
-    GEOGRAPHY = 'GEOGRAPHY', 'Geography'
-    PHILOSOPHY = 'PHILOSOPHY', 'Philosophy'
-    ECONOMICS = 'ECONOMICS', 'Economics'
+    MATHEMATICS = 'رياضيات', 'رياضيات'
+    PHYSICS = 'فيزياء', 'فيزياء'
+    CHEMISTRY = 'كيمياء', 'كيمياء'
+    BIOLOGY = 'أحياء', 'أحياء'
+    FRENCH = 'فرنسية', 'فرنسية'
+    ARABIC = 'عربية', 'عربية'
+    ENGLISH = 'إنجليزية', 'إنجليزية'
+    HISTORY = 'تاريخ', 'تاريخ'
+    GEOGRAPHY = 'جغرافيا', 'جغرافيا'
+    PHILOSOPHY = 'فلسفة', 'فلسفة'
+    ECONOMICS = 'اقتصاد', 'اقتصاد'
 
 
 
 
-class StudentClass(models.TextChoices):
-    FIRST_YEAR = 'F1', 'First Year'
-    SECOND_YEAR = 'F2', 'Second Year'
-    THIRD_YEAR = 'F3', 'Third Year'
 
-class StudentBranch(models.TextChoices):
-    MATHEMATICS = 'SM', 'Science and Mathematics'
-    SCIENCE = 'ST', 'Science '
-    ECONOMICS = 'EC', 'Economics'
-    LITERARY = 'LI', 'Literary'
-    TECHNICAL = 'TC', 'Technical'
 
 class Teacher(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -52,8 +42,7 @@ class Teacher(models.Model):
     teaching_subjects = models.CharField(max_length=20, choices = subjsctChoice.choices, null=True, blank=True) 
     price = models.IntegerField(default=1000)
     phone_number = models.CharField( max_length=10, null=True, blank=True)
-    first_name = models.CharField(max_length=20, null=True, blank=True)
-    last_name = models.CharField(max_length=20, null=True, blank=True)
+   
     avatar = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
     profession = models.CharField(max_length=100, null=True, blank=True)
     degree = models.CharField(max_length=100, null=True, blank=True)
@@ -62,16 +51,39 @@ class Teacher(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+
+class HighschoolClass(models.Model):
+    name = models.CharField(max_length=100)
+
+class MiddleSchoolClass(models.Model):
+    name = models.CharField(max_length=100)
+
+class HighSchoolSpecialities(models.TextChoices):
+    LITERATURE = 'LT', 'Literature'
+    MATH = 'MT', 'Math'
+    SCIENCE = 'SC', 'Science'
+
+
+class SchoolLevel(models.Model):
+    school_level = models.CharField(
+        max_length=10,
+        choices=SchoolChoice.choices,
+        null=True,
+        blank=True
+    )
+
+    # For Middle School - 4 classes
+    middle_school_classes = models.ManyToManyField(MiddleSchoolClass, blank=True)
+
+    # For High School - 3 subjects
+    high_school_classes = models.ManyToManyField(HighschoolClass, blank=True)  # Assuming Class will represent the high school subjects
+
+
 class Student(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    phone_number = models.CharField( max_length=10, null=True, blank=True)
-    first_name = models.CharField(max_length=20, null=True, blank=True)
-    last_name = models.CharField(max_length=20, null=True, blank=True)
-    branch = models.CharField(
-        max_length=10,
-        choices = StudentBranch.choices
-        )
-    student_class = models.CharField(
-        max_length=10,
-        choices = StudentClass.choices
-        )
+    phone_number = models.CharField(max_length=10, null=True, blank=True)
+    avatar = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
+    wilaya = models.CharField(max_length=20, null=True, blank=True)
+    school_level = models.ForeignKey(SchoolLevel, on_delete=models.CASCADE)
+    hightschool_speciality = models.CharField(max_length=10, choices=HighSchoolSpecialities.choices, null=True, blank=True)
+    

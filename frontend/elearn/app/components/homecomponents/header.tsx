@@ -1,10 +1,13 @@
 "use client"
 import React, { useState } from 'react';
 import Link from 'next/link';
-
-import { useRouter } from 'next/navigation';
-
+import { usePathname, useRouter } from "next/navigation";
 import './Header.css'
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, AppDispatch } from '../../../store/store';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons';
+import { logout } from '../../../store/authSlice';
 
 const Header: React.FC = () => {
   
@@ -12,17 +15,33 @@ const Header: React.FC = () => {
   const toggleMenu =()=>{
     setIsMenuOpen(!isMenuOpen)
   }
+  const [isOpen, setIsOpen] = useState(false);
+
+  const dispatch = useDispatch<AppDispatch>()
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const pathname = usePathname(); 
+  const isHomePage = pathname === '/' 
   
   const router = useRouter()
   const handleClick = () => {
+
 
     router.push('/login'); 
     setIsMenuOpen(false)
     
   };
-    
+  
+  const authState = useSelector((state:RootState)=> state.auth.isAuthenticated)
+
+  const handlelogout =()=>{
+    dispatch(logout())
+  }
   return (
-    <header className="header flex justify-between items-center py-4 bg-transparent px-20  w-full text-black">
+    <header className={`header flex justify-between items-center py-4 bg-transparent px-20  w-full text-black ${!isHomePage? "shadow-sm sticky" : "shadow-none" } `}>
     <div className='relative group'>
       <div className="text-3xl text-gray-dark font-bold">منبت</div>
       <span className="absolute left-0 bottom-0 w-full h-2.5 bg-green bg-opacity-80 transform scale-y-100  transition-all duration-300"></span>
@@ -59,12 +78,56 @@ const Header: React.FC = () => {
         </li>
       </ul>
     </nav>
+    
+    {!authState? 
+    
     <button 
         onClick={handleClick}
     
     className="hidden md:flex relative overflow-hidden px-6 py-2 text-white bg-gray-dark border-none rounded-lg focus:outline-none transition-all duration-300 hover:bg-green">
       <span className="relative z-10">تسجيل الدخول</span>
     </button>
+  :
+  <div className="relative inline-block ">
+      <button
+        onClick={toggleDropdown}
+        className="inline-flex justify-center w-full rounded-full border-none shadow-sm  focus:outline-none hover:ring-2 over:ring-offset-4 hover:ring-gray  "
+      >
+   
+        <div className='w-10 h-10 overflow-hidden rounded-full'>
+          <img src="/teacher.jpg" className='w-full' alt="" />
+        </div>
+      </button>
+
+      {isOpen && (
+        <div className="origin-top-left absolute left-0 mt-2 w-56 rounded-md z-30 shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+          <div className="py-1">
+            <Link 
+              href={''}
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-light"
+            >
+              اعدادات الحساب
+            </Link>
+            <Link 
+              href={''}
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-light"
+            >
+              المجموعات
+            </Link>
+              <button
+                onClick={handlelogout}
+                className="block w-full px-4 text-right py-2 text-sm text-gray-700 hover:bg-gray-light"
+              >
+                <FontAwesomeIcon icon={ faRightFromBracket } className='mx-2'/>
+                تسحيل الخروج
+              </button>
+          </div>
+        </div>
+      )}
+    </div>
+  }
+    
+    
     <button
         className="md:hidden flex items-center p-2 text-white bg-gray-dark"
         onClick={toggleMenu}

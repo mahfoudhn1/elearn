@@ -1,6 +1,6 @@
 from django.db import models
 
-from users.models import StudentBranch, StudentClass, Student
+from users.models import Student
 from subscription.models import Subscription
 
 GROUP_STATUS_CHOICES = [
@@ -14,14 +14,7 @@ class Group(models.Model):
     students = models.ManyToManyField("users.Student")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    branch = models.CharField(
-        max_length=50,
-        choices= StudentBranch
-        )
-    student_class = models.CharField(
-        max_length=50,
-        choices= StudentClass
-        )
+
     
     status = models.CharField(max_length=20, choices=GROUP_STATUS_CHOICES, default='open')
 

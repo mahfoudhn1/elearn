@@ -6,23 +6,41 @@ import { login } from '../../store/authThunks';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import GoogleButton from 'react-google-button';
+import axios from 'axios';
+import { loginSuccess } from '../../store/authSlice';
 
 
 const Loginpage = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const loginStatus = useSelector((state: RootState) => state.auth.registrationStatus);
+  const loginStatus = useSelector((state: RootState) => state.auth.loginStatus);
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter()
 
-  const handleSubmit = (e: React.FormEvent) => {
+
+  console.log(loginStatus);
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(login({ username, password }));
-  };
-  const handleGoogleSuccess = () => {
-    return router.push(`https://accounts.google.com/o/oauth2/auth?client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent('http://localhost:8000/api/auth/callback/google/')}&response_type=code&scope=profile email`)
-  };
+    const resultAction = await dispatch(login({ username, password}));
+
+    if (login.fulfilled.match(resultAction)) {
+      if (resultAction.payload?.success) {
+        
+        router.push('/dashboard');
+      } else {
+        console.error('Registration failed');
+      }
+    }
+};
+
+
+const handleGoogleSuccess = () => {
+  const state = "random"
+  return router.push(`https://accounts.google.com/o/oauth2/auth?client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent('http://localhost:3000/api/auth/google/callback/')}&response_type=code&scope=profile email&state=${state}`)
+};
+
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen ">

@@ -16,4 +16,3 @@ admin.site.register(CustomUser, UserAdmin)
 admin.site.register(Teacher)
 admin.site.register(Student)
 
-
