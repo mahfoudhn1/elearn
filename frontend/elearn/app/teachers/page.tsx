@@ -2,7 +2,8 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
 import axiosInstance from '../../store/axiosInstance';
 import Link from 'next/link';
-
+import { useSelector, UseSelector } from 'react-redux';
+import { RootState } from '../../store/store';
 
 interface CityProps {
     cities: string[];
@@ -50,6 +51,8 @@ const fetchTeachers = async (filters: Filters): Promise<Teacher[]> => {
 };
 
 const TeacherFilter: React.FC = () => {
+
+    const user = useSelector((state:RootState) => state.auth.user)
     const [filters, setFilters] = useState<Filters>({
         teaching_level: '',
         teaching_subjects: '',
@@ -77,6 +80,7 @@ const TeacherFilter: React.FC = () => {
         setFilters({ ...filters, [e.target.name]: e.target.value });
     };
 
+    console.log(teachers);
     
     return (
 <div className="p-6 bg-gray-100 min-h-screen mt-8">

@@ -226,9 +226,13 @@ class AuthViewSet(viewsets.GenericViewSet):
 
         return response
     
-def logout_view(request):
-    response = HttpResponse()
-    response.delete_cookie('access_token')
-    response.delete_cookie('refresh_token')
-    response.data = {'message': 'Successfully logged out'}
-    return response
+
+class LogoutViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request):
+        # Perform logout logic here
+        response.delete_cookie('access_token')
+        response.delete_cookie('refresh_token')
+        response = Response({'message': 'Logged out successfully'})
+        return response

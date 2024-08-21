@@ -20,7 +20,7 @@ class TeacherSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Teacher
-        fields = ["id","user","price", "phone_number","avatar","profession" ,"degree" ,"university", "profile_privet","teaching_level","teaching_subjects","wilaya","created_at","updated_at"]
+        fields = ["id","user","price", "phone_number","first_name","last_name", "avatar","profession" ,"degree" ,"university", "profile_privet","teaching_level","teaching_subjects","wilaya","created_at","updated_at"]
         read_only_fields = ['user']
     
     def create(self, validated_data):
@@ -44,7 +44,7 @@ class StudentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Student
-        fields = ['id', 'user',"avatar", "wilaya","school_level", "hightschool_speciality", "phone_number"]
+        fields = ['id', 'user',"avatar","first_name","last_name", "wilaya","school_level", "hightschool_speciality", "phone_number"]
         read_only_fields = ['user']
 
     def create(self, validated_data):

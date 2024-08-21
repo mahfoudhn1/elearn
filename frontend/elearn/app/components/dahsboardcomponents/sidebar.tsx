@@ -3,80 +3,149 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+import { faClose, faBars } from '@fortawesome/free-solid-svg-icons';
 
 const Sidebar: React.FC = () => {
-    const [isOpen, setIsOpen] = useState(true); // Track sidebar visibility
+    const [isOpen, setIsOpen] = useState(false); // Track sidebar visibility
+    const [isExpanded, setIsExpanded] = useState(true);
+
 
     const toggleSidebar = () => {
         setIsOpen(!isOpen);
     };
-
+    const toggleExpand = () => {
+        setIsExpanded(!isExpanded);
+      };
+    
     return (
-        <div>
-            {/* Toggle Button for Mobile */}
-            <button 
-                onClick={toggleSidebar} 
-                className="fixed top-4 left-4 z-50 p-2 bg-blue-500 text-white rounded-md md:hidden"
-            >
-                {isOpen ? 'Close' : 'Open'} Sidebar
-            </button>
+       <>
+       
+       {/* <button
+       
+        type="button"
+        onClick={toggleSidebar}
+        className="inline-flex items-center p-2 mt-2 ms-3 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 "
+      >
+        <span className="sr-only">Open sidebar</span>
+        <svg
+          className="w-6 h-6"
+          aria-hidden="true"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            clipRule="evenodd"
+            fillRule="evenodd"
+            d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"
+          ></path>
+        </svg>
+      </button> */}
+    <div className='flex h-full'>
 
-            <nav 
-                className={`bg-[#fcfcfc] shadow-lg h-screen fixed top-0 right-0 transition-transform transform ${
-                    isOpen ? 'translate-x-0' : 'translate-x-full'
-                } min-w-[250px] py-6 px-4 font-[sans-serif] overflow-auto md:relative md:translate-x-0 md:w-[250px]`}
-            >
-                <a href="javascript:void(0)">
-                    <img 
-                        src="https://readymadeui.com/readymadeui.svg" 
-                        alt="logo" 
-                        className='w-[160px]' 
-                    />
-                </a>
+    
+      <aside
+        id="default-sidebar"
 
-                <ul className="mt-8">
-                    <li>
-                        <a href="javascript:void(0)"
-                           className="text-gray-600 hover:text-black transition-all text-sm flex items-center hover:bg-[#efefef] rounded-md px-4 py-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" className="w-[18px] h-[18px] mr-4"
-                                 viewBox="0 0 512 512">
-                                <path
-                                    d="M197.332 170.668h-160C16.746 170.668 0 153.922 0 133.332v-96C0 16.746 16.746 0 37.332 0h160c20.59 0 37.336 16.746 37.336 37.332v96c0 20.59-16.746 37.336-37.336 37.336zM37.332 32A5.336 5.336 0 0 0 32 37.332v96a5.337 5.337 0 0 0 5.332 5.336h160a5.338 5.338 0 0 0 5.336-5.336v-96A5.337 5.337 0 0 0 197.332 32zm160 480h-160C16.746 512 0 495.254 0 474.668v-224c0-20.59 16.746-37.336 37.332-37.336h160c20.59 0 37.336 16.746 37.336 37.336v224c0 20.586-16.746 37.332-37.336 37.332zm-160-266.668A5.337 5.337 0 0 0 32 250.668v224A5.336 5.336 0 0 0 37.332 480h160a5.337 5.337 0 0 0 5.336-5.332v-224a5.338 5.338 0 0 0-5.336-5.336zM474.668 512h-160c-20.59 0-37.336-16.746-37.336-37.332v-96c0-20.59 16.746-37.336 37.336-37.336h160c20.586 0 37.332 16.746 37.332 37.336v96C512 495.254 495.254 512 474.668 512zm-160-138.668a5.338 5.338 0 0 0-5.336 5.336v96a5.337 5.337 0 0 0 5.336 5.332h160a5.336 5.336 0 0 0 5.332-5.332v-96a5.337 5.337 0 0 0-5.332-5.336zm160-74.664h-160c-20.59 0-37.336-16.746-37.336-37.336v-224C277.332 16.746 294.078 0 314.668 0h160C495.254 0 512 16.746 512 37.332v224c0 20.59-16.746 37.336-37.332 37.336zM314.668 32a5.337 5.337 0 0 0-5.336 5.332v224a5.338 5.338 0 0 0 5.336 5.336h160a5.337 5.337 0 0 0 5.332-5.336v-224A5.336 5.336 0 0 0 474.668 32zm0 0"
-                                    data-original="#000000" />
-                            </svg>
-                            <span>Dashboard</span>
+         className={` transition-transform delay-100 overflow-hidden top-0 right-0 z-40 ${
+            isExpanded ? 'w-64' : 'w-16'
+          } h-screen `}
+        
+      >
+            <div className="h-full px-3 py-4 overflow-y-auto bg-white bg-opacity-60 backdrop-blur-md text-gray-700 shadow-[-0.5px_0px_0.3px_0px_rgba(0,0,0,0.3)] ">
+            <div className="flex flex-row justify-between">
+            <h1 className={`${isExpanded ? 'block' : 'hidden'}`}>رفعة</h1>
+                <button onClick={toggleExpand} className="text-xl cursor-pointer">
+                <FontAwesomeIcon icon={isExpanded ? faBars : faBars} />
+                </button>
+            </div>
+                <ul className="space-y-2 font-medium">
+                    <p className='text-sm'> main menu </p>
+                    <li className=''>
+                      <Link href={''}>
+                        <span className={`flex-1 ms-3 whitespace-nowrap ${
+                                          isExpanded ? 'block' : 'hidden'
+                                        }`}>لوحة التحكم</span>
+                      </Link>
+                    </li>
+                    <li className='transition-colors duration-75  hover:bg-green hover:text-white'>
+                        <Link href={''} className="flex items-center p-2 text-gray-900 rounded-lg group">
+                        <div className='shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] p-2 flex h-8 w-8 items-center justify-center rounded-lg bg-white bg-center stroke-0 text-center xl:p-2.5'>
+                        <svg className="flex-shrink-0  w-5 h-5 text-gray-500 transition duration-75 " aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 18">
+                            <path d="M6.143 0H1.857A1.857 1.857 0 0 0 0 1.857v4.286C0 7.169.831 8 1.857 8h4.286A1.857 1.857 0 0 0 8 6.143V1.857A1.857 1.857 0 0 0 6.143 0Zm10 0h-4.286A1.857 1.857 0 0 0 10 1.857v4.286C10 7.169 10.831 8 11.857 8h4.286A1.857 1.857 0 0 0 18 6.143V1.857A1.857 1.857 0 0 0 16.143 0Zm-10 10H1.857A1.857 1.857 0 0 0 0 11.857v4.286C0 17.169.831 18 1.857 18h4.286A1.857 1.857 0 0 0 8 16.143v-4.286A1.857 1.857 0 0 0 6.143 10Zm10 0h-4.286A1.857 1.857 0 0 0 10 11.857v4.286c0 1.026.831 1.857 1.857 1.857h4.286A1.857 1.857 0 0 0 18 16.143v-4.286A1.857 1.857 0 0 0 16.143 10Z"/>
+                        </svg>
+                        </div>
+                        <span className={`flex-1 ms-3 whitespace-nowrap ${
+                                        isExpanded ? 'block' : 'hidden'
+                                        }`}>المجموعات</span>
+                        <span className={`inline-flex items-center justify-center px-2 ms-3 text-sm font-medium text-gray-800 bg-gray-100 rounded-full
+                                        ${isExpanded ? 'block' : 'hidden'}`}>
+                            Pro</span>
+                        </Link>
+                    </li>
+                    <li className='transition-colors duration-75 hover:bg-green hover:text-white'>
+                        <a href="#" className="flex items-center p-2 text-gray-900 rounded-lg  group">
+                        <div className='shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] p-2 flex h-8 w-8 items-center justify-center rounded-lg bg-white bg-center stroke-0 text-center xl:p-2.5'>
+
+                        <svg className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 " aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="m17.418 3.623-.018-.008a6.713 6.713 0 0 0-2.4-.569V2h1a1 1 0 1 0 0-2h-2a1 1 0 0 0-1 1v2H9.89A6.977 6.977 0 0 1 12 8v5h-2V8A5 5 0 1 0 0 8v6a1 1 0 0 0 1 1h8v4a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-4h6a1 1 0 0 0 1-1V8a5 5 0 0 0-2.582-4.377ZM6 12H4a1 1 0 0 1 0-2h2a1 1 0 0 1 0 2Z"/>
+                        </svg>
+                        </div>
+                        <span className={`flex-1 ms-3 whitespace-nowrap ${
+                                        isExpanded ? 'block' : 'hidden'
+                                        }`}>
+                            تنبيهات</span>
+                        <span className={`inline-flex items-center justify-center w-3 h-3 p-3 ms-3 text-sm font-medium text-blue-800 bg-blue-100 rounded-full
+                                            ${isExpanded ? 'block' : 'hidden'}`} >
+                                3</span>
                         </a>
                     </li>
-                </ul>
+                    <li className='transition-colors duration-75 hover:bg-green hover:text-white'>
+                        <a href="#" className="flex items-center p-2 text-gray-900 rounded-lg">
+                        <div className='shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] p-2 flex h-8 w-8 items-center justify-center rounded-lg bg-white bg-center stroke-0 text-center xl:p-2.5'>
 
-                <div className="mt-6">
-                    <div className="flex cursor-pointer group">
-                        <h6 className="text-gray-600 group-hover:text-black text-sm font-bold px-4 flex-1">Information</h6>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 fill-gray-600 group-hover:fill-black"
-                             viewBox="0 0 451.847 451.847">
-                            <path
-                                d="M225.923 354.706c-8.098 0-16.195-3.092-22.369-9.263L9.27 151.157c-12.359-12.359-12.359-32.397 0-44.751 12.354-12.354 32.388-12.354 44.748 0l171.905 171.915 171.906-171.909c12.359-12.354 32.391-12.354 44.744 0 12.365 12.354 12.365 32.392 0 44.751L248.292 345.449c-6.177 6.172-14.274 9.257-22.369 9.257z"
-                                data-original="#000000" />
+                        <svg className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 " aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 18">
+                            <path d="M14 2a3.963 3.963 0 0 0-1.4.267 6.439 6.439 0 0 1-1.331 6.638A4 4 0 1 0 14 2Zm1 9h-1.264A6.957 6.957 0 0 1 15 15v2a2.97 2.97 0 0 1-.184 1H19a1 1 0 0 0 1-1v-1a5.006 5.006 0 0 0-5-5ZM6.5 9a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9ZM8 10H5a5.006 5.006 0 0 0-5 5v2a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-2a5.006 5.006 0 0 0-5-5Z"/>
                         </svg>
-                    </div>
+                       </div>
+                        <span className={`flex-1 ms-3 whitespace-nowrap ${
+                                        isExpanded ? 'block' : 'hidden'
+                                        }`}>الطلبة</span>
+                        </a>
+                    </li>
+                    <li className='transition-colors duration-75 hover:bg-green hover:text-gray-light'>
+                        <a href="#" className="flex items-center p-2 text-gray-900 rounded-lg">
+                        <div className='shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] p-2 flex h-8 w-8 items-center justify-center rounded-lg bg-white bg-center stroke-0 text-center xl:p-2.5'>
 
-                    <ul className="space-y-1 mt-2 pl-4">
-                        <li>
-                            <a href="javascript:void(0)"
-                               className="text-gray-600 hover:text-black transition-all text-sm flex items-center hover:bg-[#efefef] rounded-md px-4 py-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" className="w-[18px] h-[18px] mr-4"
-                                     viewBox="0 0 512 512">
-                                    <path
-                                        d="M437.02 74.98C388.668 26.63 324.379 0 256 0S123.332 26.629 74.98 74.98C26.63 123.332 0 187.621 0 256s26.629 132.668 74.98 181.02C123.332 485.37 187.621 512 256 512s132.668-26.629 181.02-74.98C485.37 388.668 512 324.379 512 256s-26.629-132.668-74.98-181.02zM111.105 429.297c8.454-72.735 70.989-128.89 144.895-128.89 38.96 0 75.598 15.179 103.156 42.734 23.281 23.285 37.965 53.687 41.742 86.152C361.641 462.172 311.094 482 256 482s-105.637-19.828-144.895-52.703zM256 94.133c57.739 0 106.473 39.8 122.452 93.413-44.002-19.472-93.396-30.099-144.452-30.099-51.119 0-100.494 10.685-144.19 29.919 16.092-52.28 64.052-92.567 122.19-93.413zm0 314.414c-29.533 0-58.73-11.495-80.877-32.491 1.893-29.302 14.305-57.165 35.093-80.259 21.662-23.939 50.614-37.508 81.591-37.508 20.357 0 40.087 7.267 55.793 20.502 5.635 5.237 10.527 11.15 14.228 17.846-42.759 24.051-95.741 38.56-152.452 38.56-16.756 0-33.236-1.577-49.211-4.586 7.533-20.091 23.468-34.865 44.184-39.574 20.845-4.719 41.118-1.927 58.896 8.853 16.107 9.016 29.134 22.942 36.989 39.177 6.618 11.658 11.015 24.406 13.439 37.824-18.874 21.574-47.823 34.521-76.457 34.521z"
-                                        data-original="#000000" />
-                                </svg>
-                                <span>Personal Information</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
-        </div>
+                        <svg className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 " aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 20">
+                            <path d="M17 5.923A1 1 0 0 0 16 5h-3V4a4 4 0 1 0-8 0v1H2a1 1 0 0 0-1 .923L.086 17.846A2 2 0 0 0 2.08 20h13.84a2 2 0 0 0 1.994-2.153L17 5.923ZM7 9a1 1 0 0 1-2 0V7h2v2Zm0-5a2 2 0 1 1 4 0v1H7V4Zm6 5a1 1 0 1 1-2 0V7h2v2Z"/>
+                        </svg>
+                          </div>
+                        <span className={`flex-1 ms-3 whitespace-nowrap ${
+                                        isExpanded ? 'block' : 'hidden'
+                                        }`}>الحصص</span>
+                        </a>
+                    </li>
+                    <li className='transition-colors duration-75 hover:bg-green hover:text-white'>
+                        <a href="#" className="flex items-center p-2 text-gray-900 rounded-lg">
+                        <svg className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 " aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 16">
+                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M1 8h11m0 0L8 4m4 4-4 4m4-11h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-3"/>
+                        </svg>
+                        <span className={`flex-1 ms-3 whitespace-nowrap ${
+                                        isExpanded ? 'block' : 'hidden'
+                                        }`}>تسجيل الخروج</span>
+                        </a>
+                    </li>
+    
+                </ul>
+            </div>
+            </aside>
+            </div>
+            
+
+       </>
     );
 };
 

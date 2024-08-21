@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import RegisterView, TeacherProfileView,logout_view, UserViewSet,AuthViewSet, TeacherViewSet, StudentViewSet, MyTokenObtainPairView, MyTokenRefreshView, GoogleOAuthCallbackViewSet
+from .views import RegisterView, TeacherProfileView,LogoutViewSet, UserViewSet,AuthViewSet, TeacherViewSet, StudentViewSet, MyTokenObtainPairView, MyTokenRefreshView, GoogleOAuthCallbackViewSet
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -9,7 +9,7 @@ from django.conf.urls.static import static
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
 router.register(r'teacher/profile', TeacherProfileView, basename='teacher-profile')
-router.register(r'logout', logout_view, basename='logout')
+router.register(r'logout', LogoutViewSet , basename='logout')
 
 router.register(r'register', RegisterView, basename='register')
 router.register(r'teachers', TeacherViewSet, basename='teacher')

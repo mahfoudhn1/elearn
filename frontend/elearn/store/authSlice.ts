@@ -7,7 +7,8 @@ interface User {
   username: string;
   email: string;
   role: string;
-
+  first_name:string;
+  last_name:string;
 }
 
 
@@ -33,7 +34,7 @@ interface AuthState {
       loginSuccess(state, action: PayloadAction<{ user: User, message: string }>) {
         state.user = action.payload.user;
         state.isAuthenticated = true;
-        state.loginStatus = action.payload.message;  // Update loginStatus here
+        state.loginStatus = action.payload.message; 
         state.registrationStatus = '';  
       },
       logout(state) {

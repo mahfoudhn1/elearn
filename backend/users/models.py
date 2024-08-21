@@ -42,7 +42,8 @@ class Teacher(models.Model):
     teaching_subjects = models.CharField(max_length=20, choices = subjsctChoice.choices, null=True, blank=True) 
     price = models.IntegerField(default=1000)
     phone_number = models.CharField( max_length=10, null=True, blank=True)
-   
+    first_name =models.CharField( max_length=20, null=True, blank=True)
+    last_name =models.CharField( max_length=20, null=True, blank=True)
     avatar = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
     profession = models.CharField(max_length=100, null=True, blank=True)
     degree = models.CharField(max_length=100, null=True, blank=True)
@@ -81,6 +82,8 @@ class SchoolLevel(models.Model):
 
 class Student(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    first_name =models.CharField( max_length=20, null=True, blank=True)
+    last_name =models.CharField( max_length=20, null=True, blank=True)
     phone_number = models.CharField(max_length=10, null=True, blank=True)
     avatar = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
     wilaya = models.CharField(max_length=20, null=True, blank=True)

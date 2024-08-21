@@ -52,8 +52,9 @@ export const register = createAsyncThunk(
     }
   );
   
-export const LogoutThunk = () => {
-  return async (dispatch:AppDispatch ) => {
+export const LogoutThunk = createAsyncThunk(
+  'auth/logout',
+  async (dispatch:AppDispatch ) => {
     try {
       await axiosInstance.post('/logout/', {}, {
         withCredentials: true, 
@@ -69,6 +70,6 @@ export const LogoutThunk = () => {
       console.error('Error during logout:', error);
       // Optionally dispatch an error action
     }
-  };
-};
+  }
+);
   

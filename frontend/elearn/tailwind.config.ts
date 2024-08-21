@@ -27,8 +27,9 @@ const config: Config = {
       'gray': '#8492a6',
       'gray-700': '#374151',
       'gray-800': '#1e293b',
+      'gray-300':'#d1d5db',  
       'gray-light': '#d3dce6',
-      
+      'lime-500':'#84cc16',
       'blue-400':'#38bdf8',
       'blue-500':'#0ea5e9',
       'blue-300':'#93c5fd',

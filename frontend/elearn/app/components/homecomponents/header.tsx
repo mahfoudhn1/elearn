@@ -24,6 +24,7 @@ const Header: React.FC = () => {
   };
 
   const pathname = usePathname(); 
+  const isDashboard = pathname === '/dashboard' 
   const isHomePage = pathname === '/' 
   
   const router = useRouter()
@@ -41,6 +42,9 @@ const Header: React.FC = () => {
     dispatch(logout())
   }
   return (
+    <>
+    {!isDashboard ?
+
     <header className={`header flex justify-between items-center py-4 bg-transparent px-20  w-full text-black ${!isHomePage? "shadow-sm sticky" : "shadow-none" } `}>
     <div className='relative group'>
       <div className="text-3xl text-gray-dark font-bold">منبت</div>
@@ -197,7 +201,10 @@ const Header: React.FC = () => {
         </div>
       </div>
   </header>
-
+:
+  <div></div>
+}
+</>
   );
 };
 
