@@ -1,65 +1,42 @@
-import React from "react";
+import React, { useEffect } from "react";
 
-interface Task {
-  title: string;
-  time: string; // e.g., "09:00"
-  note?: string; // Optional note for the task
-}
+export default function DayViewCalendar() {
 
-interface DayViewCalendarProps {
-  tasks: Task[];
-}
-
-const DayViewCalendar: React.FC = () => {
-    
-    const tasks: Task[] = [
-        { time: "9:30", title: "الثانية ثانوي علمي" },
-        { time: "12:00", title: "امتحان بكالوريا" },
-        { time: "15:00", title: "الاولى ثانوي" },
-        { time: "18:00", title: "الثالثة ثانوي ادب", note:" مراجعة سريعة" }
-        ];
-
-    const validTasks = Array.isArray(tasks) ? tasks : [];
-
-  // Create a Set of unique task times
-  const taskTimes = new Set(validTasks.map(task => task.time));
-
-  // Convert the Set back to an array for mapping
-  const uniqueTaskTimes = Array.from(taskTimes).sort();
-
-  return (
-    <div className=" flex flex-col bg-white shadow-lg justify-center text-center py-2 px-4 rounded-xl">
-      <h2>دروس اليوم</h2>
-      <table className="bg-white shadow-sm p-y border-none rounded-xl px-4">
-
-        <tbody>
-          {uniqueTaskTimes.map((time) => {
-            const task = validTasks.find(task => task.time === time);
-            return (
-              <tr key={time}>
-                <td className="border-none text-xs p-2">
-                  {task ? task.time : ""}
-                </td>
-                <td  className="border-none p-2">
-                  {task ? (
-                    <div className="bg-orange bg-opacity-50 p-2">
-                      <h1 className="text-xs font-semibold text-gray-800">{task.title}</h1>
-                      {task.note && <p className="text-xs text-gray">{task.note}</p>}
+    return (
+        <>
+            <div className="flex items-center justify-center">
+                <div className=" w-full shadow-lg">
+                    <div className="md:p-8 text-center  bg-white rounded-t">
+                        <div className="px-4 flex items-center justify-between">
+                            <h1 className="text-xl font-bold  text-gray-800">دروس اليوم</h1>
+                           
+                        </div>
+                        <div className="flex items-center justify-between">
+       
+                        </div>
                     </div>
-                  ) : (
-                    "No Task"
-                  )}
-                </td>
+                    <div className="md:py-8 py-5 md:px-8 px-5 bg-white rounded-b">
+                        <div className="px-4">
+                            <div className="border-b pb-4 border-gray-700 border-dashed">
+                                <p className="text-xs font-light leading-3 text-gray">9:00 AM</p>
+                                <p className="text-lg font-medium leading-5 text-gray-800 pt-2">مراجعة عامة دروس الدوال بكالوريا</p>
+                                <p className="text-sm pt-2 leading-4  text-gray">مناقشة و حل مسائل متعلقة بالدوال</p>
+                            </div>
+                            <div className="border-b pb-4 border-gray-700 border-dashed pt-5">
+                              <div className="absolute inset-0 bg-purple-500 opacity-50"></div>
 
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
-};
-
-export default DayViewCalendar;
-
-
+                                <p className="text-xs font-light leading-3 text-gray">10:00 AM</p>
+                                <p className="text-lg font-medium leading-5 text-gray-800 pt-2"> حل اختبار السنة الثانية متوسط</p>
+                            </div>
+                            <div className="border-b pb-4 border-gray-700 border-dashed pt-5">
+                                <p className="text-xs font-light leading-3 text-gray">9:00 AM</p>
+                                <p className="text-lg font-medium leading-5 text-gray-800  pt-2">درس خاص للتلميذ أحمد محمد</p>
+                                <p className="text-sm pt-2 leading-4  text-gray">درس دعم خاص مع التركيز على النقاط الغير مفهومة</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </>
+    );
+}

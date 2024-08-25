@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from "next/navigation";
-import './Header.css'
+// import './Header.css'
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../../../store/store';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -22,12 +22,13 @@ const Header: React.FC = () => {
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
+  const router = useRouter()
 
   const pathname = usePathname(); 
-  const isDashboard = pathname === '/dashboard' 
+  
+  const isDashboard = pathname.startsWith('/dashboard/');
   const isHomePage = pathname === '/' 
   
-  const router = useRouter()
   const handleClick = () => {
 
 

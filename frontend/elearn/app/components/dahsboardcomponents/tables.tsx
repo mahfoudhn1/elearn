@@ -24,7 +24,7 @@ function StudentTables() {
                         </tr>
                      </thead>
                      <tbody>
-                        {/* <tr>
+                        <tr>
                            <td className="p-2 align-middle bg-transparent border-b border-gray  whitespace-nowrap shadow-transparent">
                               <div className="flex px-2 py-1">
                                  <div>
@@ -51,7 +51,7 @@ function StudentTables() {
                               <a href=";" className="text-xs font-semibold leading-tight text-gray"> Delete </a>
                            
                            </td>
-                        </tr> */}
+                        </tr>
                         <tr>
                            <td className="p-2 align-middle bg-transparent border-b border-gray  whitespace-nowrap shadow-transparent">
                               <div className="flex px-2 py-1">

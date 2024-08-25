@@ -29,3 +29,6 @@ html[dir="rtl"] {
     text-wrap: balance;
   }
 }
+.datepicker{
+  direction: ltr;
+}

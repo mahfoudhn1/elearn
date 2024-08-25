@@ -45,12 +45,19 @@ class ZoomMeetingViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, 'teacher'):
-            return ZoomMeeting.objects.filter(teacher__user=user)
-        elif hasattr(user, 'student'):
-            return ZoomMeeting.objects.filter(students=user)
-        return ZoomMeeting.objects.none()
+        queryset = ZoomMeeting.objects.all()
 
+        if hasattr(user, 'teacher'):
+            queryset = queryset.filter(teacher__user=user)
+        elif hasattr(user, 'student'):
+            queryset = queryset.filter(students=user)
+        
+        date = self.request.query_params.get('date')
+        if date:
+            queryset = queryset.filter(start_time__date=date)
+        
+        return queryset
+    
     def create(self, request, *args, **kwargs):
         if not hasattr(request.user, 'teacher'):
             return Response({'detail': 'You do not have permission to create a meeting.'}, status=status.HTTP_403_FORBIDDEN)

@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { faClose, faBars } from '@fortawesome/free-solid-svg-icons';
+import { faClose, faBars, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 
 const Sidebar: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false); // Track sidebar visibility
@@ -50,11 +50,11 @@ const Sidebar: React.FC = () => {
         id="default-sidebar"
 
          className={` transition-transform delay-100 overflow-hidden top-0 right-0 z-40 ${
-            isExpanded ? 'w-64' : 'w-16'
+            isExpanded ? 'w-52' : 'w-16'
           } h-screen `}
         
       >
-            <div className="h-full px-3 py-4 overflow-y-auto bg-white bg-opacity-60 backdrop-blur-md text-gray-700 shadow-[-0.5px_0px_0.3px_0px_rgba(0,0,0,0.3)] ">
+            <div className="h-full px-3 fixed bg-transparent py-4 overflow-y-auto bg-opacity-60 backdrop-blur-md text-gray-700 shadow-[-0.5px_0px_0.3px_0px_rgba(0,0,0,0.3)] ">
             <div className="flex flex-row justify-between">
             <h1 className={`${isExpanded ? 'block' : 'hidden'}`}>رفعة</h1>
                 <button onClick={toggleExpand} className="text-xl cursor-pointer">
@@ -62,7 +62,7 @@ const Sidebar: React.FC = () => {
                 </button>
             </div>
                 <ul className="space-y-2 font-medium">
-                    <p className='text-sm'> main menu </p>
+                    {/* <p className='text-sm'> main menu </p> */}
                     <li className=''>
                       <Link href={''}>
                         <span className={`flex-1 ms-3 whitespace-nowrap ${
@@ -106,6 +106,17 @@ const Sidebar: React.FC = () => {
                         <a href="#" className="flex items-center p-2 text-gray-900 rounded-lg">
                         <div className='shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] p-2 flex h-8 w-8 items-center justify-center rounded-lg bg-white bg-center stroke-0 text-center xl:p-2.5'>
 
+                        <FontAwesomeIcon icon={faCalendarAlt} className='flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75' />
+                       </div>
+                        <span className={`flex-1 ms-3 whitespace-nowrap ${
+                                        isExpanded ? 'block' : 'hidden'
+                                        }`}>التوقيت</span>
+                        </a>
+                    </li>
+                    <li className='transition-colors duration-75 hover:bg-green hover:text-white'>
+                        <a href="#" className="flex items-center p-2 text-gray-900 rounded-lg">
+                        <div className='shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] p-2 flex h-8 w-8 items-center justify-center rounded-lg bg-white bg-center stroke-0 text-center xl:p-2.5'>
+
                         <svg className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 " aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 18">
                             <path d="M14 2a3.963 3.963 0 0 0-1.4.267 6.439 6.439 0 0 1-1.331 6.638A4 4 0 1 0 14 2Zm1 9h-1.264A6.957 6.957 0 0 1 15 15v2a2.97 2.97 0 0 1-.184 1H19a1 1 0 0 0 1-1v-1a5.006 5.006 0 0 0-5-5ZM6.5 9a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9ZM8 10H5a5.006 5.006 0 0 0-5 5v2a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-2a5.006 5.006 0 0 0-5-5Z"/>
                         </svg>
@@ -140,7 +151,7 @@ const Sidebar: React.FC = () => {
                     </li>
     
                 </ul>
-            </div>
+                </div>
             </aside>
             </div>
             

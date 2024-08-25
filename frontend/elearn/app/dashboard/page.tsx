@@ -5,13 +5,14 @@ import Cards from '../components/dahsboardcomponents/cards'
 import StudentTables from '../components/dahsboardcomponents/tables'
 import DayViewCalendar from '../components/dahsboardcomponents/Daycalender'
 import Howitworks from '../components/dahsboardcomponents/Howitworks'
+import Footer from '../components/homecomponents/Footer'
 
 
 
 function Dashboard() {
   return (
     <div className='flex flex-row w-full h-full'>
-        <div >
+        <div className='' >
           <Sidebar/>
         </div>
         <div className=' w-full bg-gray-300 flex flex-col'>
@@ -19,20 +20,22 @@ function Dashboard() {
             <Navbar />
 
             </div>
-            <div className="body p-10">
+            <div className="body relative w-full md:p-10 p-2 ">
               <Cards/>
               <Howitworks/>
-              <div className='flex flex-row w-full'>
-                <div className=''>
+              <div className='flex md:flex-row flex-col w-full'>
+                <div className='md:w-3/4 w-full'>
                 <StudentTables/>
                 </div>
-              <div className='w-1/4'>
+              <div className='md:w-1/4 w-full'>
               <DayViewCalendar/>
 
               </div>
               </div>
             </div>
+            {/* <Footer/> */}
         </div>
+
     </div>
   )
 }

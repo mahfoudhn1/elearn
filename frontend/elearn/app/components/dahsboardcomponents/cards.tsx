@@ -4,11 +4,11 @@ import { faMoneyBill1Wave, faPeopleGroup, faClock } from '@fortawesome/free-soli
 
 function Cards() {
   return (
-<div className="flex flex-wrap mx-3">
+<div className="flex w-full mb-6 flex-wrap mx-3">
 
     {/* card1 */}
   
-  <div className="w-full max-w-full px-3 mb-6 sm:w-1/3 sm:flex-none xl:mb-0 xl:w-1/4">
+  <div className="w-full max-w-full px-3 sm:w-1/3 sm:flex-none xl:mb-0 xl:w-1/4">
     <div className="relative flex flex-col min-w-0 break-words bg-white shadow-soft-xl rounded-2xl bg-clip-border">
       <div className="flex-auto p-4">
         <div className="flex flex-row -mx-3">
@@ -36,7 +36,7 @@ function Cards() {
   {/* card2 */}
 
     
-  <div className="w-full max-w-full px-3 mb-6 sm:w-1/3 sm:flex-none xl:mb-0 xl:w-1/4">
+  <div className="w-full max-w-full px-3  sm:w-1/3 sm:flex-none xl:mb-0 xl:w-1/4">
     <div className="relative flex flex-col min-w-0 break-words bg-white shadow-soft-xl rounded-2xl bg-clip-border">
       <div className="flex-auto p-4">
         <div className="flex flex-row -mx-3">
@@ -62,7 +62,7 @@ function Cards() {
   </div>   
   {/* card3 */}
   
-  <div className="w-full max-w-full px-3 mb-6 sm:w-1/3 sm:flex-none xl:mb-0 xl:w-1/4">
+  <div className="w-full max-w-full px-3 sm:w-1/3 sm:flex-none xl:mb-0 xl:w-1/4">
     <div className="relative flex flex-col min-w-0 break-words bg-white shadow-soft-xl rounded-2xl bg-clip-border">
       <div className="flex-auto p-4">
         <div className="flex flex-row -mx-3">
