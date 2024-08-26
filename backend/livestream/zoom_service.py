@@ -1,3 +1,5 @@
+import base64
+import datetime
 import requests
 from django.conf import settings
 
@@ -8,8 +10,10 @@ class ZoomOAuthService:
         self.client_id = settings.ZOOM_CLIENT_ID
         self.client_secret = settings.ZOOM_CLIENT_SECRET
         self.redirect_uri = settings.ZOOM_REDIRECT_URI
-
+        print(settings.ZOOM_CLIENT_ID)
+    
     def get_authorization_url(self):
+  
         return (
             f'https://zoom.us/oauth/authorize?response_type=code&client_id={self.client_id}&redirect_uri={self.redirect_uri}'
         )
@@ -41,6 +45,41 @@ class ZoomOAuthService:
         }
         response = requests.get(url, headers=headers)
         response.raise_for_status()
+        return response.json()
+        
+    def get_access_token(self, user):
+    # Retrieve the stored access token and its expiration time
+        access_token = user.zoom_access_token
+        expires_at = user.zoom_token_expires_at
+        refresh_token = user.zoom_refresh_token
+
+        if datetime.now() >= expires_at:
+            tokens = self.refresh_access_token(refresh_token)
+            access_token = tokens['access_token']
+            refresh_token = tokens['refresh_token']
+            expires_in = tokens['expires_in']
+
+           
+            user.zoom_access_token = access_token
+            user.zoom_refresh_token = refresh_token
+            user.zoom_token_expires_at = datetime.now() + datetime.timedelta(seconds=expires_in)
+            user.save()
+
+        return access_token
+
+    def refresh_access_token(self, refresh_token):
+
+        response = requests.post(
+            'https://zoom.us/oauth/token',
+            params={
+                'grant_type': 'refresh_token',
+                'refresh_token': refresh_token,
+            },
+            headers={
+                'Authorization': 'Basic ' + base64.b64encode(f'{self.client_id}:{self.client_secret}'.encode()).decode(),
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+        )
         return response.json()
 
     def create_meeting(self, access_token, topic, start_time, duration, agenda):

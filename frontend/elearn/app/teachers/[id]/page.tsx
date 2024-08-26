@@ -5,6 +5,7 @@ import { faUniversity, faChalkboardTeacher, faLocationPin } from '@fortawesome/f
 import axiosInstance from '../../../store/axiosInstance';
 import { RootState } from '../../../store/store';
 import { useSelector } from 'react-redux';
+import ZoomAuthButton from '../../components/profile/zoombutton';
 
 export interface Teacher {
   user: number;
@@ -164,6 +165,7 @@ const Profile: React.FC<TeacherProps> = ({ params }) =>{
             <div className="profile-edit">
               <button>Edit Profile</button>
               <button>Create Group</button>
+              <ZoomAuthButton/>
             </div>
           ) : (
             <button >Subscribe</button>

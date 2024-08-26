@@ -26,7 +26,7 @@ const Header: React.FC = () => {
 
   const pathname = usePathname(); 
   
-  const isDashboard = pathname.startsWith('/dashboard/');
+  const isDashboard = pathname === '/dashboard' || pathname.startsWith('/dashboard/');
   const isHomePage = pathname === '/' 
   
   const handleClick = () => {

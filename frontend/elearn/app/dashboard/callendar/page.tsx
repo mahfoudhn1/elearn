@@ -5,14 +5,20 @@ import React, { useState, useEffect, useRef } from 'react';
 import { GrFormNext, GrFormPrevious } from 'react-icons/gr';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday, isSameDay } from 'date-fns';
 import Datepicker from "react-tailwindcss-datepicker";
-import axios from 'axios';
 import axiosInstance from '../../../store/axiosInstance';
 import Sidebar from '../../components/dahsboardcomponents/sidebar';
 import Navbar from '../../components/dahsboardcomponents/navbar';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faDeleteLeft, faEdit, faRemove, faX } from '@fortawesome/free-solid-svg-icons';
 
 
 
-
+interface Meeting {
+  topic: string;
+  agenda: string;
+  duration: number;
+  start_time: string; 
+}
 
 function CallendarPage() {
   type DateValueType = {
@@ -26,8 +32,14 @@ function CallendarPage() {
   const [today, setToday] = useState(currentDate);
   const [selectDate, setSelectDate] = useState(currentDate);
   const [meetings, setMeetings] = useState<any[]>([]);
-  const [newMeeting, setNewMeeting] = useState({ topic: '', agenda: '', duration: 60 });
-  const [isPopupOpen, setIsPopupOpen] = useState(false); // State for popup visibility
+  const [newMeeting, setNewMeeting] = useState<Meeting>({
+    topic: '',
+    agenda: '',
+    duration: 60,
+    start_time: "", // Default to the current date/time
+  });  const [isPopupOpen, setIsPopupOpen] = useState(false); // State for popup visibility
+  const [timeValue, setTimeValue] = useState<string>('');
+  const [editingMeetingId, setEditingMeetingId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchMeetings = async () => {
@@ -46,18 +58,35 @@ function CallendarPage() {
       setDatepickerValue(null);
     }
   };
+  const handleTimeChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
+    setTimeValue(event.target.value);
+  };
+
 
   const handleScheduleMeeting = async () => {
+    if (!datepickerValue) {
+      alert('Please select a date.');
+      return;
+    }
+
+    const combinedDateTime = format(
+      new Date(
+        `${format(datepickerValue, 'yyyy-MM-dd')}T${timeValue}:00`
+      ),
+      "yyyy-MM-dd'T'HH:mm:ss"
+    );
+
     try {
       const response = await axiosInstance.post('/livestream/zoom-meetings/', {
         ...newMeeting,
-        start_time: format(selectDate, "yyyy-MM-dd'T'HH:mm:ss")
+        start_time: combinedDateTime
       });
       setMeetings([...meetings, response.data]);
-      setNewMeeting({ topic: '', agenda: '', duration: 60 });
+      setNewMeeting({ topic: '', agenda: '', duration: 60, start_time:'' });
     } catch (error) {
       console.error("Failed to schedule meeting", error);
     }
+    setIsPopupOpen(false)
   };
 
   const generateDate = (month: Date) => {
@@ -82,6 +111,44 @@ function CallendarPage() {
 
     return dateArray;
   }
+
+  const handleEdit = (meeting: any) => {
+    setNewMeeting({
+      topic: meeting.topic,
+      agenda: meeting.agenda,
+      duration: meeting.duration,
+      start_time: meeting.started_time, 
+
+    });
+    setEditingMeetingId(meeting.id);
+    setIsPopupOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const response = await axiosInstance.put(`/livestream/zoom-meetings/${editingMeetingId}/`, {
+        ...newMeeting,
+        start_time: format(newMeeting.start_time, "yyyy-MM-dd'T'HH:mm:ss"),
+      });
+      setMeetings(meetings.map(meeting => 
+        meeting.id === editingMeetingId ? response.data : meeting
+      ));
+      setIsPopupOpen(false);
+      setNewMeeting({ topic: '', agenda: '', duration: 60, start_time:"" });
+    } catch (error) {
+      console.error("Failed to update meeting", error);
+    }
+  };
+
+  const handleDelete = async (meetingId: number) => {
+    try {
+      await axiosInstance.delete(`/livestream/zoom-meetings/${meetingId}/`);
+      setMeetings(meetings.filter(meeting => meeting.id !== meetingId));
+    } catch (error) {
+      console.error("Failed to delete meeting", error);
+    }
+  };
+
 
   const formattedMonthYear = format(today, 'MMMM yyyy');
 
@@ -155,8 +222,25 @@ function CallendarPage() {
         ) : (
           <ul className="space-y-2">
             {meetings.map((meeting, index) => (
-              <li key={index} className="text-gray-800">
+              <li key={index} className="text-gray-800 flex flex-row space-x-4 border-b pb-4 border-gray-700 border-dashed pt-5">
+                <div>
                 <strong>{meeting.topic}</strong> - {format(new Date(meeting.start_time), 'hh:mm a')}
+                </div>
+                <div className="flex space-x-2">
+                <button
+                  onClick={() => handleEdit(meeting)}
+                  className=" text-gray-dark px-2 py-1 rounded-lg transition-colors hover:bg-gray-dark hover:text-white"
+                >
+                <FontAwesomeIcon icon={faEdit}/>
+                  
+                </button>
+                <button
+                  onClick={() => handleDelete(meeting.id)}
+                  className=" text-gray-dark px-2 py-1 rounded-lg transition-colors hover:bg-gray-dark hover:text-white"
+                >
+                  <FontAwesomeIcon icon={faRemove} />
+                </button>
+              </div>
               </li>
             ))}
           </ul>
@@ -198,6 +282,12 @@ function CallendarPage() {
                 inputClassName="border-1 bg-gray-light focus:outline-none border-none rounded-lg p-2 mt-2"
               />
               </div>
+              <input
+                  type="time"
+                  value={timeValue}
+                  onChange={handleTimeChange}
+                  className="border-1 bg-gray-light focus:outline-none border-none rounded-lg p-2 mt-2"
+                />
               <input
                 type="number"
                 placeholder="مدة الحصة )بالدقيقة("

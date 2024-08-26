@@ -80,7 +80,9 @@ const TeacherFilter: React.FC = () => {
         setFilters({ ...filters, [e.target.name]: e.target.value });
     };
 
-    console.log(teachers);
+    const handleZoomAuth = () => {
+        window.location.href = '/api/zoom/';
+      };
     
     return (
 <div className="p-6 bg-gray-100 min-h-screen mt-8">

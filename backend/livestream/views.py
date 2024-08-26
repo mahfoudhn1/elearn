@@ -1,7 +1,7 @@
 from datetime import datetime
 from django.shortcuts import redirect
 import requests
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from rest_framework.decorators import action
 from rest_framework import viewsets, status
 from .zoom_service import ZoomOAuthService
@@ -17,7 +17,7 @@ class OAuthViewSet(viewsets.ViewSet):
     def zoom_authenticate(self, request):
         oauth_service = ZoomOAuthService()
         auth_url = oauth_service.get_authorization_url()
-        return redirect(auth_url)
+        return JsonResponse({'auth_url': auth_url})
 
     @action(detail=False, methods=['get'])
     def oauth_callback(self, request):
@@ -36,7 +36,18 @@ class OAuthViewSet(viewsets.ViewSet):
             return HttpResponse('Authentication successful. You can now close this window.')
         except requests.RequestException as e:
             return HttpResponse(f'Error during authentication: {str(e)}', status=500)
+    
+    @action(detail=False, methods=['get'])
+    def get_zoom_token(request):
+        if not request.user.is_authenticated:
+            return Response({'error': 'Unauthorized'}, status=401)
+
+        zoom_access_token = request.session.get('zoom_access_token')
         
+        if zoom_access_token:
+            return Response({'zoom_access_token': zoom_access_token})
+        else:
+            return Response({'error': 'Zoom access token not found'}, status=404)
 
 
 class ZoomMeetingViewSet(viewsets.ModelViewSet):
@@ -49,9 +60,14 @@ class ZoomMeetingViewSet(viewsets.ModelViewSet):
 
         if hasattr(user, 'teacher'):
             queryset = queryset.filter(teacher__user=user)
+            date = self.request.query_params.get('date')
+            if date:
+                queryset = queryset.filter(start_time__date=date)
         elif hasattr(user, 'student'):
             queryset = queryset.filter(students=user)
-        
+            date = self.request.query_params.get('date')
+            if date:
+                queryset = queryset.filter(start_time__date=date)
         date = self.request.query_params.get('date')
         if date:
             queryset = queryset.filter(start_time__date=date)
@@ -70,7 +86,7 @@ class ZoomMeetingViewSet(viewsets.ModelViewSet):
 
         if isinstance(start_time, str):
             try:
-                start_time = datetime.strptime(start_time, "%Y-%m-%d %H:%M")
+                start_time = datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S")
             except ValueError as e:
                 return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
             

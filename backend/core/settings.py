@@ -190,9 +190,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 APPEND_SLASH=False 
 
-ZOOM_CLIENT_ID = ""
-ZOOM_CLIENT_SECRET = ""
-ZOOM_REDIRECT_URI = 'http://localhost:8000/api/livestream/oauth/oauth_callback/'
+# zoom settings
+
+ZOOM_CLIENT_ID= os.getenv('ZOOM_CLIENT_ID')
+ZOOM_CLIENT_SECRET= os.getenv('ZOOM_CLIENT_SECRET')
+ZOOM_REDIRECT_URI= os.getenv('ZOOM_REDIRECT_URI')
+
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  # Access token validity
