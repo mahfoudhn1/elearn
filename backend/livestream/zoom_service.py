@@ -10,7 +10,6 @@ class ZoomOAuthService:
         self.client_id = settings.ZOOM_CLIENT_ID
         self.client_secret = settings.ZOOM_CLIENT_SECRET
         self.redirect_uri = settings.ZOOM_REDIRECT_URI
-        print(settings.ZOOM_CLIENT_ID)
     
     def get_authorization_url(self):
   
@@ -96,10 +95,8 @@ class ZoomOAuthService:
             "duration": duration,
             "timezone": "Africa/Algiers"
         }
-        print(url, headers, payload)
+
         response = requests.post(url, headers=headers, json=payload)
-        print(response)
         if response.status_code != 201:
-            print(f"Error: {response.status_code}, {response.text}")
-        response.raise_for_status()
+            response.raise_for_status()
         return response.json()

@@ -8,6 +8,9 @@ class User(AbstractUser):
         ("student", "Student")
     )
     role = models.CharField(max_length=10, choices=ROLE_CHOICE, null=True, blank=True)
+    zoom_access_token = models.CharField( null=True, blank=True)
+    zoom_refresh_token = models.CharField( null=True, blank=True)
+    zoom_token_expires_at = models.DateTimeField(null=True, blank=True)
 
 
 

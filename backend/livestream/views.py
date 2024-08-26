@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+from django.utils import timezone
 from django.shortcuts import redirect
 import requests
 from django.http import HttpResponse, JsonResponse
@@ -28,10 +29,16 @@ class OAuthViewSet(viewsets.ViewSet):
         oauth_service = ZoomOAuthService()
         try:
             token_data = oauth_service.exchange_code_for_token(code)
-            request.session['zoom_access_token'] = token_data['access_token']
             
+            # request.session['zoom_access_token'] = token_data['access_token']
+
+            request.user.zoom_access_token = token_data['access_token']
+            request.user.zoom_refresh_token = token_data['refresh_token']
+            expires_in = token_data['expires_in']
+            request.user.zoom_token_expires_at = timezone.now() + timedelta(seconds=expires_in)
+            request.user.save()
             print('Authentication successful. You can now close this window.')
-            print(request.session.get('zoom_access_token'))
+            # print(request.session.get('zoom_access_token'))
 
             return HttpResponse('Authentication successful. You can now close this window.')
         except requests.RequestException as e:
@@ -42,7 +49,7 @@ class OAuthViewSet(viewsets.ViewSet):
         if not request.user.is_authenticated:
             return Response({'error': 'Unauthorized'}, status=401)
 
-        zoom_access_token = request.session.get('zoom_access_token')
+        zoom_access_token = request.request.user.zoom_access_token
         
         if zoom_access_token:
             return Response({'zoom_access_token': zoom_access_token})
@@ -74,6 +81,7 @@ class ZoomMeetingViewSet(viewsets.ModelViewSet):
         
         return queryset
     
+
     def create(self, request, *args, **kwargs):
         if not hasattr(request.user, 'teacher'):
             return Response({'detail': 'You do not have permission to create a meeting.'}, status=status.HTTP_403_FORBIDDEN)
@@ -89,17 +97,14 @@ class ZoomMeetingViewSet(viewsets.ModelViewSet):
                 start_time = datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S")
             except ValueError as e:
                 return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-            
-        access_token = request.session.get('zoom_access_token')
-        if not access_token:
-            access_token = request.headers.get('X-Zoom-Access-Token')
-        
-        if not access_token:
-            return Response({'detail': 'OAuth token missing'}, status=status.HTTP_400_BAD_REQUEST)
         
         oauth_service = ZoomOAuthService()
+        access_token = oauth_service.get_access_token(request.user)
+
+        if not access_token:
+            return Response({'detail': 'OAuth token missing or invalid.'}, status=status.HTTP_400_BAD_REQUEST)
+        
         try:
-            
             meeting_data = oauth_service.create_meeting(access_token, topic, start_time, duration, agenda)
             meeting = ZoomMeeting.objects.create(
                 teacher=request.user.teacher,
