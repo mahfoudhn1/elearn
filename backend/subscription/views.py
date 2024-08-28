@@ -20,8 +20,10 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         user = request.user
+        print(user)
         try:
             student = Student.objects.get(user=user)
+            print(student)
         except Student.DoesNotExist:
             return Response({'error': 'The authenticated user is not a student'}, status=status.HTTP_400_BAD_REQUEST)
 

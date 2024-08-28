@@ -8,26 +8,20 @@ from .serializers import *
 from .models import *
 from users.models import Student, Teacher
 
-class GroupViewset(viewsets.ModelViewSet):
-
-    queryset = Group.objects.all()
+class GroupViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def perform_create(self, serializer):
-        request = self.request
-        # Ensure user is a teacher
-        if request.user.role != 'teacher':
-            raise serializers.ValidationError("Only teachers can create groups.")
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == 'teacher':
+            try:
+                teacher = Teacher.objects.get(user=user)
+                return Group.objects.filter(admin=teacher)
+            except Teacher.DoesNotExist:
+                return Group.objects.none()  
+        return Group.objects.none()  
 
-        try:
-            user = request.user
-            teacher = Teacher.objects.get(user=user)
-        except Teacher.DoesNotExist:
-            raise serializers.ValidationError("User does not have an associated Teacher instance.")
-
-        # Save the group with the teacher as admin
-        serializer.save(admin=teacher)
 
 class StudentGroupRequestViewSet(viewsets.ModelViewSet):
     queryset = StudentGroupRequest.objects.all()

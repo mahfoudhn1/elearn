@@ -90,6 +90,6 @@ class Student(models.Model):
     phone_number = models.CharField(max_length=10, null=True, blank=True)
     avatar = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
     wilaya = models.CharField(max_length=20, null=True, blank=True)
-    school_level = models.ForeignKey(SchoolLevel, on_delete=models.CASCADE)
+    school_level = models.CharField(max_length=20, null=True, blank=True)
     hightschool_speciality = models.CharField(max_length=10, choices=HighSchoolSpecialities.choices, null=True, blank=True)
     

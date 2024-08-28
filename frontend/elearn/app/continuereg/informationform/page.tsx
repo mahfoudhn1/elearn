@@ -210,6 +210,10 @@ function CompletInformations() {
                   className="mt-1 p-2 w-full border bg-white rounded-md focus:border-gray focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300"
                 >
                   <option value="" disabled>اختيار</option>
+                  <option value="1st" >السنة الاولى</option>
+                  <option value="2nd">السنة الثانية</option>
+                  <option value="3rd">السنة الثالثة</option>
+                  <option value="4th"> السنة الرابعة</option>
                 </select>
               </div>
                 </div>
