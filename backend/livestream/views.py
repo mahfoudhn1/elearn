@@ -31,7 +31,7 @@ class OAuthViewSet(viewsets.ViewSet):
             token_data = oauth_service.exchange_code_for_token(code)
             
             # request.session['zoom_access_token'] = token_data['access_token']
-
+            print(token_data['expires_in'])
             request.user.zoom_access_token = token_data['access_token']
             request.user.zoom_refresh_token = token_data['refresh_token']
             expires_in = token_data['expires_in']

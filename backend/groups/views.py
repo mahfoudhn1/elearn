@@ -1,8 +1,10 @@
-from django.shortcuts import render
 from rest_framework.response import Response
 
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.decorators import action
 
 from .serializers import * 
 from .models import *
@@ -10,51 +12,84 @@ from users.models import Student, Teacher
 
 class GroupViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
+        user = self.request.user  
+        field_of_study_id = self.request.query_params.get('field_of_study', None) 
+
+        queryset = Group.objects.all()  
+
+        if field_of_study_id:
+            queryset = queryset.filter(field_of_study=field_of_study_id)
         if user.role == 'teacher':
             try:
-                teacher = Teacher.objects.get(user=user)
-                return Group.objects.filter(admin=teacher)
+                teacher = user.teacher  
+                queryset = queryset.filter(admin=teacher)
             except Teacher.DoesNotExist:
-                return Group.objects.none()  
-        return Group.objects.none()  
+                return Group.objects.none()
 
+        return queryset  
+
+class FieldOfStudysView(viewsets.ModelViewSet):
+    queryset = FieldOfStudy.objects.all()
+    serializer_class = fieldofstudySerializer
+    permission_classes = [IsAuthenticated]
+   
+
+class ScheduleViewSet(viewsets.ModelViewSet):
+    queryset = Schedule.objects.all()
+    serializer_class = ScheduleSerializer
+    permission_classes = [IsAuthenticated]  
+    
+    def create(self, request, *args, **kwargs):
+        group_id = request.data.get('group_id')
+        try:
+            group = Group.objects.get(id=group_id)
+        except Group.DoesNotExist:
+            return Response({"error": "Group not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        teacher = Teacher.objects.get(user = request.user)
+
+        if group.admin != teacher:
+            raise PermissionDenied("You are not authorized to manage schedules for this group.")
+
+        schedule = Schedule.objects.create(
+            day_of_week=request.data['day_of_week'],
+            start_time=request.data['start_time'],
+            end_time=request.data['end_time']
+        )
+
+        group.schedule = schedule
+        group.save()
+
+        serializer = self.get_serializer(schedule)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class StudentGroupRequestViewSet(viewsets.ModelViewSet):
     queryset = StudentGroupRequest.objects.all()
     serializer_class = StudentGroupRequestSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        # Ensure the user is a student
+       
         if self.request.user.role != 'student':
             raise serializers.ValidationError("Only students can send group join requests.")
-
         user = self.request.user
         try:
             student = Student.objects.get(user=user)
         except Student.DoesNotExist:
             raise serializers.ValidationError("User does not have an associated Student instance.")
 
-        # Get group ID from the request data
         group_id = self.request.data.get('group')
         if not group_id:
             raise serializers.ValidationError("Group ID must be provided.")
 
         try:
-            # Fetch the group and teacher associated with the group
             group = Group.objects.get(id=group_id)
-
-            teacher = group.admin # Adjust based on how teachers are associated with the group
-
-
+            teacher = group.admin 
             if not teacher:
                 raise serializers.ValidationError("Group does not have an associated teacher.")
-
-            # Check if the student is subscribed to the teacher
             
             subscription_exists = Subscription.objects.filter(student=student, teacher=teacher, is_active=True).exists()
 
@@ -64,13 +99,12 @@ class StudentGroupRequestViewSet(viewsets.ModelViewSet):
         except Group.DoesNotExist:
             raise serializers.ValidationError("Group does not exist.")
         
-        # Save the group join request with the student
         serializer.save(student=student)
 
 class TeacherGroupRequestViewSet(viewsets.ModelViewSet):
     queryset = StudentGroupRequest.objects.all()
     serializer_class = StudentGroupRequestSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def update(self, request, *args, **kwargs):
         if request.user.role != 'teacher':

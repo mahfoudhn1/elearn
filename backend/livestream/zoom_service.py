@@ -1,6 +1,6 @@
 import base64
-import datetime
 import requests
+from datetime import datetime, timezone, timedelta
 from django.conf import settings
 
 class ZoomOAuthService:
@@ -47,12 +47,12 @@ class ZoomOAuthService:
         return response.json()
         
     def get_access_token(self, user):
-    # Retrieve the stored access token and its expiration time
+   
         access_token = user.zoom_access_token
         expires_at = user.zoom_token_expires_at
         refresh_token = user.zoom_refresh_token
 
-        if datetime.now() >= expires_at:
+        if datetime.now(timezone.utc) >= expires_at:
             tokens = self.refresh_access_token(refresh_token)
             access_token = tokens['access_token']
             refresh_token = tokens['refresh_token']
@@ -61,7 +61,7 @@ class ZoomOAuthService:
            
             user.zoom_access_token = access_token
             user.zoom_refresh_token = refresh_token
-            user.zoom_token_expires_at = datetime.now() + datetime.timedelta(seconds=expires_in)
+            user.zoom_token_expires_at = datetime.now() + timedelta(seconds=expires_in)
             user.save()
 
         return access_token

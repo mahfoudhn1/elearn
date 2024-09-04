@@ -1,20 +1,33 @@
 from rest_framework import serializers
-from .models import Group, StudentGroupRequest
+from .models import FieldOfStudy, Grade, Group, Schedule, StudentGroupRequest
 from users.models import Teacher, Student
 
 class StudentGroupRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentGroupRequest
-        fields = ['id', 'group', 'created_at', 'is_accepted', 'is_rejected']
+        fields = ['id', 'created_at', 'is_accepted', 'is_rejected']
+
+class ScheduleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Schedule
+        fields = ['day_of_week', 'start_time', 'end_time']
+
+class fieldofstudySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FieldOfStudy
+        fields = '__all__'
 
 class GroupSerializer(serializers.ModelSerializer):
-    students = serializers.PrimaryKeyRelatedField(queryset=Student.objects.all(), many=True, required=False, write_only=True)
-    status = serializers.CharField(source='get_status_display', read_only=True)  # Assuming `get_status_display` is a method or choice field
+    students = serializers.StringRelatedField(many=True)
+    school_level = serializers.StringRelatedField()  
+    grade = serializers.StringRelatedField()
+    field_of_study = serializers.StringRelatedField()
+    schedule = ScheduleSerializer(many=True)
 
     class Meta:
         model = Group
-        fields = ['id', 'name', 'students', 'created_at', 'updated_at', 'branch', 'student_class', 'status']
-        read_only_fields = ['created_at', 'updated_at', 'status']  
+        fields = ['id', 'name', 'students', 'school_level', 'grade', 'schedule', 'field_of_study','created_at', 'updated_at', 'status']
+
 
     def create(self, validated_data):
         request = self.context['request']
