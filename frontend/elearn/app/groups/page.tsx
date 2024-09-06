@@ -3,7 +3,7 @@ import React, { useState, FC, useEffect } from 'react';
 import Navbar from '../components/dahsboardcomponents/navbar';
 import Sidebar from '../components/dahsboardcomponents/sidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBook, faCompassDrafting, faFlask, faRuler, faSquareRootAlt } from '@fortawesome/free-solid-svg-icons';
+import { faBook, faCompassDrafting, faFlask, faLandmark, faLanguage, faRuler, faSquareRootAlt } from '@fortawesome/free-solid-svg-icons';
 import axiosInstance from '../../store/axiosInstance';
 import { useRouter } from 'next/navigation';
 
@@ -16,17 +16,26 @@ interface fieldofstudy{
   id:number;
   name:string
 }
+interface schoolLevel{
+  id:number;
+  name:string;
+}
+
 
 const gradeIconMapping: { [key: string]: GradeIcon } = {
   'رياضيات': { icon: faSquareRootAlt, bgColor: 'bg-blue' },
   'نقني رياضي': { icon: faCompassDrafting, bgColor: 'bg-orange' },
   'علوم تجريبية': { icon: faFlask, bgColor: 'bg-green' },
-  // Add more grades as needed
+  'تسيير و  اقتصاد': { icon: faLandmark, bgColor: 'bg-gray-dark' },
+  'ادب و فلسفة': { icon: faBook, bgColor: 'bg-yellow-400' },
+  'لغات اجنبية': { icon: faLanguage, bgColor: 'bg-purple-600' },
+
 };
 
 const GroupsList: FC = () => {
 
   const [fieldofstudy, setfieldofstudy] = useState<fieldofstudy[]>([]);
+  const [schoolLevel, setSchoolLevel] = useState<schoolLevel>()
   const router = useRouter()
   
 
@@ -45,10 +54,11 @@ const GroupsList: FC = () => {
     fetchGrades();
   }, []);
 
-  console.log(fieldofstudy);
+  const school_Level = "ثانوي"
+  
   const handelGroup = (id: number)=>{
-    router.push(`/groups/${id}`)
-  }
+    router.push(`/groups/${id}?school_Level=${school_Level}`);
+    }
 
   return (
     <div className="flex flex-row w-full h-full">

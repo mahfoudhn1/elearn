@@ -17,6 +17,14 @@ class fieldofstudySerializer(serializers.ModelSerializer):
         model = FieldOfStudy
         fields = '__all__'
 
+class gradeSerializer(serializers.ModelSerializer):
+    
+    school_level = serializers.StringRelatedField()
+    class Meta:
+        model = Grade
+        fields = ['id', 'name', 'school_level' ]
+
+
 class GroupSerializer(serializers.ModelSerializer):
     students = serializers.StringRelatedField(many=True)
     school_level = serializers.StringRelatedField()  

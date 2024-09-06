@@ -5,6 +5,8 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.decorators import action
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.exceptions import NotFound
 
 from .serializers import * 
 from .models import *
@@ -36,7 +38,24 @@ class FieldOfStudysView(viewsets.ModelViewSet):
     serializer_class = fieldofstudySerializer
     permission_classes = [IsAuthenticated]
    
+class GradeViewSet(viewsets.ModelViewSet):
+    queryset = Grade.objects.all()
+    serializer_class = gradeSerializer
 
+    def get_queryset(self):
+        school_level_name = self.request.query_params.get('school_level')
+        
+        if school_level_name:
+            try:
+                school_level = SchoolLevel.objects.get(name=school_level_name)
+                return self.queryset.filter(school_level=school_level.id)
+            except SchoolLevel.DoesNotExist:
+                raise NotFound("School level not found.")
+
+        return super().get_queryset()
+    
+
+    
 class ScheduleViewSet(viewsets.ModelViewSet):
     queryset = Schedule.objects.all()
     serializer_class = ScheduleSerializer

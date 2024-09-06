@@ -34,10 +34,6 @@ class subjsctChoice(models.TextChoices):
     ECONOMICS = 'اقتصاد', 'اقتصاد'
 
 
-
-
-
-
 class Teacher(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_privet = models.BooleanField(default=True)
@@ -56,32 +52,6 @@ class Teacher(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 
-class HighschoolClass(models.Model):
-    name = models.CharField(max_length=100)
-
-class MiddleSchoolClass(models.Model):
-    name = models.CharField(max_length=100)
-
-class HighSchoolSpecialities(models.TextChoices):
-    LITERATURE = 'LT', 'Literature'
-    MATH = 'MT', 'Math'
-    SCIENCE = 'SC', 'Science'
-
-
-class SchoolLevel(models.Model):
-    school_level = models.CharField(
-        max_length=10,
-        choices=SchoolChoice.choices,
-        null=True,
-        blank=True
-    )
-
-    # For Middle School - 4 classes
-    middle_school_classes = models.ManyToManyField(MiddleSchoolClass, blank=True)
-
-    # For High School - 3 subjects
-    high_school_classes = models.ManyToManyField(HighschoolClass, blank=True)  # Assuming Class will represent the high school subjects
-
 
 class Student(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -90,6 +60,8 @@ class Student(models.Model):
     phone_number = models.CharField(max_length=10, null=True, blank=True)
     avatar = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
     wilaya = models.CharField(max_length=20, null=True, blank=True)
-    school_level = models.CharField(max_length=20, null=True, blank=True)
-    hightschool_speciality = models.CharField(max_length=10, choices=HighSchoolSpecialities.choices, null=True, blank=True)
+    school_level = models.ForeignKey("groups.SchoolLevel", on_delete=models.CASCADE, default=1)
+    grade = models.ForeignKey("groups.Grade", on_delete=models.CASCADE, default=1)
+    field_of_study = models.ForeignKey("groups.FieldOfStudy", on_delete=models.CASCADE, default=1)
+    
     

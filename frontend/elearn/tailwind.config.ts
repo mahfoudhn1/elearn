@@ -23,6 +23,7 @@ const config: Config = {
       'pink': '#ff49db',
       'orange': '#ff7849',
       'green': '#97c680',
+      'red-500':'#ef4444',
       'yellow': '#ffc82c',
       'gray-dark': '#273444',
       'gray': '#8492a6',

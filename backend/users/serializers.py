@@ -44,7 +44,7 @@ class StudentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Student
-        fields = ['id', 'user',"avatar","first_name","last_name", "wilaya","school_level", "hightschool_speciality", "phone_number"]
+        fields = ['id', 'user',"avatar","first_name","last_name", "wilaya","school_level", "grade", "field_of_study", "phone_number"]
         read_only_fields = ['user']
 
     def create(self, validated_data):
