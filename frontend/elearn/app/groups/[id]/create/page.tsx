@@ -10,7 +10,7 @@ interface Student {
   id: number; 
   first_name: string;
   last_name: string;
-  grade: Grade;
+  grade: number;
 }
 
 interface Grade{
@@ -24,12 +24,14 @@ function CreateGroup() {
   const [students, setStudents] = useState<Student[]>([])
   const [selectedStudents, setSelectedStudents] = useState<Student[]>([])
   const [grade, setGrade] = useState<Grade[]>([]);
-
+  const [name, setName] = useState<string>()
   const [selectedGrade, setSelectedGrade] = useState<Grade | undefined>();
   const [filteredStudents, setFilteredStudents] = useState(students);
+  
   const searchParams = useSearchParams()
   const school_level = searchParams.get('school_Level')
-  
+  const params = useParams<{ id: string; create: string }>()
+  const field_of_study = params.id
 
 
   useEffect(() => {
@@ -68,8 +70,7 @@ function CreateGroup() {
     setSelectedGrade(selectedGradeObj); 
 
     if (selectedGradeObj) {
-      const filtered = students.filter((student) => student.grade.id === selectedGradeObj.id);
-      console.log(filtered);
+      const filtered = students.filter((student) => student.grade === selectedGradeObj.id);
       
       setFilteredStudents(filtered);
     } else {
@@ -77,22 +78,50 @@ function CreateGroup() {
     }
   };
 
-  const handleStudentAdd = (student: Student) => {
-    setSelectedStudents((prev) => [...prev, student]);
+  const handleCheckboxChange = (student: Student) => {
+    setSelectedStudents(prevSelected => {
+      if (prevSelected.some(s => s.id === student.id)) {
+        return prevSelected.filter(s => s.id !== student.id);
+      } else {
+        return [...prevSelected, student];
+      }
+    });
   };
+  
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
+    const dataToSubmit= {
+      name :name,
+      students: selectedStudents.map((student) => student.id), // Submit only student IDs
+      grade: selectedGrade?.id,
+      field_of_study : parseInt(field_of_study) ,
+      school_level: 1,
+    };
+    console.log(dataToSubmit);
+    
+    try {
+      const response = await axiosInstance.post('/groups/', dataToSubmit);
+      console.log('Response:', response.data);
+    } catch (error) {
+      console.error('Error submitting data:', error);
+    }
+  };
   
 
   return (
     <div className='p-10 mx-auto flex flex-col justify-center'>
      
-      <form className="w-full max-w-lg">
+      <form className="w-full max-w-lg" onSubmit={handleSubmit}>
   <div className="flex flex-wrap -mx-3 mb-6">
     <div className="w-full md:w-full px-3 mb-6 md:mb-0">
       <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" htmlFor="grid-first-name">
         اسم المجموعة
       </label>
-      <input className="appearance-none block w-full bg-gray-200 text-gray-700 border border-red-500 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" id="grid-first-name" type="text" placeholder="Jane"/>
+      <input className="appearance-none block w-full bg-gray-200 text-gray-700 border border-red-500 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" id="grid-first-name" type="text" placeholder="مجموعة 1"
+        value={name || ""}
+        onChange={(e) => setName(e.target.value)}
+      />
       <p className="text-red-500 text-xs italic">الرجاء ملىء هذه.</p>
     </div>
 
@@ -108,7 +137,7 @@ function CreateGroup() {
           onChange={handleGradeChange}
           value={selectedGrade?.name || ''} 
           >
-          <option disabled>اختيار المستوى</option>
+          <option >اختيار المستوى</option>
           {grade.map((g) => (
           <option key={g.id} value={g.name}>
             {g.name}
@@ -123,7 +152,9 @@ function CreateGroup() {
   </div>
 </form>
 {filteredStudents.map((student:Student)=>(
-    <li key={student.id}>
+    <div key={student.id}
+    className='flex flex-col mb-2'
+    >
       <div className="relative max-w-sm flex w-full flex-col rounded-xl bg-white shadow">
 
           <div
@@ -131,14 +162,18 @@ function CreateGroup() {
             className="flex w-full items-center rounded-lg p-0 transition-all hover:bg-gray-100 focus:bg-gray-100 active:bg-gray-100"
           >
               <label
-                htmlFor="check-vertical-list-group4"
+                htmlFor={`${student.id}`}
                 className="flex w-full cursor-pointer items-center px-3 py-2"
               >
                 <div className="inline-flex items-center">
-                  <label className="flex items-center cursor-pointer relative" htmlFor="check-vertical-list-group4">
+                  <label className="flex items-center cursor-pointer relative" htmlFor={`${student.id}`}>
                     <input type="checkbox"
+                    
                       className="peer h-5 w-5 cursor-pointer transition-all appearance-none rounded shadow hover:shadow-md border border-gray-300 checked:bg-gray-800 checked:border-gray-800"
-                      id="check-vertical-list-group4" />
+                      id={`${student.id}`} 
+                      checked={selectedStudents.some(s => s.id === student.id)}
+                      onChange={() => handleCheckboxChange(student)}
+                      />
                     <span className="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"
                         strokeWidth="currentColor" >
@@ -148,19 +183,23 @@ function CreateGroup() {
                       </svg>
                     </span>
                   </label>
-                  <label className="cursor-pointer ml-2 text-gray-600 text-sm" htmlFor="check-vertical-list-group4">
+                  <label className="cursor-pointer ml-2 text-gray-600 text-sm" htmlFor={`${student.id}`}>
                     { student.first_name } {student.last_name}
                   </label>
-                  <label htmlFor="check-vertical-list-group4">  {student.grade.name} </label>
+                    {grade.find(g => g.id === student.grade)?.name || "Grade not found"}
                 </div>
               </label>
             </div>
 
 
             </div>
-        </li>
+        </div>
       ))}
+    <button className='text-white bg-gray-800 border-none rounded-lg px-4 py-2 ' 
+      onClick={handleSubmit}
+    > Submit </button>
     </div>
+
   )
 }
 

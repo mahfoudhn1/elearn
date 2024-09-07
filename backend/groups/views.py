@@ -40,7 +40,7 @@ class FieldOfStudysView(viewsets.ModelViewSet):
    
 class GradeViewSet(viewsets.ModelViewSet):
     queryset = Grade.objects.all()
-    serializer_class = gradeSerializer
+    serializer_class = gradeSerializer  # Ensure proper capitalization if `gradeSerializer` was a typo
 
     def get_queryset(self):
         school_level_name = self.request.query_params.get('school_level')
@@ -48,12 +48,13 @@ class GradeViewSet(viewsets.ModelViewSet):
         if school_level_name:
             try:
                 school_level = SchoolLevel.objects.get(name=school_level_name)
-                return self.queryset.filter(school_level=school_level.id)
-            except SchoolLevel.DoesNotExist:
-                raise NotFound("School level not found.")
 
-        return super().get_queryset()
-    
+                return Grade.objects.filter(school_level=school_level.id)
+            except SchoolLevel.DoesNotExist:
+                return Grade.objects.all()
+        
+
+        return Grade.objects.all()
 
     
 class ScheduleViewSet(viewsets.ModelViewSet):

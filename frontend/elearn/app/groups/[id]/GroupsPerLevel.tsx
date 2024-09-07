@@ -28,16 +28,21 @@ interface Group {
   id: number;
   name: string;
   school_level: string;
-  grade: string;
+  grade: number;
   schedule?: Schedule[];
   students?: Student[];
 }
 
 interface GroupsPerLevelProps {
   groupsCategories: Group[];
+  allGrades: Grade[]
+}
+interface Grade{
+  id:number;
+  name:string;
 }
 
-const GroupsPerLevel = ({ groupsCategories }: GroupsPerLevelProps) => {
+const GroupsPerLevel = ({ groupsCategories, allGrades }: GroupsPerLevelProps) => {
   const [openGroupId, setOpenGroupId] = useState<number | null>(null);
 
   const handleDropdown = (groupId: number) => {
@@ -47,16 +52,15 @@ const GroupsPerLevel = ({ groupsCategories }: GroupsPerLevelProps) => {
   const school_Level = searchParams.get('school_Level')
   const params = useParams()
  
-
-
-  console.log(params);
   
   const router = useRouter()
 
   const handleCreatePage = ()=>{
     router.push(`/groups/${params.id}/create?school_Level=${school_Level}`);
   }
-
+  const handleGroup = (id:number)=>{
+    router.push(`/groups/${params.id}/${id}`)
+  }
 
   return (
     <div className="flex flex-row bg-stone-50">
@@ -73,7 +77,9 @@ const GroupsPerLevel = ({ groupsCategories }: GroupsPerLevelProps) => {
           <ul>
             {groupsCategories?.map((group) => (
               <li key={group.id}>
-                <div className="max-w-md flex-col cursor-pointer mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl m-5">
+                <div className="max-w-md flex-col cursor-pointer mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl m-5"
+                  onClick={()=>handleGroup(group.id)}
+                >
                   <div className="p-8 flex">
                     <div className="pl-4">
                       <p className="md:text-4xl text-lg font-bold text-gray-700"> {group.name} </p>
@@ -83,7 +89,7 @@ const GroupsPerLevel = ({ groupsCategories }: GroupsPerLevelProps) => {
                         {' '}
                         عدد الطلبة : {group.students?.length ?? 0}{' '}
                       </div>
-                      <p className="mt-2 text-gray"> {group.grade} </p>
+                      <p className="mt-2 text-gray"> {allGrades.find(g => g.id === group.grade)?.name || "Grade not found"} </p>
                       <p className="mt-2 text-gray"> {group.school_level} </p>
                     </div>
                   </div>

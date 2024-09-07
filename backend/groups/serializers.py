@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import FieldOfStudy, Grade, Group, Schedule, StudentGroupRequest
+from .models import FieldOfStudy, Grade, Group, Schedule, SchoolLevel, StudentGroupRequest
 from users.models import Teacher, Student
 
 class StudentGroupRequestSerializer(serializers.ModelSerializer):
@@ -26,25 +26,37 @@ class gradeSerializer(serializers.ModelSerializer):
 
 
 class GroupSerializer(serializers.ModelSerializer):
-    students = serializers.StringRelatedField(many=True)
-    school_level = serializers.StringRelatedField()  
-    grade = serializers.StringRelatedField()
-    field_of_study = serializers.StringRelatedField()
-    schedule = ScheduleSerializer(many=True)
+    students = serializers.PrimaryKeyRelatedField(many=True, queryset=Student.objects.all())
+    school_level = serializers.PrimaryKeyRelatedField(queryset=SchoolLevel.objects.all())
+    grade = serializers.PrimaryKeyRelatedField(queryset=Grade.objects.all())
+    field_of_study = serializers.PrimaryKeyRelatedField(queryset=FieldOfStudy.objects.all())
+    schedule = ScheduleSerializer(many=True, required=False)  
 
     class Meta:
         model = Group
         fields = ['id', 'name', 'students', 'school_level', 'grade', 'schedule', 'field_of_study','created_at', 'updated_at', 'status']
 
-
     def create(self, validated_data):
         request = self.context['request']
-        if request.user.role != "teacher":
-            raise serializers.ValidationError("Only teachers can create groups.")
+        
+        # Fetch the Teacher instance associated with the logged-in user
+        try:
+            teacher = request.user.teacher  # Accessing the Teacher instance through the User
+        except Teacher.DoesNotExist:
+            raise serializers.ValidationError("User is not associated with any teacher.")
 
-        group = super().create(validated_data)
+        # Pop the 'students' and 'schedule' fields from validated_data
+        students = validated_data.pop('students', [])
+        schedule_data = validated_data.pop('schedule', [])
 
-        students = validated_data.get('students', [])
+        # Create the group instance and set the admin to the fetched Teacher
+        group = Group.objects.create(admin=teacher, **validated_data)
+
+        # Associate students with the group
         group.students.set(students)
+
+        # Create and associate schedules if provided
+        for schedule in schedule_data:
+            Schedule.objects.create(group=group, **schedule)
 
         return group
