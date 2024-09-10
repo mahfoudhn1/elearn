@@ -4,8 +4,10 @@ import Navbar from '../components/dahsboardcomponents/navbar';
 import Sidebar from '../components/dahsboardcomponents/sidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBook, faCompassDrafting, faFlask, faLandmark, faLanguage, faRuler, faSquareRootAlt } from '@fortawesome/free-solid-svg-icons';
-import axiosInstance from '../../store/axiosInstance';
 import { useRouter } from 'next/navigation';
+import axiosClientInstance from '../lib/axiosInstance';
+
+
 
 
 interface GradeIcon {
@@ -42,7 +44,7 @@ const GroupsList: FC = () => {
   useEffect(()=>{
     const fetchGrades = async () => {
       try {
-        const response = await axiosInstance.get('/groups/fieldofstudy/'); 
+        const response = await axiosClientInstance.get('/groups/fieldofstudy/'); 
         setfieldofstudy(response.data); 
 
       } catch (error) {

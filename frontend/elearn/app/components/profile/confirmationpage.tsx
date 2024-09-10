@@ -1,6 +1,9 @@
 import React from 'react';
-import axios from 'axios';
-import axiosInstance from '../../../store/axiosInstance';
+import axiosClientInstance from '../../lib/axiosInstance';
+
+
+
+
 
 interface ConfirmationPageProps {
   teacherId: string;
@@ -16,7 +19,7 @@ const ConfirmationPage: React.FC<ConfirmationPageProps> = ({
 }) => {
   const handleConfirmSubscription = async () => {
     try {
-      const response = await axiosInstance.post('/subscriptions/', {
+      const response = await axiosClientInstance.post('/subscriptions/', {
         teacher: teacherId,
         plan: planId,
       });

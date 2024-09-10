@@ -1,12 +1,13 @@
 "use client"
 import React, {useState} from 'react'
-import axiosInstance from '../../../store/axiosInstance';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChalkboardTeacher, faUserGraduate } from '@fortawesome/free-solid-svg-icons';
 import updateUserRole  from '../../../store/authThunks';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../../../store/store'; // Adjust the import path for your AppDispatch type
 import { useRouter } from 'next/navigation';
+
+
 
 function ChooseRole() {
     const [role, setRole] = useState<string>('');

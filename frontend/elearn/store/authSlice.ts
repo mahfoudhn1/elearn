@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import axiosInstance from './axiosInstance'
 import updateUserRole from './authThunks'
+
 
 interface User {
   id: number;

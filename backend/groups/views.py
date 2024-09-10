@@ -101,7 +101,7 @@ class StudentGroupRequestViewSet(viewsets.ModelViewSet):
         except Student.DoesNotExist:
             raise serializers.ValidationError("User does not have an associated Student instance.")
 
-        group_id = self.request.data.get('group')
+        group_id = self.request.data.get('group_id')
         if not group_id:
             raise serializers.ValidationError("Group ID must be provided.")
 
@@ -117,14 +117,22 @@ class StudentGroupRequestViewSet(viewsets.ModelViewSet):
                 raise serializers.ValidationError("You must be subscribed to the teacher to join their group.")
             
         except Group.DoesNotExist:
-            raise serializers.ValidationError("Group does not exist.")
+            return Response({"error": "Group does not exist."}, status=status.HTTP_404_NOT_FOUND)
         
         serializer.save(student=student)
 
 class TeacherGroupRequestViewSet(viewsets.ModelViewSet):
-    queryset = StudentGroupRequest.objects.all()
     serializer_class = StudentGroupRequestSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        request_group_id = self.request.query_params.get('group_id')  # Assuming you're passing group_id as a query param
+
+        if request_group_id:
+            
+            queryset = StudentGroupRequest.objects.filter(group__id=request_group_id)
+        else:
+            queryset = StudentGroupRequest.objects.all()
 
     def update(self, request, *args, **kwargs):
         if request.user.role != 'teacher':

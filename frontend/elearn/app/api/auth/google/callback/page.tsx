@@ -28,7 +28,6 @@ const GoogleCallback = () => {
 
           if (response) {
             const data = await response.data;
-            console.log(data);
             
             dispatch(loginSuccess({ user: data.user, message: 'Login successful' }));
             router.push('/dashboard'); 

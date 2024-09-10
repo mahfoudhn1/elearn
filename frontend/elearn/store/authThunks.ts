@@ -1,15 +1,14 @@
 // store/authThunks.ts
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { registerSuccess, registerFailure,loginSuccess, loginFailure, logout  } from './authSlice';
-
-import axiosInstance from './axiosInstance';
 import { AppDispatch } from './store';
+import axiosClientInstance from '../app/lib/axiosInstance';
 
 export const register = createAsyncThunk(
     '/register',
     async (userData: { username: string; email: string; first_name: string, last_name: string, password: string; password2: string; role: string }, { dispatch }) => {
       try {
-        const response = await axiosInstance.post('/register/', userData);
+        const response = await axiosClientInstance.post('/register/', userData);
         const { message } = response.data;
         dispatch(registerSuccess({ message }));
         return { success: true }; // Return success status
@@ -24,7 +23,7 @@ export const register = createAsyncThunk(
     'auth/updateRole',
     async (role: string, { rejectWithValue }) => {
       try {
-        const response = await axiosInstance.put('/users/me/', { role });
+        const response = await axiosClientInstance.put('/users/me/', { role });
         return response.data; // This should be the entire user object
       } catch (error) {
         return rejectWithValue("No update made");
@@ -39,7 +38,7 @@ export const register = createAsyncThunk(
     'auth/login',
     async (userData: { username: string; password: string }, { dispatch }) => {
       try {
-        const response = await axiosInstance.post('/auth/', userData);
+        const response = await axiosClientInstance.post('/auth/', userData);
         const {  user } = response.data;
         const { message } = response.data
         dispatch(loginSuccess({user, message}));
@@ -56,7 +55,7 @@ export const LogoutThunk = createAsyncThunk(
   'auth/logout',
   async (dispatch:AppDispatch ) => {
     try {
-      await axiosInstance.post('/logout/', {}, {
+      await axiosClientInstance.post('/logout/', {}, {
         withCredentials: true, 
       });
       

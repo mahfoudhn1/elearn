@@ -4,6 +4,9 @@ from rest_framework.response import Response
 from .models import User, Teacher, Student
 from .serializers import AuthSerializer, LoginSerializer, UserSerializer, TeacherSerializer, StudentSerializer, RegisterSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework.views import APIView
+
+
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.conf import settings
@@ -18,6 +21,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .filters import TeacherFilter
 from django.core.exceptions import PermissionDenied
 import json
+from datetime import datetime, timedelta
+from django.utils import timezone
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -25,9 +30,52 @@ class MyTokenObtainPairView(TokenObtainPairView):
     pass
 
 class MyTokenRefreshView(TokenRefreshView):
-    # Optionally customize the behavior
-    pass
+    permission_classes = [AllowAny]
 
+    def post(self, request):
+        refresh_token = request.COOKIES.get('refresh_token')
+        if not refresh_token:
+            return Response({'error': 'Refresh token not found'}, status=400)
+
+        try:
+            refresh = RefreshToken(refresh_token)
+            new_access_token = refresh.access_token
+
+            refresh.set_jti() 
+            new_refresh_token = str(refresh)
+
+            # Create response and set the new access token in the cookie
+            response = Response({'message': 'Token refreshed successfully'})
+
+            # Set cookie expiration for the access token (e.g., 5 minutes)
+            access_token_expiry = timezone.now() + timedelta(minutes=15)
+            response.set_cookie(
+                'access_token',
+                str(new_access_token),
+                httponly=True,
+                secure=False,  # Set to True in production
+                samesite='Lax',
+                expires=access_token_expiry,  # Set expiration to match token lifetime
+            )
+
+            refresh_token_expiry = timezone.now() + timedelta(minutes=15)
+            response.set_cookie(
+                'refresh_token',
+                new_refresh_token,
+                httponly=True,
+                secure=False,  # Set to True in production
+                samesite='Lax',
+                expires=refresh_token_expiry,
+            )
+
+            return response
+
+        except Exception as e:
+
+            print(f"Error refreshing token: {str(e)}")
+            return Response({'error': 'Invalid refresh token'}, status=400)
+
+        
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
@@ -236,3 +284,6 @@ class LogoutViewSet(viewsets.ViewSet):
         response.delete_cookie('refresh_token')
         response = Response({'message': 'Logged out successfully'})
         return response
+
+# class RefreshTokenView(APIView):
+

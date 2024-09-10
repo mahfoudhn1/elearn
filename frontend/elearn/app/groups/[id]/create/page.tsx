@@ -1,8 +1,10 @@
 "use client"
 
 import React, { useEffect, useState } from 'react'
-import axiosInstance from '../../../../store/axiosInstance'
 import { useParams, useSearchParams } from 'next/navigation';
+import axiosClientInstance from '../../../lib/axiosInstance';
+
+
 
 
 
@@ -36,7 +38,7 @@ function CreateGroup() {
 
   useEffect(() => {
     const fetchStudents = () => {
-      axiosInstance
+      axiosClientInstance
         .get(`/subscriptions/subscribed_students/`)
         .then((response) => {
           setStudents(response.data);
@@ -47,7 +49,7 @@ function CreateGroup() {
         });
     };
     const fetchGrade = ()=>{
-      axiosInstance.get(`/groups/grades/?school_level=${school_level}`)
+      axiosClientInstance.get(`/groups/grades/?school_level=${school_level}`)
       .then((response) => {
         setGrade(response.data);
       })
@@ -101,7 +103,7 @@ function CreateGroup() {
     console.log(dataToSubmit);
     
     try {
-      const response = await axiosInstance.post('/groups/', dataToSubmit);
+      const response = await axiosClientInstance.post('/groups/', dataToSubmit);
       console.log('Response:', response.data);
     } catch (error) {
       console.error('Error submitting data:', error);

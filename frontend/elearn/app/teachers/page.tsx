@@ -1,9 +1,12 @@
 "use client"
 import React, { useState, useEffect, ChangeEvent } from 'react';
-import axiosInstance from '../../store/axiosInstance';
 import Link from 'next/link';
 import { useSelector, UseSelector } from 'react-redux';
 import { RootState } from '../../store/store';
+import axiosClientInstance from '../lib/axiosInstance';
+
+
+
 
 interface CityProps {
     cities: string[];
@@ -42,7 +45,7 @@ const filtersToQueryParams = (filters: Filters): Record<string, string> => {
 
 const fetchTeachers = async (filters: Filters): Promise<Teacher[]> => {
     const queryParams = new URLSearchParams(filtersToQueryParams(filters)).toString();
-    const response = await axiosInstance.get(`/teachers/?${queryParams}`);
+    const response = await axiosClientInstance.get(`/teachers/?${queryParams}`);
     if (!response) {
         throw new Error('Network response was not ok');
     }

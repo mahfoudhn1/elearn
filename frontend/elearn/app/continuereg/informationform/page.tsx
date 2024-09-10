@@ -3,7 +3,8 @@ import React, {useState} from 'react'
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store/store';
 import Link from 'next/link';
-import axiosInstance from '../../../store/axiosInstance';
+import axiosClientInstance from '../../lib/axiosInstance';
+
 
 const subjects = [
   { value: 'رياضيات', label: 'رياضيات' },
@@ -83,7 +84,7 @@ function CompletInformations() {
             
           };
           
-          response = await axiosInstance.post('/teachers/', data);
+          response = await axiosClientInstance.post('/teachers/', data);
         } else if (rolestate === 'student') {
           const data = {
             phone_number,
@@ -96,7 +97,7 @@ function CompletInformations() {
             university,
             
           };
-          response = await axiosInstance.post('/students/', data);
+          response = await axiosClientInstance.post('/students/', data);
         }
   
         console.log('Response:', response);

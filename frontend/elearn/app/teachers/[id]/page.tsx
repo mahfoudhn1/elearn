@@ -2,12 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUniversity, faChalkboardTeacher, faLocationPin } from '@fortawesome/free-solid-svg-icons';
-import axiosInstance from '../../../store/axiosInstance';
 import { RootState } from '../../../store/store';
 import ZoomAuthButton from '../../components/profile/zoombutton';
 import { PlanComponent } from '../../components/profile/plans';
 import { useSelector } from 'react-redux';
 import ConfirmationPage from '../../components/profile/confirmationpage';
+import axiosClientInstance from '../../lib/axiosInstance';
+
+
+
 
 export interface Teacher {
   user: number;
@@ -40,7 +43,7 @@ const Profile: React.FC<TeacherProps> = ({ params }) => {
   useEffect(() => {
     const fetchTeacher = async () => {
       try {
-        const response = await axiosInstance.get<Teacher>(`http://localhost:8000/api/teachers/${params.id}/`);
+        const response = await axiosClientInstance.get<Teacher>(`http://localhost:8000/api/teachers/${params.id}/`);
         setTeacher(response.data);
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -52,7 +55,7 @@ const Profile: React.FC<TeacherProps> = ({ params }) => {
   useEffect(() => {
     const checkSubscriptionStatus = async () => {
       try {
-        const response = await axiosInstance.get('/subscriptions/'); 
+        const response = await axiosClientInstance.get('/subscriptions/'); 
         const subscriptions = response.data;
 
         const isAlreadySubscribed = subscriptions.some((sub: any) => 

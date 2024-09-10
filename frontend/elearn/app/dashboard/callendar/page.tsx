@@ -5,11 +5,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { GrFormNext, GrFormPrevious } from 'react-icons/gr';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday, isSameDay } from 'date-fns';
 import Datepicker from "react-tailwindcss-datepicker";
-import axiosInstance from '../../../store/axiosInstance';
 import Sidebar from '../../components/dahsboardcomponents/sidebar';
 import Navbar from '../../components/dahsboardcomponents/navbar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDeleteLeft, faEdit, faRemove, faX } from '@fortawesome/free-solid-svg-icons';
+import axiosClientInstance from '../../lib/axiosInstance';
+
+
+
 
 
 
@@ -53,7 +56,7 @@ function CallendarPage() {
   };
   useEffect(() => {
     const fetchMeetings = async () => {
-      const response = await axiosInstance.get(`/livestream/zoom-meetings/?date=${format(selectDate, 'yyyy-MM-dd')}`);
+      const response = await axiosClientInstance.get(`/livestream/zoom-meetings/?date=${format(selectDate, 'yyyy-MM-dd')}`);
       setMeetings(response.data);
     };
     fetchMeetings();
@@ -87,7 +90,7 @@ function CallendarPage() {
     );
 
     try {
-      const response = await axiosInstance.post('/livestream/zoom-meetings/', {
+      const response = await axiosClientInstance.post('/livestream/zoom-meetings/', {
         ...newMeeting,
         start_time: combinedDateTime
       });
@@ -136,7 +139,7 @@ function CallendarPage() {
 
   const handleSaveEdit = async () => {
     try {
-      const response = await axiosInstance.put(`/livestream/zoom-meetings/${editingMeetingId}/`, {
+      const response = await axiosClientInstance.put(`/livestream/zoom-meetings/${editingMeetingId}/`, {
         ...newMeeting,
         start_time: format(newMeeting.start_time, "yyyy-MM-dd'T'HH:mm:ss"),
       });
@@ -152,7 +155,7 @@ function CallendarPage() {
 
   const handleDelete = async (meetingId: number) => {
     try {
-      await axiosInstance.delete(`/livestream/zoom-meetings/${meetingId}/`);
+      await axiosClientInstance.delete(`/livestream/zoom-meetings/${meetingId}/`);
       setMeetings(meetings.filter(meeting => meeting.id !== meetingId));
     } catch (error) {
       console.error("Failed to delete meeting", error);
