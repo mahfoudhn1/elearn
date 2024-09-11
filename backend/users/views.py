@@ -1,3 +1,4 @@
+from tokenize import TokenError
 from django.http import HttpResponse, HttpResponseRedirect
 from rest_framework import viewsets, status
 from rest_framework.response import Response
@@ -15,7 +16,7 @@ import requests as req
 from google.auth.transport import requests
 import logging
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.shortcuts import redirect
+
 from rest_framework.exceptions import NotFound
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import TeacherFilter
@@ -30,48 +31,49 @@ class MyTokenObtainPairView(TokenObtainPairView):
     pass
 
 class MyTokenRefreshView(TokenRefreshView):
-    permission_classes = [AllowAny]
+
+    permission_classes = [AllowAny]  
 
     def post(self, request):
-        refresh_token = request.COOKIES.get('refresh_token')
-        if not refresh_token:
-            return Response({'error': 'Refresh token not found'}, status=400)
-
+        old_refresh_token = request.COOKIES.get('refresh_token') or request.data.get("refreshToken")
+        
+        if not old_refresh_token:
+            return Response({'error': 'Refresh token not provided'}, status=400)
+        
+        print(old_refresh_token)
         try:
-            refresh = RefreshToken(refresh_token)
-            new_access_token = refresh.access_token
-
-            refresh.set_jti() 
-            new_refresh_token = str(refresh)
-
-            # Create response and set the new access token in the cookie
-            response = Response({'message': 'Token refreshed successfully'})
-
-            # Set cookie expiration for the access token (e.g., 5 minutes)
+            # Decode the old refresh token
+            old_token = RefreshToken(old_refresh_token)
+            
+            # Extract user id from the token payload
+            user_id = old_token.payload.get('user_id')
+            if not user_id:
+                return Response({'error': 'Token contained no recognizable user identification'}, status=400)
+            
+            # Get the user from the database
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response({'error': 'User not found'}, status=400)
+            
+            new_refresh = RefreshToken.for_user(user)
+            new_access_token = str(new_refresh.access_token)
+            new_refresh_token = str(new_refresh)
+            print(new_access_token)
             access_token_expiry = timezone.now() + timedelta(minutes=15)
-            response.set_cookie(
-                'access_token',
-                str(new_access_token),
-                httponly=True,
-                secure=False,  # Set to True in production
-                samesite='Lax',
-                expires=access_token_expiry,  # Set expiration to match token lifetime
-            )
+            refresh_token_expiry = timezone.now() + timedelta(days=7)
 
-            refresh_token_expiry = timezone.now() + timedelta(minutes=15)
-            response.set_cookie(
-                'refresh_token',
-                new_refresh_token,
-                httponly=True,
-                secure=False,  # Set to True in production
-                samesite='Lax',
-                expires=refresh_token_expiry,
-            )
+            return Response({
+                'message': 'Token refreshed successfully',
+                'access_token': new_access_token,
+                'refresh_token': new_refresh_token,
+                'access_token_expiry': access_token_expiry.isoformat(),
+                'refresh_token_expiry': refresh_token_expiry.isoformat(),
+            })
 
-            return response
-
+        except TokenError as e:
+            return Response({'error': str(e)}, status=400)
         except Exception as e:
-
             print(f"Error refreshing token: {str(e)}")
             return Response({'error': 'Invalid refresh token'}, status=400)
 
@@ -285,5 +287,4 @@ class LogoutViewSet(viewsets.ViewSet):
         response = Response({'message': 'Logged out successfully'})
         return response
 
-# class RefreshTokenView(APIView):
 

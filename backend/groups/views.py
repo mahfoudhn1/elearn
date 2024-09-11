@@ -8,6 +8,8 @@ from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.exceptions import NotFound
 
+from users.serializers import StudentSerializer
+
 from .serializers import * 
 from .models import *
 from users.models import Student, Teacher
@@ -37,6 +39,7 @@ class FieldOfStudysView(viewsets.ModelViewSet):
     queryset = FieldOfStudy.objects.all()
     serializer_class = fieldofstudySerializer
     permission_classes = [IsAuthenticated]
+   
    
 class GradeViewSet(viewsets.ModelViewSet):
     queryset = Grade.objects.all()
@@ -100,7 +103,6 @@ class StudentGroupRequestViewSet(viewsets.ModelViewSet):
             student = Student.objects.get(user=user)
         except Student.DoesNotExist:
             raise serializers.ValidationError("User does not have an associated Student instance.")
-
         group_id = self.request.data.get('group_id')
         if not group_id:
             raise serializers.ValidationError("Group ID must be provided.")
@@ -119,20 +121,30 @@ class StudentGroupRequestViewSet(viewsets.ModelViewSet):
         except Group.DoesNotExist:
             return Response({"error": "Group does not exist."}, status=status.HTTP_404_NOT_FOUND)
         
-        serializer.save(student=student)
+        serializer.save(student=student, group_id = group_id)
 
 class TeacherGroupRequestViewSet(viewsets.ModelViewSet):
     serializer_class = StudentGroupRequestSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        request_group_id = self.request.query_params.get('group_id')  # Assuming you're passing group_id as a query param
+        # Get the group ID from the request query parameters
+        request_group_id = self.request.query_params.get('group_id')
 
+        # If a group ID is provided, filter the StudentGroupRequest
         if request_group_id:
-            
-            queryset = StudentGroupRequest.objects.filter(group__id=request_group_id)
-        else:
-            queryset = StudentGroupRequest.objects.all()
+            join_requests = StudentGroupRequest.objects.filter(group__id=request_group_id)
+            # Get the students linked to those join requests
+            students = Student.objects.filter(id__in=join_requests.values('student_id'))
+            return students
+        
+        return Student.objects.none()
+
+    def list(self, request):
+        queryset = self.get_queryset()
+        serializer = StudentSerializer(queryset, many=True)
+        return Response(serializer.data)
+
 
     def update(self, request, *args, **kwargs):
         if request.user.role != 'teacher':

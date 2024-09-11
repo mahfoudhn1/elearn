@@ -1,43 +1,48 @@
 import axios from 'axios';
-import { cookies } from 'next/headers'; // This is only available on the server side
+import { cookies } from 'next/headers';
+import { refreshToken } from './serverAction';
 
 const axiosSSRInstance = axios.create({
-  baseURL: 'http://localhost:8000/api/',
-  withCredentials: true, 
+  baseURL: 'http://localhost:8000/api', // Your backend API URL
+  withCredentials: true,
 });
 
 axiosSSRInstance.interceptors.request.use(
   (config) => {
     const cookieStore = cookies();
-    const authToken = cookieStore.get('access_token')?.value;
-
-    if (authToken && config.headers) {
-      config.headers['Authorization'] = `Bearer ${authToken}`;
+    const accessToken = cookieStore.get('access_token')?.value;
+    
+    if (accessToken) {
+      config.headers['Authorization'] = `Bearer ${accessToken}`;
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 axiosSSRInstance.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    
+    const refreshToken = cookies().get('refresh_token')?.value
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
-        await axios.post(`http://localhost:8000/api/token/refresh/`, {}, {
-          withCredentials: true,
-        });
+        const response = await axiosSSRInstance.post('http://localhost:3000/api/auth/refresh',{refreshToken}, {withCredentials:true})
+        const {access_token, refresh_token} = response.data
+        
+        if(access_token){
+          originalRequest.headers['Authorization'] = `Bearer ${access_token}`;
+          return axiosSSRInstance(originalRequest);
 
-        return axiosSSRInstance(originalRequest);
+        }
+        // Retry the original request
       } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+        // Handle refresh failure (e.g., redirect to login)
         return Promise.reject(refreshError);
       }
     }
@@ -45,5 +50,4 @@ axiosSSRInstance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
 export default axiosSSRInstance;
