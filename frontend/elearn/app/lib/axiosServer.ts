@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { cookies } from 'next/headers';
-import { refreshToken } from './serverAction';
 
 const axiosSSRInstance = axios.create({
   baseURL: 'http://localhost:8000/api', // Your backend API URL
