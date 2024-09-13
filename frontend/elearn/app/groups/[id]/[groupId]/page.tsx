@@ -4,6 +4,8 @@ import Navbar from '../../../components/dahsboardcomponents/navbar';
 import { cookies } from 'next/headers';
 import Students from './Students';
 import axiosSSRInstance from '../../../lib/axiosServer';
+import StudentsRequest from './Students';
+import StudentsList from './StudentsList';
 
 
 
@@ -26,22 +28,35 @@ async function getStudents(group_id:number){
     console.error('Error fetching group data:', error);
   }
 }
+async function getGroupStudents(group_id:number){
+
+  try {
+    const response = await axiosSSRInstance.get(`/groups/${group_id}/`, {
+      });
+    return response.data
+    ;
+  } catch (error) {
+    console.error('Error fetching group data:', error);
+  }
+}
 
 async function SnigleGrpoup({params} :{params:Params}) {
   
   try{
 
   const group_id = Number(params.groupId)
-  const students = await getStudents(group_id)
-
+  const StudentsReqGroup = await getStudents(group_id)
+  const {students} = await getGroupStudents(group_id)
+  console.log(students);
+  
   
   return (
     <div className="flex flex-row bg-stone-50">
     <Sidebar />
     <div className="flex flex-col w-full">
-      <Navbar />
-      <div className="p-4">
-        <Students students={students} />
+      <div className="p-4 flex flex-col">
+      <StudentsRequest studentsreqroup={StudentsReqGroup} />
+      <StudentsList studentlist={students} />
       </div>
     </div>
     </div>

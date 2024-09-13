@@ -42,6 +42,7 @@ const config: Config = {
       "green-400":"#4ade80",
       "green-300":"#86efac",
       "green-200":"#bbf7d0",
+      "green-800":"#166534",
       "sky-400":"#38bdf8",
       "emerald-500":"#10b981",
       "purple-600":"#9333ea",

@@ -43,13 +43,16 @@ class Teacher(models.Model):
     phone_number = models.CharField( max_length=10, null=True, blank=True)
     first_name =models.CharField( max_length=20, null=True, blank=True)
     last_name =models.CharField( max_length=20, null=True, blank=True)
-    avatar = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
+    avatar = models.ImageField(upload_to='profile_pics/', default='profile_pics/teacherdefault.jpg', null=True, blank=True)
     profession = models.CharField(max_length=100, null=True, blank=True)
     degree = models.CharField(max_length=100, null=True, blank=True)
     wilaya = models.CharField(max_length=20, null=True, blank=True)
     university = models.CharField(max_length=100, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self) -> str:
+        return f"{self.first_name} {self.last_name}"
 
 
 
@@ -58,10 +61,13 @@ class Student(models.Model):
     first_name =models.CharField( max_length=20, null=True, blank=True)
     last_name =models.CharField( max_length=20, null=True, blank=True)
     phone_number = models.CharField(max_length=10, null=True, blank=True)
-    avatar = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
+    avatar = models.ImageField(upload_to='profile_pics/', default='profile_pics/student.jpg', null=True, blank=True)
     wilaya = models.CharField(max_length=20, null=True, blank=True)
     school_level = models.ForeignKey("groups.SchoolLevel", on_delete=models.CASCADE, default=1)
     grade = models.ForeignKey("groups.Grade", on_delete=models.CASCADE, default=1)
     field_of_study = models.ForeignKey("groups.FieldOfStudy", on_delete=models.CASCADE, default=1)
+    
+    def __str__(self) -> str:
+        return f"{self.first_name} {self.last_name}"
     
     

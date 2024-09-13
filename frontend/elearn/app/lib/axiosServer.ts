@@ -6,18 +6,7 @@ const axiosSSRInstance = axios.create({
   withCredentials: true,
 });
 
-axiosSSRInstance.interceptors.request.use(
-  (config) => {
-    const cookieStore = cookies();
-    const accessToken = cookieStore.get('access_token')?.value;
-    
-    if (accessToken) {
-      config.headers['Authorization'] = `Bearer ${accessToken}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+
 
 axiosSSRInstance.interceptors.response.use(
   (response) => response,

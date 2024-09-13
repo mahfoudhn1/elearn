@@ -74,13 +74,15 @@ const GroupsPerLevel = ({ groupsCategories, allGrades }: GroupsPerLevelProps) =>
       
       return res
     }catch(error:any){
-      console.log(error.response.data[0]);
+      console.log(error);
       
-      if (error) {
-        setErrorMessage(error.response.data[0]);
-      } else {
-        setErrorMessage("An unexpected error occurred.");
-      }
+      // if (error) {
+      //   console.log(error);
+        
+      //   // setErrorMessage(error.response);
+      // } else {
+      //   setErrorMessage("An unexpected error occurred.");
+      // }
     }
   }
   

@@ -1,11 +1,26 @@
 from rest_framework import serializers
+
+from users.serializers import StudentSerializer
 from .models import FieldOfStudy, Grade, Group, Schedule, SchoolLevel, StudentGroupRequest
 from users.models import Teacher, Student
 
 class StudentGroupRequestSerializer(serializers.ModelSerializer):
+    student = serializers.PrimaryKeyRelatedField(queryset=Student.objects.all())
+
     class Meta:
         model = StudentGroupRequest
-        fields = ['id', 'created_at', 'is_accepted', 'is_rejected']
+        fields = ['id', 'student', 'group', 'created_at', 'is_accepted', 'is_rejected']
+        read_only_fields = ['created_at', 'is_accepted', 'is_rejected']
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        if instance.student:  # Check if there are any students
+            representation['student'] = StudentSerializer(instance.student).data
+        else:
+            representation['student'] = None  
+        return representation
+
 
 class ScheduleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -60,3 +75,9 @@ class GroupSerializer(serializers.ModelSerializer):
             Schedule.objects.create(group=group, **schedule)
 
         return group
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['students'] = StudentSerializer(instance.students.all(), many=True).data
+        return representation
+
