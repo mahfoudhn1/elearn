@@ -6,8 +6,6 @@ router = DefaultRouter()
 router.register(r'', SubscriptionViewSet, basename='subscription')
 
 
-
-
 urlpatterns = [
     path('', include(router.urls)),
   

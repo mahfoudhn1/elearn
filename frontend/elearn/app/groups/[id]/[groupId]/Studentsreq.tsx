@@ -61,7 +61,7 @@ function StudentsRequest({ studentsreqroup }: StudentsRequestProps) {
 
   return (
     <div className='p-10'>
-        <h1>Students request list</h1>
+        <h1>طلبات الأنظمام للمجموعة</h1>
         <Swiper
         modules={[Pagination, Scrollbar, A11y]}
         spaceBetween={0}

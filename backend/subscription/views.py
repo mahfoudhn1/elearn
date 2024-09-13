@@ -46,8 +46,6 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def subscribed_students(self, request):
         user = request.user
-
-    
         try:
             teacher = Teacher.objects.get(user=user)
         except Teacher.DoesNotExist:
@@ -58,4 +56,22 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
         students = [subscription.student for subscription in subscriptions]
 
         serializer = StudentSerializer(students, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def filtered_subscribed_students(self, request):
+        user = request.user
+        try:
+            teacher = Teacher.objects.get(user=user)
+        except Teacher.DoesNotExist:
+            return Response({'error': 'The authenticated user is not a teacher'}, status=status.HTTP_400_BAD_REQUEST)
+
+        student_ids = request.data.get('student_ids', [])
+        if not student_ids:
+            return Response({'error': 'No student IDs provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        subscriptions = Subscription.objects.filter(teacher=teacher, student__id__in=student_ids)
+        
+        serializer = SubscriptionSerialize(subscriptions, many=True)
+
         return Response(serializer.data)

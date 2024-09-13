@@ -34,7 +34,27 @@ class GroupViewSet(viewsets.ModelViewSet):
                 return Group.objects.none()
 
         return queryset  
+    
+    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated])
+    def remove_student(self, request, pk=None):
+        try:
+            group = self.get_object()  
+            student_id = request.data.get('student_id') 
+            
+            if not student_id:
+                return Response({'error': 'Student ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Assuming you have a Many-to-Many relationship between Group and Student
+            try:
+                student = group.students.get(id=student_id)  # Get the student from the group
+                group.students.remove(student)  # Remove the student from the group
+                return Response({'message': 'Student removed from group successfully'}, status=status.HTTP_204_NO_CONTENT)
+            except Student.DoesNotExist:
+                return Response({'error': 'Student not found in this group'}, status=status.HTTP_404_NOT_FOUND)
 
+        except Group.DoesNotExist:
+            return Response({'error': 'Group not found'}, status=status.HTTP_404_NOT_FOUND)
+        
 class FieldOfStudysView(viewsets.ModelViewSet):
     queryset = FieldOfStudy.objects.all()
     serializer_class = fieldofstudySerializer

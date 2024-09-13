@@ -1,10 +1,7 @@
 import React from 'react'
 import Sidebar from '../../../components/dahsboardcomponents/sidebar';
-import Navbar from '../../../components/dahsboardcomponents/navbar';
-import { cookies } from 'next/headers';
-import Students from './Students';
 import axiosSSRInstance from '../../../lib/axiosServer';
-import StudentsRequest from './Students';
+import StudentsRequest from './Studentsreq';
 import StudentsList from './StudentsList';
 
 

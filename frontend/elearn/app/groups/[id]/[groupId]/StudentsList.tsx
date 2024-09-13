@@ -1,4 +1,7 @@
-import React from 'react'
+"use client"
+import React, { useEffect, useState } from 'react'
+import axiosClientInstance from '../../../lib/axiosInstance';
+import { useParams } from 'next/navigation';
 
 interface Student{
     id:number;
@@ -7,51 +10,84 @@ interface Student{
     avatar : string;
     wilaya:string;
   }
-  interface StudentsListProps {
-    studentlist: Student[];
+interface StudentsListProps {
+  studentlist: Student[];
+}
+
+interface Subscription {
+  id: number;
+  student: number;
+  is_active:boolean;
+}
+  
+
+
+function StudentsList({studentlist}:StudentsListProps) {
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const params = useParams() 
+
+  useEffect(() => {
+      if (studentlist.length > 0) {
+        const fetchSubscriptions = async () => {
+          try {
+            const studentIds = studentlist.map(student => student.id);
+
+            const response = await axiosClientInstance.post('/subscriptions/filtered_subscribed_students/', {
+              student_ids: studentIds
+            },
+          );
+
+            if (response) {
+              const data = await response.data;
+              setSubscriptions(data);
+            } else {
+              console.error('Failed to fetch subscriptions');
+            }
+          } catch (error) {
+            console.error('Error fetching subscriptions:', error);
+          }
+        };
+
+        fetchSubscriptions();
+      }
+    }, [studentlist]);
+
+
+  const handleDelte = async(id:number)=>{
+    const groud_id = Number(params.groupId)
+    return await axiosClientInstance.delete(`groups/${groud_id}/remove_student/`, {
+      data: { student_id: id } 
+  });
   }
     
 
-function StudentsList({studentlist}:StudentsListProps) {
   return (
     <div className="mx-auto max-w-screen-lg px-4 py-8 sm:px-8">
   <div className="flex items-center justify-between pb-6">
     <div>
-      <h2 className="font-semibold text-gray-700">User Accounts</h2>
-      <span className="text-xs text-gray-500">View accounts of registered users</span>
-    </div>
-    <div className="flex items-center justify-between">
-      <div className="ml-10 space-x-8 lg:ml-40">
-        <button className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white focus:outline-none focus:ring hover:bg-blue-700">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="h-4 w-4">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m0 0l6.75-6.75M12 19.5l-6.75-6.75" />
-          </svg>
-
-          CSV
-        </button>
-      </div>
+      <h2 className="font-semibold text-gray-700">أعضاء المجموعة</h2>
     </div>
   </div>
 
   <div className="overflow-y-hidden rounded-lg border border-gray-light">
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
+      <table className="min-w-full divide-y divide-gray-light">
         <thead className="bg-sky-400">
           <tr>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
               ID
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-              Full Name
+              الاسم الكامل
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-              User Role
+              الاشتراك
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-              Created at
+              الولاية
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-              Status
+              
             </th>
           </tr>
         </thead>
@@ -69,22 +105,33 @@ function StudentsList({studentlist}:StudentsListProps) {
                     alt="" />
                   </div>
                   <div className="mr-4">
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium">
                       {student.first_name} {student.last_name}
                     </div>
                   </div>
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                Administrator
+                {subscriptions.find(s => s.student === student.id)?.is_active ? 
+                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-300 text-green-800">
+                Active
+                </span> 
+                  : 
+                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-300 text-red-800">
+                  not active
+                </span>
+                  
+                  }
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {student.wilaya}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-300 text-green-800">
-                  Active
-                </span>
+                <button className="px-2 inline-flex text-sm  py-1 font-semibold border border-red-300 rounded-lg text-red-800 hover:text-white hover:bg-red-500 hover:border-red-800  "
+                onClick={()=>handleDelte(student.id)}
+                >
+                  حذف 
+                </button>
               </td>
             </tr>
           ))}
