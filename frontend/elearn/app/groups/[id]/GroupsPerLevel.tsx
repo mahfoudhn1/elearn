@@ -9,43 +9,15 @@ import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store/store';
 import axiosInstance from '../../lib/axiosInstance';
-
-
-
-
-interface Schedule {
-  day_of_week: string;
-  start_time: string;
-  end_time: string;
-}
-
-interface Student {
-  first_name: string;
-  last_name: string;
-  phone_number: string;
-  avatar: string;
-  wilaya: string;
-  school_level: string;
-  hightschool_speciality: string;
-}
-
-interface Group {
-  id: number;
-  name: string;
-  school_level: string;
-  grade: number;
-  schedule?: Schedule[];
-  students?: Student[];
-}
+import { Student } from '../../types/student';
+import { Group } from '../../types/student';
+import { Grade } from '../../types/student';
 
 interface GroupsPerLevelProps {
   groupsCategories: Group[];
   allGrades: Grade[]
 }
-interface Grade{
-  id:number;
-  name:string;
-}
+
 
 const GroupsPerLevel = ({ groupsCategories, allGrades }: GroupsPerLevelProps) => {
   const [openGroupId, setOpenGroupId] = useState<number | null>(null)

@@ -8,14 +8,9 @@ import 'swiper/swiper-bundle.css'
 import { Navigation, Pagination, Scrollbar, A11y, Autoplay } from 'swiper/modules';
 import { faCheck, faCheckCircle, faXmark } from '@fortawesome/free-solid-svg-icons';
 import axiosClientInstance from '../../../lib/axiosInstance';
+import { Student } from '../../../types/student';
 
-interface Student{
-  id:number;
-  first_name:string;
-  last_name : string;
-  avatar : string;
-  wilaya:string;
-}
+
 
 interface StudentReq{
     id: number

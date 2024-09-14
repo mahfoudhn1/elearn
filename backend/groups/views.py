@@ -33,7 +33,28 @@ class GroupViewSet(viewsets.ModelViewSet):
             except Teacher.DoesNotExist:
                 return Group.objects.none()
 
-        return queryset  
+        return queryset
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def add_student_to_group(self, request, pk=None):
+        group_id = pk  # Get group ID from URL parameters
+        student_id = request.data.get('student_id')
+
+        try:
+            # Fetch the group and student
+            group = Group.objects.get(id=group_id)
+            student = Student.objects.get(id=student_id)
+
+            # Add the student to the group's students
+            group.students.add(student)
+
+            return Response({'success': 'Student added to group successfully.'}, status=status.HTTP_200_OK)
+        except Group.DoesNotExist:
+            return Response({'error': 'Group not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Student.DoesNotExist:
+            return Response({'error': 'Student not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated])
     def remove_student(self, request, pk=None):
@@ -54,7 +75,44 @@ class GroupViewSet(viewsets.ModelViewSet):
 
         except Group.DoesNotExist:
             return Response({'error': 'Group not found'}, status=status.HTTP_404_NOT_FOUND)
-        
+    
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def Noroup_students(self, request):
+        user = request.user
+        group_id = request.query_params.get('group_id', None)
+
+        if not group_id:
+            return Response({'error': 'group_id parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            group = Group.objects.get(id=group_id)
+        except Group.DoesNotExist:
+            return Response({'error': 'Group not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            teacher = Teacher.objects.get(user=user)
+        except Teacher.DoesNotExist:
+            return Response({'error': 'The authenticated user is not a teacher'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Fetch active subscriptions where students don't belong to any group
+        subscriptions = Subscription.objects.filter(
+            teacher=teacher,
+            is_active=True,
+            student__group__isnull=True
+        )
+
+        subscriptions = subscriptions.filter(
+            student__school_level=group.school_level,
+            student__grade=group.grade
+        )
+
+        students = [subscription.student for subscription in subscriptions]
+
+        serializer = StudentSerializer(students, many=True)
+        return Response(serializer.data)
+
+
+
 class FieldOfStudysView(viewsets.ModelViewSet):
     queryset = FieldOfStudy.objects.all()
     serializer_class = fieldofstudySerializer

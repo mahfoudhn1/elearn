@@ -2,30 +2,31 @@
 import React, { useEffect, useState } from 'react'
 import axiosClientInstance from '../../../lib/axiosInstance';
 import { useParams } from 'next/navigation';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import PopupStudents from './PopupStudents';
+import { Student } from '../../../types/student';
+import { Subscription } from '../../../types/student';
 
-interface Student{
-    id:number;
-    first_name:string;
-    last_name : string;
-    avatar : string;
-    wilaya:string;
-  }
 interface StudentsListProps {
   studentlist: Student[];
 }
 
-interface Subscription {
-  id: number;
-  student: number;
-  is_active:boolean;
-}
-  
-
 
 function StudentsList({studentlist}:StudentsListProps) {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [isPopupVisible, setPopupVisible] = useState(false);
   const params = useParams() 
 
+
+  const handleOpenPopup = () => {
+      setPopupVisible(true);
+    };
+  
+    // Function to hide the popup
+    const handleClosePopup = () => {
+      setPopupVisible(false);
+    };
   useEffect(() => {
       if (studentlist.length > 0) {
         const fetchSubscriptions = async () => {
@@ -63,12 +64,28 @@ function StudentsList({studentlist}:StudentsListProps) {
 
   return (
     <div className="mx-auto max-w-screen-lg px-4 py-8 sm:px-8">
+       {isPopupVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+          <div className="relative w-full max-w-lg bg-transparent p-6">
+            <PopupStudents onClose={handleClosePopup} />
+          </div>
+        </div>
+      )}
   <div className="flex items-center justify-between pb-6">
     <div>
       <h2 className="font-semibold text-gray-700">أعضاء المجموعة</h2>
     </div>
+    <div className="flex items-center justify-between">
+        <div className="ml-10 space-x-8 lg:ml-40">
+          <button className="flex items-center gap-2 rounded-md bg-sky-400 px-4 py-2 text-sm font-semibold text-white focus:outline-none focus:ring hover:bg-blue"
+          onClick={handleOpenPopup}
+          >
+            <FontAwesomeIcon icon={faPlus} />
+            اضافة أعضاء
+          </button>
+        </div>
+      </div>
   </div>
-
   <div className="overflow-y-hidden rounded-lg border border-gray-light">
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-light">
@@ -91,10 +108,10 @@ function StudentsList({studentlist}:StudentsListProps) {
             </th>
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody className="bg-white divide-y divide-gray">
           {studentlist?.map((student, index) => (
             <tr key={index}>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray">
                 {student.id}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">

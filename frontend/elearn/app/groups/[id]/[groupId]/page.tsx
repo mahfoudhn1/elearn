@@ -44,7 +44,6 @@ async function SnigleGrpoup({params} :{params:Params}) {
   const group_id = Number(params.groupId)
   const StudentsReqGroup = await getStudents(group_id)
   const {students} = await getGroupStudents(group_id)
-  console.log(students);
   
   
   return (

@@ -3,23 +3,8 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'next/navigation';
 import axiosClientInstance from '../../../lib/axiosInstance';
-
-
-
-
-
-interface Student {
-  id: number; 
-  first_name: string;
-  last_name: string;
-  grade: number;
-}
-
-interface Grade{
-  id:number;
-  name:string;
-}
-
+import { Student } from '../../../types/student';
+import { Grade } from '../../../types/student';
 
 function CreateGroup() {
 
