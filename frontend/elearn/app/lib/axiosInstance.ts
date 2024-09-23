@@ -23,7 +23,7 @@ axiosClientInstance.interceptors.response.use(
             withCredentials: true, 
           }
         );
-        console.log(response.data);
+        // console.log(response.data);
         
         const { access_token, refresh_token } = response.data;
         

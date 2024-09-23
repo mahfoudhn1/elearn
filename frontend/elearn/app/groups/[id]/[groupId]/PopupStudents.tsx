@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import axiosClientInstance from '../../../lib/axiosInstance';
 import { Student } from '../../../types/student';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faX } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faX } from '@fortawesome/free-solid-svg-icons';
 
 interface PopupStudentsProps {
     onClose: () => void;
@@ -13,6 +13,7 @@ const PopupStudents:React.FC<PopupStudentsProps> = ({onClose})=>{
     const [students, setStudents] = useState<Student[]>([]);
     const [searchTerm, setSearchTerm] = useState<string>(''); // State to store search input
     const [filteredStudents, setFilteredStudents] = useState<Student[]>([]); // State for filtered students
+    const [isAdded, setIsAdded] = useState<Boolean>(false)
 
     const params = useParams();
     const group_id = Number(params.groupId);
@@ -23,7 +24,7 @@ const PopupStudents:React.FC<PopupStudentsProps> = ({onClose})=>{
                 const response = await axiosClientInstance.get(`/groups/Noroup_students/`, { params: { group_id } });
                 if (response.data) {
                     setStudents(response.data);
-                    setFilteredStudents(response.data); // Initialize with full list
+                    setFilteredStudents(response.data); 
                 }
             } catch (error) {
                 console.log(error);
@@ -47,6 +48,9 @@ const PopupStudents:React.FC<PopupStudentsProps> = ({onClose})=>{
           const res = await axiosClientInstance.post(`groups/${group_id}/add_student_to_group/`,{
             student_id
           })
+          if(res){
+            setIsAdded(true)
+          }
         }catch(error){
           console.log(error);
           
@@ -90,11 +94,21 @@ const PopupStudents:React.FC<PopupStudentsProps> = ({onClose})=>{
                       <p className="text-sm text-gray">{student.wilaya}</p>
                     </div>
                   </div>
+                  {isAdded ?  
+                      <div className="text-sm  rounded-lg px-2 py-1 bg-white text-gray-light"
+                      
+                    >
+                      <FontAwesomeIcon icon={faCheck} />
+                      تم الاضافة
+                    </div>
+                  : 
+                  
                   <button className="text-sm border rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     onClick={()=>handleAdd(student.id, group_id)}
                   >
                     اضافة
                   </button>
+                  }
                 </div>
               ))}
             </div>

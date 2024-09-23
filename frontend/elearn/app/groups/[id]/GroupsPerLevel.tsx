@@ -47,14 +47,7 @@ const GroupsPerLevel = ({ groupsCategories, allGrades }: GroupsPerLevelProps) =>
       return res
     }catch(error:any){
       console.log(error);
-      
-      // if (error) {
-      //   console.log(error);
-        
-      //   // setErrorMessage(error.response);
-      // } else {
-      //   setErrorMessage("An unexpected error occurred.");
-      // }
+
     }
   }
   
@@ -91,7 +84,7 @@ const GroupsPerLevel = ({ groupsCategories, allGrades }: GroupsPerLevelProps) =>
                         {' '}
                         عدد الطلبة : {group.students?.length ?? 0}{' '}
                       </div>
-                      <p className="mt-2 text-gray"> {allGrades.find(g => g.id === group.grade)?.name || "Grade not found"} </p>
+                      <p className="mt-2 text-gray"> {allGrades.find(g => g.id === group.grade.id)?.name || "Grade not found"} </p>
                       <p className="mt-2 text-gray"> {group.school_level} </p>
                     </div>
                     <div className='flex flex-col'>

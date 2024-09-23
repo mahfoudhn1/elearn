@@ -1,4 +1,6 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
+from datetime import datetime, time, timedelta
 
 from rest_framework import viewsets
 from rest_framework import status
@@ -8,6 +10,8 @@ from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.exceptions import NotFound
 
+from livestream.models import ZoomMeeting
+from livestream.zoom_service import ZoomOAuthService
 from users.serializers import StudentSerializer
 
 from .serializers import * 
@@ -45,7 +49,7 @@ class GroupViewSet(viewsets.ModelViewSet):
             group = Group.objects.get(id=group_id)
             student = Student.objects.get(id=student_id)
 
-            # Add the student to the group's students
+
             group.students.add(student)
 
             return Response({'success': 'Student added to group successfully.'}, status=status.HTTP_200_OK)
@@ -137,35 +141,119 @@ class GradeViewSet(viewsets.ModelViewSet):
 
         return Grade.objects.all()
 
-    
+
 class ScheduleViewSet(viewsets.ModelViewSet):
-    queryset = Schedule.objects.all()
     serializer_class = ScheduleSerializer
-    permission_classes = [IsAuthenticated]  
-    
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user  # Get the current user
+        group_id = self.request.query_params.get('group_id', None)
+        scheduled_date = self.request.query_params.get('scheduled_date', None)
+
+        # Fetch schedules based on group ID or user
+        if group_id:
+            schedules = Schedule.objects.filter(group=group_id)
+        else:
+            schedules = Schedule.objects.filter(user=user)
+            if scheduled_date:
+                schedules = schedules.filter(scheduled_date=scheduled_date)
+
+
+        # Check if any scheduled dates have passed and update them
+        for schedule in schedules:
+           
+            if schedule.scheduled_date < timezone.now().date():  # Use timezone.now() for current date
+                # Update the schedule date to the next occurrence if it has passed
+                next_occurrence = self.get_next_weekday(schedule.day_of_week)
+                schedule.scheduled_date = next_occurrence
+                schedule.save()  # Save the updated schedule
+        return schedules
+
     def create(self, request, *args, **kwargs):
+        user = request.user
         group_id = request.data.get('group_id')
+        group = get_object_or_404(Group, id=group_id)
+
         try:
-            group = Group.objects.get(id=group_id)
-        except Group.DoesNotExist:
-            return Response({"error": "Group not found."}, status=status.HTTP_404_NOT_FOUND)
+            teacher = Teacher.objects.get(user=user)
+            if group.admin != teacher:
+                return Response({"detail": "You are not authorized to create a schedule for this group."}, 
+                                status=status.HTTP_403_FORBIDDEN)
+        except Teacher.DoesNotExist:
+            return Response({"detail": "You are not registered as a teacher."}, 
+                            status=status.HTTP_403_FORBIDDEN)
 
-        teacher = Teacher.objects.get(user = request.user)
+        data = request.data.copy()
+        schedule_type = data.get('schedule_type', 'weekly')
 
-        if group.admin != teacher:
-            raise PermissionDenied("You are not authorized to manage schedules for this group.")
+        if schedule_type not in ['weekly', 'custom']:
+            return Response({"detail": "Invalid schedule type. Must be 'weekly' or 'one-time'."}, status=status.HTTP_400_BAD_REQUEST)
 
-        schedule = Schedule.objects.create(
-            day_of_week=request.data['day_of_week'],
-            start_time=request.data['start_time'],
-            end_time=request.data['end_time']
-        )
+        scheduled_date = data.get('scheduled_date')
+        if not scheduled_date:
+            return Response({"detail": "Scheduled date is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        group.schedule = schedule
-        group.save()
+        scheduled_date = datetime.strptime(scheduled_date, '%Y-%m-%d').date()
+        day_of_week = scheduled_date.strftime('%A').lower()
+        data['day_of_week'] = day_of_week
 
-        serializer = self.get_serializer(schedule)
+        # Check if the scheduled date has passed
+        if schedule_type == 'weekly':
+            next_occurrence = self.get_next_weekday(day_of_week)
+            print(next_occurrence)
+            if next_occurrence < datetime.now().date():  # If it's in the past
+                next_occurrence += timedelta(days=7)  # Move to next week
+            elif next_occurrence == datetime.now().date():
+                pass
+            print(next_occurrence)
+            data['scheduled_date'] = next_occurrence.strftime('%Y-%m-%d')
+        else:  # one-time
+            # For one-time, just use the provided date
+            data['scheduled_date'] = scheduled_date.strftime('%Y-%m-%d')
+   
+        start_time = datetime.strptime(data.get('start_time'), '%H:%M').time()
+        end_time = datetime.strptime(data.get('end_time'), '%H:%M').time()
+
+        if day_of_week in ['friday', 'saturday']:
+            if not (start_time >= time(8, 0) and end_time <= time(22, 0)):
+                return Response({"detail": "Open time for Friday and Saturday is from 08:00 to 20:00."}, status=status.HTTP_400_BAD_REQUEST)
+        else: 
+            if not (start_time >= time(18, 0) and end_time <= time(22, 0)):
+                return Response({"detail": "Open time for other days is from 18:00 to 20:00."}, status=status.HTTP_400_BAD_REQUEST)
+
+        data['user'] = user.id
+        data['group'] = group_id
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def perform_create(self, serializer):
+        serializer.save()
+    
+    def destroy(self, request, *args, **kwargs):
+        try:
+            schedule = self.get_object()
+            if schedule.user != request.user:
+                return Response({"detail": "Not authorized to delete this schedule."}, status=status.HTTP_403_FORBIDDEN)
+            self.perform_destroy(schedule)
+            return Response({"detail": "Schedule deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        except Schedule.DoesNotExist:
+            return Response({"detail": "Schedule not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    def get_next_weekday(self, day_of_week):
+        days_of_week = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+        today = datetime.now().date()
+        current_day = today.weekday()
+        target_day = days_of_week.index(day_of_week.lower())
+
+        days_ahead = (target_day - current_day) % 7
+
+        if days_ahead == 0:
+            return today 
+
+        return today + timedelta(days=days_ahead)
 
 class StudentGroupRequestViewSet(viewsets.ModelViewSet):
     queryset = StudentGroupRequest.objects.all()
@@ -230,9 +318,7 @@ class StudentGroupRequestViewSet(viewsets.ModelViewSet):
                 if group.admin != teacher:
                     return Response({"detail": "You are not the admin of this group."}, status=status.HTTP_403_FORBIDDEN)
                 
-                print(request_instance)
                 StudentGroupRequest.delete(request_instance)
-                print(group)
                 group.students.add(student)
                 group.save()
 

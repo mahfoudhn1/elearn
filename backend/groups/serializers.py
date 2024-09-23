@@ -25,7 +25,7 @@ class StudentGroupRequestSerializer(serializers.ModelSerializer):
 class ScheduleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Schedule
-        fields = ['day_of_week', 'start_time', 'end_time']
+        fields = ['id', 'user', 'day_of_week', 'scheduled_date', 'start_time', 'end_time', 'group','color']
 
 class fieldofstudySerializer(serializers.ModelSerializer):
     class Meta:
@@ -43,13 +43,12 @@ class gradeSerializer(serializers.ModelSerializer):
 class GroupSerializer(serializers.ModelSerializer):
     students = serializers.PrimaryKeyRelatedField(many=True, queryset=Student.objects.all())
     school_level = serializers.PrimaryKeyRelatedField(queryset=SchoolLevel.objects.all())
-    grade = serializers.PrimaryKeyRelatedField(queryset=Grade.objects.all())
-    field_of_study = serializers.PrimaryKeyRelatedField(queryset=FieldOfStudy.objects.all())
-    schedule = ScheduleSerializer(many=True, required=False)  
+    grade = gradeSerializer()
+    field_of_study = fieldofstudySerializer()
 
     class Meta:
         model = Group
-        fields = ['id', 'name', 'students', 'school_level', 'grade', 'schedule', 'field_of_study','created_at', 'updated_at', 'status']
+        fields = ['id', 'name', 'students', 'school_level', 'grade', 'field_of_study','created_at', 'updated_at', 'status']
 
     def create(self, validated_data):
         request = self.context['request']

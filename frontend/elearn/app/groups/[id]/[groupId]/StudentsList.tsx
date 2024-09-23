@@ -1,12 +1,13 @@
 "use client"
 import React, { useEffect, useState } from 'react'
 import axiosClientInstance from '../../../lib/axiosInstance';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import PopupStudents from './PopupStudents';
 import { Student } from '../../../types/student';
 import { Subscription } from '../../../types/student';
+import Link from 'next/link';
 
 interface StudentsListProps {
   studentlist: Student[];
@@ -23,7 +24,6 @@ function StudentsList({studentlist}:StudentsListProps) {
       setPopupVisible(true);
     };
   
-    // Function to hide the popup
     const handleClosePopup = () => {
       setPopupVisible(false);
     };
@@ -41,6 +41,7 @@ function StudentsList({studentlist}:StudentsListProps) {
             if (response) {
               const data = await response.data;
               setSubscriptions(data);
+
             } else {
               console.error('Failed to fetch subscriptions');
             }
@@ -53,7 +54,11 @@ function StudentsList({studentlist}:StudentsListProps) {
       }
     }, [studentlist]);
 
+    const router = useRouter()
 
+    
+
+    
   const handleDelte = async(id:number)=>{
     const groud_id = Number(params.groupId)
     return await axiosClientInstance.delete(`groups/${groud_id}/remove_student/`, {
@@ -64,6 +69,7 @@ function StudentsList({studentlist}:StudentsListProps) {
 
   return (
     <div className="mx-auto max-w-screen-lg px-4 py-8 sm:px-8">
+
        {isPopupVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
           <div className="relative w-full max-w-lg bg-transparent p-6">
