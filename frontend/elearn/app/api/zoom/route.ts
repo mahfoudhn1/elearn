@@ -1,21 +1,26 @@
-// app/api/zoom/route.ts
-import { NextResponse } from 'next/server';
-import axios from 'axios';
-import axiosClientInstance from '../../lib/axiosInstance';
+import { NextApiRequest, NextApiResponse } from "next";
+import axiosSSRInstance from "../../lib/axiosServer";
 
+export async function POST(req: Request) {
+  const { meetingNumber, role } = await req.json(); // Parse JSON body from the request
 
-
-
-export async function GET(req: Request) {
-  const zoomAuthUrl = 'livestream/oauth/zoom_authenticate/'
-  
   try {
-    const response = await axiosClientInstance.get(zoomAuthUrl);
-    const authUrl = response.data.auth_url; 
+    const response = await axiosSSRInstance.post('/livestream/signiture/', {
+      meeting_number:meetingNumber ,
+      role,
+    });
 
-    return NextResponse.redirect(authUrl);
+    return new Response(JSON.stringify(response.data), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
-    console.error('Error fetching Zoom auth URL:', error);
-    return NextResponse.json({ error: 'Error connecting to Zoom' }, { status: 500 });
+    console.error('Error:', error);
+    return new Response(JSON.stringify({ error: 'Error generating signature' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
+
+// If you want to handle other HTTP methods, you can add them here as well

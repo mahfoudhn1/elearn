@@ -168,7 +168,7 @@ class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
             'code': code,
             'client_id': settings.GOOGLE_CLIENT_ID,
             'client_secret': settings.GOOGLE_CLIENT_SECRET,
-            'redirect_uri': 'http://localhost:3000/api/auth/google/callback/',
+            'redirect_uri': 'http://localhost:3000/api/auth/callback/google/',
             'grant_type': 'authorization_code',
         }
         try:

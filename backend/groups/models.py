@@ -63,6 +63,8 @@ class Schedule(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE, default=6)
     schedule_type = models.CharField(max_length=10, choices=SCHEDULE_TYPE_CHOICES, default='weekly')
     color = models.CharField(max_length=20, default='blue-500')
+    zoom_meeting_id = models.CharField(max_length=255, blank=True, null=True)  # New field for Zoom meeting ID
+    zoom_join_url = models.URLField(blank=True, null=True)  # New field for Zoom meeting URL
     def update_scheduled_date(self):
         today = datetime.now().date()
         

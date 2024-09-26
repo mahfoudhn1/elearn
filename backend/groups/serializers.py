@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from users.serializers import StudentSerializer
+from users.serializers import StudentSerializer, TeacherSerializer
 from .models import FieldOfStudy, Grade, Group, Schedule, SchoolLevel, StudentGroupRequest
 from users.models import Teacher, Student
 
@@ -25,7 +25,7 @@ class StudentGroupRequestSerializer(serializers.ModelSerializer):
 class ScheduleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Schedule
-        fields = ['id', 'user', 'day_of_week', 'scheduled_date', 'start_time', 'end_time', 'group','color']
+        fields = ['id', 'user', 'day_of_week', 'scheduled_date', 'start_time', 'end_time', 'group','color','zoom_meeting_id','zoom_join_url']
 
 class fieldofstudySerializer(serializers.ModelSerializer):
     class Meta:
@@ -45,10 +45,10 @@ class GroupSerializer(serializers.ModelSerializer):
     school_level = serializers.PrimaryKeyRelatedField(queryset=SchoolLevel.objects.all())
     grade = gradeSerializer()
     field_of_study = fieldofstudySerializer()
-
+    admin = serializers.PrimaryKeyRelatedField(queryset=Teacher.objects.all())
     class Meta:
         model = Group
-        fields = ['id', 'name', 'students', 'school_level', 'grade', 'field_of_study','created_at', 'updated_at', 'status']
+        fields = ['id', 'name','admin', 'students', 'school_level', 'grade', 'field_of_study','created_at', 'updated_at', 'status']
 
     def create(self, validated_data):
         request = self.context['request']

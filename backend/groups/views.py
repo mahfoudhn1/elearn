@@ -13,6 +13,7 @@ from rest_framework.exceptions import NotFound
 from livestream.models import ZoomMeeting
 from livestream.zoom_service import ZoomOAuthService
 from users.serializers import StudentSerializer
+import requests
 
 from .serializers import * 
 from .models import *
@@ -142,16 +143,16 @@ class GradeViewSet(viewsets.ModelViewSet):
         return Grade.objects.all()
 
 
+
 class ScheduleViewSet(viewsets.ModelViewSet):
     serializer_class = ScheduleSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user  # Get the current user
+        user = self.request.user
         group_id = self.request.query_params.get('group_id', None)
         scheduled_date = self.request.query_params.get('scheduled_date', None)
 
-        # Fetch schedules based on group ID or user
         if group_id:
             schedules = Schedule.objects.filter(group=group_id)
         else:
@@ -159,15 +160,15 @@ class ScheduleViewSet(viewsets.ModelViewSet):
             if scheduled_date:
                 schedules = schedules.filter(scheduled_date=scheduled_date)
 
-
-        # Check if any scheduled dates have passed and update them
+        # Update any schedules with passed dates
         for schedule in schedules:
-           
-            if schedule.scheduled_date < timezone.now().date():  # Use timezone.now() for current date
-                # Update the schedule date to the next occurrence if it has passed
+            if schedule.scheduled_date < timezone.now().date():
                 next_occurrence = self.get_next_weekday(schedule.day_of_week)
                 schedule.scheduled_date = next_occurrence
-                schedule.save()  # Save the updated schedule
+                schedule.save()
+
+                self.create_zoom_meeting(schedule)
+
         return schedules
 
     def create(self, request, *args, **kwargs):
@@ -197,36 +198,28 @@ class ScheduleViewSet(viewsets.ModelViewSet):
         scheduled_date = datetime.strptime(scheduled_date, '%Y-%m-%d').date()
         day_of_week = scheduled_date.strftime('%A').lower()
         data['day_of_week'] = day_of_week
-
-        # Check if the scheduled date has passed
         if schedule_type == 'weekly':
             next_occurrence = self.get_next_weekday(day_of_week)
-            print(next_occurrence)
-            if next_occurrence < datetime.now().date():  # If it's in the past
-                next_occurrence += timedelta(days=7)  # Move to next week
-            elif next_occurrence == datetime.now().date():
-                pass
-            print(next_occurrence)
+            if next_occurrence < datetime.now().date():
+                next_occurrence += timedelta(days=7)
             data['scheduled_date'] = next_occurrence.strftime('%Y-%m-%d')
-        else:  # one-time
-            # For one-time, just use the provided date
+        else:
             data['scheduled_date'] = scheduled_date.strftime('%Y-%m-%d')
-   
+
         start_time = datetime.strptime(data.get('start_time'), '%H:%M').time()
         end_time = datetime.strptime(data.get('end_time'), '%H:%M').time()
 
-        if day_of_week in ['friday', 'saturday']:
-            if not (start_time >= time(8, 0) and end_time <= time(22, 0)):
-                return Response({"detail": "Open time for Friday and Saturday is from 08:00 to 20:00."}, status=status.HTTP_400_BAD_REQUEST)
-        else: 
-            if not (start_time >= time(18, 0) and end_time <= time(22, 0)):
-                return Response({"detail": "Open time for other days is from 18:00 to 20:00."}, status=status.HTTP_400_BAD_REQUEST)
+        # Validate time restrictions
+        self.validate_time(day_of_week, start_time, end_time)
 
         data['user'] = user.id
         data['group'] = group_id
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
+
+        self.create_zoom_meeting(serializer.instance)
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):
@@ -247,13 +240,51 @@ class ScheduleViewSet(viewsets.ModelViewSet):
         today = datetime.now().date()
         current_day = today.weekday()
         target_day = days_of_week.index(day_of_week.lower())
-
         days_ahead = (target_day - current_day) % 7
 
         if days_ahead == 0:
             return today 
-
         return today + timedelta(days=days_ahead)
+
+    def validate_time(self, day_of_week, start_time, end_time):
+        if day_of_week in ['friday', 'saturday']:
+            if not (start_time >= time(8, 0) and end_time <= time(22, 0)):
+                raise ValueError("Open time for Friday and Saturday is from 08:00 to 20:00.")
+        else: 
+            if not (start_time >= time(18, 0) and end_time <= time(22, 0)):
+                raise ValueError("Open time for other days is from 18:00 to 20:00.")
+
+    def create_zoom_meeting(self, schedule):
+        oauth_service = ZoomOAuthService()
+        access_token = oauth_service.get_access_token(schedule.user)
+        start_time = datetime.combine(schedule.scheduled_date, schedule.start_time)
+        end_time = datetime.combine(schedule.scheduled_date, schedule.end_time)
+        duration = int((end_time - start_time).total_seconds() / 60) 
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+        meeting_data = {
+            "topic": "Scheduled Class",
+            "type": 2,  # Scheduled meeting
+            "start_time": f"{schedule.scheduled_date}T{schedule.start_time}:00Z",  # Format for Zoom
+            "duration": duration,  # Duration in minutes
+            "timezone": "UTC",
+            "agenda": "Class Session",
+        }
+
+        response = requests.post('https://api.zoom.us/v2/users/me/meetings', json=meeting_data, headers=headers)
+
+        if response.status_code == 201:
+            meeting_info = response.json()
+            # Save the meeting ID and join URL to the schedule or another related model
+            schedule.zoom_meeting_id = meeting_info['id']
+            schedule.zoom_join_url = meeting_info['join_url']
+            schedule.save()
+        else:
+            print(f"Error creating Zoom meeting: {response.content}")
+
+
 
 class StudentGroupRequestViewSet(viewsets.ModelViewSet):
     queryset = StudentGroupRequest.objects.all()

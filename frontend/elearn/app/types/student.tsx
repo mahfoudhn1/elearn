@@ -22,6 +22,8 @@ export interface Student{
     user: number;              // Assuming this is the ID of the user
     [key: string]: any;
     color:string;
+    zoom_meeting_id: string;
+    zoom_join_url: string;
 }
   export interface Grade{
     id:number;
