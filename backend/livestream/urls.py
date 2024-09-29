@@ -11,4 +11,6 @@ router.register(r'oauth', OAuthViewSet, basename='oauth')
 urlpatterns = [
     path('', include(router.urls)),
     path('signiture/', ZoomSignatureView.as_view(), name='signiture'),
+    # path('videosdk/', ZoomVideoSDKAuthView.as_view(), name='videosdk'),
+
 ]

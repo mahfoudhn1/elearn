@@ -9,6 +9,8 @@ router.register(r'schedules', ScheduleViewSet, basename='schedule')
 router.register(r'fieldofstudy', FieldOfStudysView, basename='fieldofstudy')
 router.register(r'grades', GradeViewSet, basename='grades')
 router.register(r'', GroupViewSet, basename='groups')
+
 urlpatterns = [
     path('', include(router.urls)),
+
 ]

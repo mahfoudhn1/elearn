@@ -62,7 +62,6 @@ async function SnigleGrpoup({params} :{params:Params}) {
   const StudentsReqGroup = await getStudents(group_id)
   const {students} = await getGroupStudents(group_id)
   const schedules = await getSchedule(group_id)
-  console.log(schedules);
   
   return (
     <div className="flex flex-row bg-stone-50">

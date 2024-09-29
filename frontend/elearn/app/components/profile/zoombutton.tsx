@@ -2,7 +2,7 @@ import React from 'react';
 
 const ZoomAuthButton: React.FC = () => {
   const handleZoomAuth = () => {
-    window.location.href = '/api/zoom/';
+    window.location.href = '/api/auth/zoom';
   };
 
   return (

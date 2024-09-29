@@ -1,6 +1,8 @@
+"use client"
 import React from 'react';
 import { CalendarCheck2, Clock, MapPin, Trash2 } from 'lucide-react';
 import { Schedule } from '../../../../../types/student';
+import { useParams, useRouter } from 'next/navigation';
 
 interface ScheduleListProps {
   schedules: Schedule[];
@@ -21,15 +23,19 @@ const ScheduleList: React.FC<ScheduleListProps> = ({ schedules, onCancel, role }
     "saturday": 'السبت',
     "sunday": 'الأحد'
   };
-  console.log(schedules);
-  
+  const params = useParams()
+  const router = useRouter()
+  const GoToMetting = (id:number)=>{
+    router.push(`/groups/${params.id}/${params.groupId}/livestream/${id}`)
+  } 
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg mt-4">
       <h2 className="text-2xl font-semibold text-gray-dark mb-4">التوقيت</h2>
       {schedules?.map((schedule, index) => (
         <div key={index} className={`mb-4 last:mb-0 p-2 shadow rounded-lg bg-${schedule.color} bg-opacity-70`}>
           <div className="flex justify-between items-start mb-1">
-            <div className="flex">
+            <div className="flex cursor-pointer"
+              onClick={()=>GoToMetting(schedule.id)}>
             <div className='flex flex-col border-l justify-center'>
               <p className="text-white text-sm flex ml-4 items-center">
                 <Clock size={14} className="mr-1" />

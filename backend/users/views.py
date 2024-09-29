@@ -40,7 +40,6 @@ class MyTokenRefreshView(TokenRefreshView):
         if not old_refresh_token:
             return Response({'error': 'Refresh token not provided'}, status=400)
         
-        print(old_refresh_token)
         try:
             # Decode the old refresh token
             old_token = RefreshToken(old_refresh_token)
@@ -59,7 +58,6 @@ class MyTokenRefreshView(TokenRefreshView):
             new_refresh = RefreshToken.for_user(user)
             new_access_token = str(new_refresh.access_token)
             new_refresh_token = str(new_refresh)
-            print(new_access_token)
             access_token_expiry = timezone.now() + timedelta(minutes=15)
             refresh_token_expiry = timezone.now() + timedelta(days=7)
 
@@ -159,7 +157,6 @@ def get_tokens_for_user(user):
 class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
     def create(self, request, *args, **kwargs):
         code = request.data.get('code')
-        print(code)
         if not code:
             return Response({'error': 'Authorization code missing'}, status=status.HTTP_400_BAD_REQUEST)
 

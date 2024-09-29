@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import axiosClientInstance from '../../../../../lib/axiosInstance';
 import { Schedule } from '../../../../../types/student';
 import CustomDatePicker from './Datepicker';

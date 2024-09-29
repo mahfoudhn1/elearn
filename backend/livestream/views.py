@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta
 from django.utils import timezone
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 import requests
 from django.http import HttpResponse, JsonResponse
 from rest_framework.decorators import action
 from rest_framework import viewsets, status
 
+from groups.models import Schedule
 from users.models import Student, Teacher
 from subscription.models import Subscription
 from .zoom_service import ZoomOAuthService
@@ -51,17 +52,34 @@ class OAuthViewSet(viewsets.ViewSet):
             return HttpResponse(f'Error during authentication: {str(e)}', status=500)
     
     @action(detail=False, methods=['get'])
-    def get_zoom_token(request):
+    def get_zoom_token(self, request):
         if not request.user.is_authenticated:
             return Response({'error': 'Unauthorized'}, status=401)
 
-        zoom_access_token = request.request.user.zoom_access_token
-        
+        zoom_access_token = request.user.zoom_access_token
+        print(zoom_access_token)
         if zoom_access_token:
             return Response({'zoom_access_token': zoom_access_token})
         else:
             return Response({'error': 'Zoom access token not found'}, status=404)
+    
+    @action(detail=False, methods=['get'])
+    def get_zak_token(self, request):
+        if not request.user.is_authenticated:
+            return Response({'error': 'Unauthorized'}, status=401)
 
+        oauth_service = ZoomOAuthService()
+        access_token = oauth_service.get_access_token(request.user)
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+        response = requests.get(f'https://api.zoom.us/v2/users/me/token?type=zak', headers=headers)
+        if response.status_code == 200:
+            zak_token = response.json().get('token')
+            return Response({'zak_token': zak_token})
+        else:
+            return None
 
 class ZoomMeetingViewSet(viewsets.ModelViewSet):
     serializer_class = ZoomMeetingSerializer
@@ -106,7 +124,6 @@ class ZoomMeetingViewSet(viewsets.ModelViewSet):
         
         oauth_service = ZoomOAuthService()
         access_token = oauth_service.get_access_token(request.user)
-        print(access_token)
         if not access_token:
             return Response({'detail': 'OAuth token missing or invalid.'}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -130,16 +147,14 @@ class ZoomMeetingViewSet(viewsets.ModelViewSet):
 class ZoomSignatureView(APIView):
     permission_classes = [IsAuthenticated]
 
+
     def post(self, request):
         meeting_id = request.data.get('meeting_number') 
         user = request.user
         teacher_id = request.data.get('teacher_id')
-     
-        
-        if Teacher.objects.filter(user=user).exists():
-            role = "1"  # Host
-        else:
-            role = "0"  # Attendee
+
+        # Determine role (host or attendee)
+        role = "1" if Teacher.objects.filter(user=user).exists() else "0"
 
         # Validate meeting_id and role
         if not meeting_id or role not in ["0", "1"]:
@@ -149,22 +164,23 @@ class ZoomSignatureView(APIView):
         api_key = settings.ZOOM_SDK_ID  # Store in your environment
         api_secret = settings.ZOOM_SDK_SECRET  # Store in your environment
 
-        # If the user is an attendee (role = 0), verify subscription to the teacher
-        if role == "0":
-            teacher = Teacher.objects.get(id=teacher_id)
-            teacher_id = request.data.get('teacher_id')
-            student = Student.objects.get(user = user)
-            if not teacher_id or not self.is_student_subscribed(student, teacher_id):
+        if role == "0":  # If the user is an attendee
+            teacher = get_object_or_404(Teacher, id=teacher_id)
+            student = get_object_or_404(Student, user=user)
+            schedule = get_object_or_404(Schedule, zoom_meeting_id=meeting_id)
+
+            # Check if the student is subscribed to the teacher
+            if not self.is_student_subscribed(student, teacher.id):
                 return Response({'error': 'User is not subscribed to the teacher.'}, status=status.HTTP_403_FORBIDDEN)
 
-        print(api_key)
-        print(api_secret)
+            if student not in schedule.group.students.all():
+                return Response({"error": "Student is not in the group"}, status=status.HTTP_403_FORBIDDEN)
 
+        # Generate JWT signature
         oHeader = {
             "alg": 'HS256',
             "typ": 'JWT'
         }
-
         oPayload = {
             "sdkKey": api_key,
             "mn": meeting_id,
@@ -178,14 +194,89 @@ class ZoomSignatureView(APIView):
 
         return Response({'signature': signature}, status=status.HTTP_200_OK)
 
-
     def is_student_subscribed(self, student, teacher_id):
         """
         Check if the student is subscribed to the given teacher.
         """
-        teacher = Teacher.objects.get(id=teacher_id)
-        print(teacher)
-        subscirption = Subscription.objects.filter(student=student)
-        print(subscirption)
-        return Subscription.objects.filter(student=student, teacher=teacher_id, is_active=True).exists()
+        return Subscription.objects.filter(student=student, teacher_id=teacher_id, is_active=True).exists()
+
+
+# class ZoomVideoSDKAuthView(APIView):
+#     def post(self, request):
+#         # Validation functions
+#         def is_required(value):
+#             return value is not None and value != ""
+
+#         def in_number_array(arr):
+#             return lambda value: isinstance(value, int) and value in arr
+
+#         def is_length_less_than(length):
+#             return lambda value: value is None or len(str(value)) < length
+
+#         def is_between(min_val, max_val):
+#             return lambda value: value is None or (isinstance(value, int) and min_val <= value <= max_val)
+
+#         def matches_string_array(arr):
+#             return lambda value: value is None or (isinstance(value, list) and all(item in arr for item in value))
+
+#         # Validator
+#         validator = {
+#             'role': [is_required, in_number_array([0, 1])],
+#             'sessionName': [is_required, is_length_less_than(200)],
+#             'expirationSeconds': is_between(1800, 172800),
+#             'userIdentity': is_length_less_than(35),
+#             'sessionKey': is_length_less_than(36),
+#             'geoRegions': matches_string_array(['AU', 'BR', 'CA', 'CN', 'DE', 'HK', 'IN', 'JP', 'MX', 'NL', 'SG', 'US']),
+#             'cloudRecordingOption': in_number_array([0, 1]),
+#             'cloudRecordingElection': in_number_array([0, 1]),
+#             'audioCompatibleMode': in_number_array([0, 1])
+#         }
+
+#         # Coerce request data
+#         data = request.data.copy()
+#         for key in ['role', 'expirationSeconds', 'cloudRecordingOption', 'cloudRecordingElection', 'audioCompatibleMode']:
+#             if key in data and isinstance(data[key], str):
+#                 try:
+#                     data[key] = int(data[key])
+#                 except ValueError:
+#                     pass
+
+#         # Validate request
+#         errors = []
+#         for field, validations in validator.items():
+#             if not isinstance(validations, list):
+#                 validations = [validations]
+#             for validation in validations:
+#                 if field in data and not validation(data[field]):
+#                     errors.append(f"Invalid {field}")
+#                     break
+
+#         if errors:
+#             return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Generate JWT
+#         iat = int(datetime.utcnow().timestamp())
+#         exp = iat + (data.get('expirationSeconds') or 7200)
+        
+#         payload = {
+#             "app_key": settings.ZOOM_CLIENT_ID,
+#             "role_type": data['role'],
+#             "tpc": data['sessionName'],
+#             "version": 1,
+#             "iat": iat,
+#             "exp": exp,
+#         }
+
+#         optional_fields = ['userIdentity', 'sessionKey', 'geoRegions', 'cloudRecordingOption', 'cloudRecordingElection', 'audioCompatibleMode']
+#         for field in optional_fields:
+#             if field in data:
+#                 payload[field] = data[field]
+
+#         if 'geoRegions' in payload:
+#             payload['geo_regions'] = ','.join(payload['geoRegions'])
+#             del payload['geoRegions']
+
+#         sdk_jwt = jwt.encode(payload, settings.ZOOM_CLIENT_SECRET, algorithm="HS256")
+
+#         return Response({"signature": sdk_jwt})
 

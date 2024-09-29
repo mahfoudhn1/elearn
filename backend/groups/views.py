@@ -160,7 +160,6 @@ class ScheduleViewSet(viewsets.ModelViewSet):
             if scheduled_date:
                 schedules = schedules.filter(scheduled_date=scheduled_date)
 
-        # Update any schedules with passed dates
         for schedule in schedules:
             if schedule.scheduled_date < timezone.now().date():
                 next_occurrence = self.get_next_weekday(schedule.day_of_week)
@@ -171,6 +170,8 @@ class ScheduleViewSet(viewsets.ModelViewSet):
 
         return schedules
 
+
+    
     def create(self, request, *args, **kwargs):
         user = request.user
         group_id = request.data.get('group_id')

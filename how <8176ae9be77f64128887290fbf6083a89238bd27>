@@ -1,0 +1,241 @@
+[33mcommit 3be61e1b23321dad1dc37af9e487f7f1a7322d9f[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Thu Sep 26 19:48:48 2024 +0100
+
+    livestream zoom SDK integration with custom permissions
+
+[33mcommit 8176ae9be77f64128887290fbf6083a89238bd27[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Mon Sep 23 15:45:01 2024 +0100
+
+    schedule time for every group
+    new teacher calender
+
+[33mcommit b85edbfd8b1c1cd7d5bbc59c1cbe570f8e27cf42[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Sat Sep 14 17:03:20 2024 +0100
+
+    add users with no groups to groups
+
+[33mcommit 59f5940f2c63e697766bf86eccf0dbcfd2084b17[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Fri Sep 13 19:42:25 2024 +0100
+
+    students List with subscription state
+
+[33mcommit 8cd0374a514f9b0fadd6a893bc14e0ba84281941[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Fri Sep 13 08:26:01 2024 +0100
+
+    student request and student group list
+
+[33mcommit 868e287669b062839e0660d23c694275760c9fa1[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Wed Sep 11 21:21:08 2024 +0100
+
+    import error fix
+
+[33mcommit 3afe89f1af74ae4a02b99690aefc4996daccad7e[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Wed Sep 11 21:20:21 2024 +0100
+
+    auto refresh auth client and server
+
+[33mcommit 3c91f05358b11da06bf8874ce5f9d427c5afe3ba[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Tue Sep 10 06:42:11 2024 +0100
+
+    auto refresh token when expired
+
+[33mcommit 63648923972ceb903882626e2bceea30cc26bbdf[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Sat Sep 7 14:05:51 2024 +0100
+
+    group creation with student appending
+
+[33mcommit db61dbc2f57b1e3928e38f3b67023e827b57bbac[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Fri Sep 6 21:43:41 2024 +0100
+
+    dynamic fetching and filtering group and students and grades
+
+[33mcommit 5f55c1777a1204c6b9a1e697f9b0756a368f856d[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Wed Sep 4 16:21:05 2024 +0100
+
+    dynamic group field fetch with custom group list of each field
+
+[33mcommit 92ba162eabf052aa9f6526493f76e7827a2acd04[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Wed Aug 28 09:55:41 2024 +0100
+
+    subscription with plans
+
+[33mcommit 790d307b8ef4b1d56629fa72b76187e5e68775b2[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Mon Aug 26 09:53:55 2024 +0100
+
+    auto refresh token zoom
+
+[33mcommit 870f2d6eeab8e26ecc59f304626d66dc46caf2df[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Mon Aug 26 07:06:41 2024 +0100
+
+    callendar page connected zoom account and retrive meetings
+
+[33mcommit bb50a365a73daaa380ba155b2326129e616b9159[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Sun Aug 25 07:56:03 2024 +0100
+
+    finished dashboard added callendar board
+
+[33mcommit 561715e33768c4a30a73880df45c055a3875f240[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Wed Aug 21 13:42:04 2024 +0100
+
+    started dashboard
+
+[33mcommit 2345750c220b37f1c3bf8d1d186983fbf0e2f784[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Mon Aug 19 19:37:50 2024 +0100
+
+    manage state after Oauth
+
+[33mcommit 51af17a6d656664d001da3661a2350bab402f25c[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Fri Aug 16 11:58:11 2024 +0100
+
+    fetching username and infos from google auth
+    + continue registeration after google auth
+
+[33mcommit 2323bdff46709dbbc8a942b43b4eafa532fd82b6[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Fri Aug 16 05:56:42 2024 +0100
+
+    teachers list filtring
+
+[33mcommit 69916796689d491617a92c37018e3aae71469a40[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Tue Aug 13 07:01:57 2024 +0100
+
+    made some authentication adjustements
+
+[33mcommit 98a8056ac8b5bc2600a9e54859f58275a9a69e23[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Mon Aug 12 14:38:54 2024 +0100
+
+    implemented google authentication
+
+[33mcommit ee11d6fcc32dc1306c8f767a057ff43fd1892bb2[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Sun Aug 11 08:23:24 2024 +0100
+
+    made home page frontend and login registration page
+
+[33mcommit 2ff9675ffaa9af9871459d293c8c8e3d1edec649[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Sat Aug 10 07:20:31 2024 +0100
+
+    why us section in home page
+
+[33mcommit 80cf2c6bbb930f14321c54440faaabd7ab61fd11[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Sat Aug 10 06:19:28 2024 +0100
+
+    button to hero
+
+[33mcommit 82851b7682fb3c040564a95eae89dcd287578e63[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Sat Aug 10 05:56:08 2024 +0100
+
+    start frontend navbar and hero section
+
+[33mcommit 76d12055da2271e54e0dcf715835f08343dfb068[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Thu Aug 8 07:25:12 2024 +0100
+
+    add some parameters in teacher and student model
+
+[33mcommit 1f74692014a4ec89b9902300275d1a3c30270e9c[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Thu Aug 8 07:18:37 2024 +0100
+
+    fixed some bugs in backend
+
+[33mcommit 074f292e1e22821e78452b0404a25529d56f69e3[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Wed Aug 7 22:08:00 2024 +0100
+
+    privet session app
+
+[33mcommit 354102c5475a6c4516fd0d40df1168fba43a9b59[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Wed Aug 7 08:17:30 2024 +0100
+
+    made some adjustements in groups and subscriptions
+
+[33mcommit 0160d2caffb05a7154f00d7782c9301f7b76ae62[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Tue Aug 6 22:27:16 2024 +0100
+
+    group app
+
+[33mcommit c03cce482ea5ee5d1933bb232a10f6c45f0a9d94[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Tue Aug 6 07:29:07 2024 +0100
+
+    added student progress in course
+
+[33mcommit 6344e3c6ef2ae022302b5f8c1102a67b24a5abb4[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Tue Aug 6 07:13:52 2024 +0100
+
+    created a course app with lessons and surveys
+
+[33mcommit cbe57f3eaae8b5dc36f63e00185153a865812d18[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Sun Aug 4 17:08:44 2024 +0100
+
+    integration of zoom services
+
+[33mcommit 7abc4596b6cb9857fd682b84daced6449d6643e2[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Fri Aug 2 00:57:34 2024 +0100
+
+    fixed security and routes
+
+[33mcommit 19509dc659bd12f7761463268bc94d237723d9d5[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Fri Aug 2 00:25:14 2024 +0100
+
+    the subscription app created
+
+[33mcommit 718d3ce96104837c0a5100e9efb678e69f8a6299[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Thu Aug 1 00:17:10 2024 +0100
+
+    add user app
+
+[33mcommit fcc09feea03996aa2757e38ffbbf31fa49dfebf4[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Thu Aug 1 00:16:22 2024 +0100
+
+    adding user app
+
+[33mcommit 3e59984dfd730685f5aec7bb005d26c37c22d605[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Wed Jul 31 17:58:23 2024 +0100
+
+    small change
+
+[33mcommit 11f84048bec35f7a73d911434baa7a6b5c464814[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Mon Jul 29 17:17:10 2024 +0100
+
+    started django project
+
+[33mcommit d57e24f2b365a58c81bcef98bbfccd97907b0079[m
+Author: mahfoudhn1 <mahfoudhn99@gmail.com>
+Date:   Mon Jul 29 17:09:51 2024 +0100
+
+    first commit
