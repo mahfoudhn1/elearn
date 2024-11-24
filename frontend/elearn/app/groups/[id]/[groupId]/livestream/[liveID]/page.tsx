@@ -78,19 +78,37 @@ const ZoomMeetingPage = () => {
   }
 
   return (
-    <div className="container mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Zoom Meeting</h1>
+    <div className="bg-gray-100 p-6 max-w-6xl mx-auto">
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="flex">
+          {/* Left column */}
+          <div className="w-3/4 p-6">
+            <div className="relative">
+            <ZoomMeeting 
+                meetingID={meetingID} 
+                signiture={signature} 
+                userName={user?.username} 
+                userEmail={user?.email} 
+                secret={secretCode} 
+                zk={zoomToken}
+              />
 
-        <ZoomMeeting 
-          meetingID={meetingID} 
-          signiture={signature} 
-          userName={user?.username} 
-          userEmail={user?.email} 
-          secret={secretCode} 
-          zk={zoomToken}
-        />
-        {/* <Videosdk/> */}
+       
+            </div>
+            {/* <FlashcardSection /> */}
+          </div>
+
+          {/* Right column */}
+
+        </div>
+      </div>
     </div>
+    // <div className="container mx-auto">
+    //   <h1 className="text-2xl font-bold mb-4">Zoom Meeting</h1>
+
+
+    //     {/* <Videosdk/> */}
+    // </div>
   );
 };
 

@@ -28,5 +28,7 @@ urlpatterns = [
     path("api/courses/", include("courses.urls")),
     path("api/groups/", include("groups.urls")),
     path("api/privet/", include("privetsessions.urls")),
+    path("api/flashcards/", include("flashcards.urls")),
+    path("api/notes/", include("notes.urls")),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -164,9 +164,8 @@ class ScheduleViewSet(viewsets.ModelViewSet):
             if schedule.scheduled_date < timezone.now().date():
                 next_occurrence = self.get_next_weekday(schedule.day_of_week)
                 schedule.scheduled_date = next_occurrence
-                schedule.save()
-
                 self.create_zoom_meeting(schedule)
+                schedule.save()
 
         return schedules
 
@@ -267,9 +266,9 @@ class ScheduleViewSet(viewsets.ModelViewSet):
         }
         meeting_data = {
             "topic": "Scheduled Class",
-            "type": 2,  # Scheduled meeting
-            "start_time": f"{schedule.scheduled_date}T{schedule.start_time}:00Z",  # Format for Zoom
-            "duration": duration,  # Duration in minutes
+            "type": 2,
+            "start_time": f"{schedule.scheduled_date}T{schedule.start_time}:00Z",  
+            "duration": duration,  
             "timezone": "UTC",
             "agenda": "Class Session",
         }

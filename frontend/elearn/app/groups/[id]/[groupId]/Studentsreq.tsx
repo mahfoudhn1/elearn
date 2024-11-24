@@ -9,6 +9,8 @@ import { Navigation, Pagination, Scrollbar, A11y, Autoplay } from 'swiper/module
 import { faCheck, faCheckCircle, faXmark } from '@fortawesome/free-solid-svg-icons';
 import axiosClientInstance from '../../../lib/axiosInstance';
 import { Student } from '../../../types/student';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../../store/store';
 
 
 
@@ -24,6 +26,7 @@ interface StudentsRequestProps {
 function StudentsRequest({ studentsreqroup }: StudentsRequestProps) {
 
   const [studentRequests, setStudentRequests] = useState<StudentReq[]>(studentsreqroup);
+  const user = useSelector((state:RootState) => state.auth.user )
 
   useEffect(() => {
     setStudentRequests(studentsreqroup);
@@ -55,7 +58,11 @@ function StudentsRequest({ studentsreqroup }: StudentsRequestProps) {
 
 
   return (
-    <div className='p-10'>
+    <>
+    
+    {user?.role === "teacher" &&
+      
+      <div className='p-10'>
         <h1>طلبات الأنظمام للمجموعة</h1>
         <Swiper
         modules={[Pagination, Scrollbar, A11y]}
@@ -107,6 +114,8 @@ function StudentsRequest({ studentsreqroup }: StudentsRequestProps) {
             ))}
     </Swiper>
     </div>
+}
+</> 
   )
 }
 

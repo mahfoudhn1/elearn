@@ -52,7 +52,9 @@ INSTALLED_APPS = [
     'livestream',
     "courses", 
     "groups",
-    "privetsessions"
+    "privetsessions",
+    "flashcards",
+    'notes'
 ]
 
 MIDDLEWARE = [

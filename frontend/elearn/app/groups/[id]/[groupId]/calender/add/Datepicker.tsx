@@ -163,25 +163,13 @@ const handleStartTimeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     );
   };
 
-
-  const colorOptions = [
-    { value: 'gray-700', color: 'gray-700' },
-    { value: 'red-500', color: 'red-500' },
-    { value: 'green', color: 'green' },
-    { value: 'blue-500', color: 'blue-500' },
-    { value: 'yellow', color: 'yellow' },
-    { value: 'purple-800', color: 'purple-800' },
-    { value: 'pink-800', color: 'pink-800' },
-    { value: 'orange', color: 'orange' },
-
-  ];
   const [selectedColor, setSelectedColor] = useState('');
 
   const handleColorClick = (color:string) => {
     setSelectedColor(color)
     onColorSelect(color) 
   }
-  console.log(selectedColor);
+
   
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg w-full">
@@ -275,16 +263,65 @@ const handleStartTimeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
       </div>
       <div className="flex">
         <h3> اختر لون : </h3>
-      {colorOptions.map(({ value, color }) => (
         <div
-          key={value}
-          className={`w-10 h-10 rounded-full bg-${color} cursor-pointer mx-1 border-transparent hover:border-black ${
-            selectedColor === value ? 'border-2 border-sky-400' : ''
+          className={`w-10 h-10 rounded-full bg-gray-700 cursor-pointer mx-1 border-transparent hover:border-black ${
+            selectedColor === 'gray-700' ? 'border-2 border-sky-400' : ''
           }`}
-          onClick={() => handleColorClick(value)}
-          title={value}
+          onClick={() => handleColorClick('gray-700')}
+          title="gray-700"
         />
-      ))}
+
+        <div
+          className={`w-10 h-10 rounded-full bg-green cursor-pointer mx-1 border-transparent hover:border-black ${
+            selectedColor === 'green' ? 'border-2 border-sky-400' : ''
+          }`}
+          onClick={() => handleColorClick('green')}
+          title="green"
+        />
+
+        <div
+          className={`w-10 h-10 rounded-full bg-blue-500 cursor-pointer mx-1 border-transparent hover:border-black ${
+            selectedColor === 'blue-500' ? 'border-2 border-sky-400' : ''
+          }`}
+          onClick={() => handleColorClick('blue-500')}
+          title="blue-500"
+        />
+
+        <div
+          className={`w-10 h-10 rounded-full bg-yellow cursor-pointer mx-1 border-transparent hover:border-black ${
+            selectedColor === 'yellow' ? 'border-2 border-sky-400' : ''
+          }`}
+          onClick={() => handleColorClick('yellow')}
+          title="yellow"
+        />
+             <div
+          className={`w-10 h-10 rounded-full bg-orange cursor-pointer mx-1 border-transparent hover:border-black ${
+            selectedColor === 'orange' ? 'border-2 border-sky-400' : ''
+          }`}
+          onClick={() => handleColorClick('orange')}
+          title="orange"
+        />
+            <div
+          className={`w-10 h-10 rounded-full bg-red-500 cursor-pointer mx-1 border-transparent hover:border-black ${
+            selectedColor === 'red-500' ? 'border-2 border-sky-400' : ''
+          }`}
+          onClick={() => handleColorClick('red-500')}
+          title="red-500"
+        />
+         <div
+          className={`w-10 h-10 rounded-full bg-purple-800 cursor-pointer mx-1 border-transparent hover:border-black ${
+            selectedColor === 'purple-800' ? 'border-2 border-sky-400' : ''
+          }`}
+          onClick={() => handleColorClick('purple-800')}
+          title="purple-800"
+        />             
+        <div
+        className={`w-10 h-10 rounded-full bg-pink-800 cursor-pointer mx-1 border-transparent hover:border-black ${
+          selectedColor === 'pink-800' ? 'border-2 border-sky-400' : ''
+        }`}
+        onClick={() => handleColorClick('pink-800')}
+        title="pink-800"
+      />
     </div>
       <div className='flex justify-center mt-4'>
       <button className="bg-blue-500 text-white p-2 "

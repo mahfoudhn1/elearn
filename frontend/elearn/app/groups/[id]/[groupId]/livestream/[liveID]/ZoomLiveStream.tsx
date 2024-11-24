@@ -29,10 +29,34 @@ const ZoomMeeting:React.FC<ZoomMeetingProps> = ({meetingID, signiture, userName,
     const client = ZoomMtgEmbedded.createClient()
 
     let meetingSDKElement = document.getElementById('meetingSDKElement')
+    let meetingSDKChatElement = document.getElementById('meetingSDKChatElement')
+
     if (meetingSDKElement) {
       client.init({
         zoomAppRoot: meetingSDKElement as HTMLElement, // Cast to HTMLElement to avoid errors
         language: 'en-US',
+        customize: {
+          video: {
+            isResizable: true,
+            viewSizes: {
+              default: {
+                width: 1300,
+                height: 700
+              },
+              ribbon: {
+                width: 700,
+                height: 300
+              }
+            },
+
+          },
+          chat: {
+            popper: {
+              disableDraggable: false,
+              anchorElement: meetingSDKChatElement,
+              
+            },
+          }}
         
       })}
    
@@ -52,16 +76,26 @@ const ZoomMeeting:React.FC<ZoomMeetingProps> = ({meetingID, signiture, userName,
       error: (error: any) => {
         console.error('Error joining Zoom Meeting:', error);
       },
-    });
+    }).then(()=>{
+      
+
+    })
   }
     
- 
+
 
   
   return (
     <div>
       <h1>Zoom Meeting</h1>
-      <div id="meetingSDKElement" />
+      <div className="flex justify-between">
+        <div id="meetingSDKElement" />
+        <div id="meetingSDKChatElement" ></div>
+        <div>
+  
+
+        </div>
+      </div>
     </div>
   );
 };
