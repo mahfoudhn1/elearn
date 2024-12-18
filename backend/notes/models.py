@@ -1,6 +1,10 @@
 from django.db import models
 
 from django.utils.timezone import now
+from django.contrib.auth.models import User
+
+from django.conf import settings
+
 
 class subjsctChoice(models.TextChoices):
     MATHEMATICS = 'رياضيات', 'رياضيات'
@@ -16,10 +20,11 @@ class subjsctChoice(models.TextChoices):
     ECONOMICS = 'اقتصاد', 'اقتصاد'
 
 class Note(models.Model):
-    student = models.ForeignKey("users.student", on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     title = models.TextField()
+    content = models.TextField(null=True, blank=True)
     subject = models.CharField(max_length=20, choices = subjsctChoice.choices, null=True, blank=True) 
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
     def __str__(self) -> str:
-        return f"note from {self.student.user.username} title: {self.title} "
+        return f"note from {self.user.username} title: {self.title} "

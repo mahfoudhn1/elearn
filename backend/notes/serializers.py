@@ -5,9 +5,9 @@ from .models import Note
 class NoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Note
-        fields = ["id", "student", "title", "subject"]
-        
-        def create(self, validated_data):
-            request = self.context['request']
-            validated_data['student'] = request.user
-            return super().create(validated_data)
+        fields = ["id", "user", "title", "subject", "content", "created_at"]
+
+    def validate_content(self, value):
+        if isinstance(value, list):  # If content is in an array format, handle it properly
+            return ''.join(value)  # Example: join the content list into a string
+        return value

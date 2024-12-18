@@ -7,6 +7,7 @@ import { RootState } from '../../../../../../store/store';
 import axiosClientInstance from '../../../../../lib/axiosInstance';
 import { cp } from 'fs';
 import Videosdk from './zoomvideosdk';
+import NoteTakingApp from './notes';
 
 const ZoomMeetingPage = () => {
   const [teacherId, setTeacherId] = useState("");
@@ -82,7 +83,7 @@ const ZoomMeetingPage = () => {
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="flex">
           {/* Left column */}
-          <div className="w-3/4 p-6">
+          <div className="w-3/4 p-6 relative">
             <div className="relative">
             <ZoomMeeting 
                 meetingID={meetingID} 
@@ -95,7 +96,10 @@ const ZoomMeetingPage = () => {
 
        
             </div>
-            {/* <FlashcardSection /> */}
+            <div className="relative">
+              <NoteTakingApp />
+
+            </div>
           </div>
 
           {/* Right column */}

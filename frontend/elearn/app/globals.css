@@ -32,3 +32,13 @@ html[dir="rtl"] {
 .datepicker{
   direction: ltr;
 }
+.rdw-image-wrapper img {
+  max-width: 100%;
+  height: auto;
+}
+
+.public-DraftEditor-content {
+  min-height: 200px;
+  border: 1px solid #ddd;
+  padding: 10px;
+}
