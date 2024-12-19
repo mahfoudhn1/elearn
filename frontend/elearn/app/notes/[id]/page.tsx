@@ -23,20 +23,21 @@ interface Note {
 interface MenuVisibleState {
   [noteId: number]: boolean; // Keeps track of visibility per note by noteId
 }
-
 const Note: React.FC = () => {
+  const params = useParams() as { id: string };
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [newNote, setNewNote] = useState({ title: '', content: '' });
+  const [newNote, setNewNote] = useState({ title: '', content: '', subject: '' });
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
   const [selectedNote, setSelectedNote] = useState<Note | null>(null); // Track selected note
   const [menuVisible, setMenuVisible] = useState<MenuVisibleState>({});  // Type the menuVisible state
 
-  const params = useParams() as { id: string };
-
+  
+  
   useEffect(() => {
+  
     const fetchNotes = async () => {
       setLoading(true);
       setError(null);
@@ -86,8 +87,8 @@ const Note: React.FC = () => {
         setNotes((prev) => [response.data, ...prev]);
       }
   
-      setNewNote({ title: '', content: '' });
-      setEditorState(EditorState.createEmpty()); // Reset editor state
+      setNewNote({ title: '', content: '', subject:decodeURIComponent(params.id) });
+      setEditorState(EditorState.createEmpty());
       setSelectedNote(null);
       setShowForm(false);
     } catch (error) {
@@ -96,13 +97,14 @@ const Note: React.FC = () => {
   };
   
   const handleaddnote = ()=>{
-    setNewNote({ title: '', content: '' });
+    setNewNote({ title: '', content: '', subject:decodeURIComponent(params.id) });
     setSelectedNote(null); 
+    setEditorState(EditorState.createEmpty());
     setShowForm(true);
   }
   const handleNoteClick = (note: Note) => {
     setSelectedNote(note);
-    setNewNote({ title: note.title, content: note.content }); 
+    setNewNote({ title: note.title, content: note.content, subject:decodeURIComponent(params.id) }); 
     const rawContent = JSON.parse(note.content);
 
     const contentState = convertFromRaw(rawContent);
@@ -117,38 +119,41 @@ const Note: React.FC = () => {
     }));
   };
   
-  const deleteNote = (noteId: number) => {
-    if (window.confirm("Are you sure you want to delete this note?")) {
-      // Logic to delete the note from the state or backend
-      setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
+  const deleteNote = async (noteId: number) => {
+    if (window.confirm("متأكد من حذف المذكرة ؟")) {
+      try {
+        await axiosClientInstance.delete(`/notes/${noteId}/`);
+        
+
+        setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
+        
+      } catch (error) {
+        console.error("Error deleting note:", error);
+        alert("Failed to delete the note. Please try again.");
+      }
     }
   };
+  
   const exportAsPDF = async (note: Note) => {
     try {
-      // Parse the raw content
       const rawContent = JSON.parse(note.content);
       const contentState = convertFromRaw(rawContent);
       const editorStateForPDF = EditorState.createWithContent(contentState);
 
-      // Convert to HTML
       const contentHTML = convertToHTML(editorStateForPDF.getCurrentContent());
 
-      // Create PDF document
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4'
       });
 
-      // Add title
       pdf.setFontSize(16);
       pdf.text(note.title, 20, 20);
 
-      // Add creation date
       pdf.setFontSize(10);
       pdf.text(`Created on: ${format(new Date(note.created_at), 'MMM dd, yyyy')}`, 20, 30);
 
-      // Create a temporary div for HTML to PDF conversion
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = contentHTML;
       tempDiv.style.width = '170mm'; // Adjusted for margins
@@ -163,19 +168,15 @@ const Note: React.FC = () => {
         logging: false
       });
 
-      // Add HTML content as image
       const imgData = canvas.toDataURL('image/png');
       const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = pdf.internal.pageSize.getWidth() - 40; // Account for margins
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-      // Add image to PDF
       pdf.addImage(imgData, 'PNG', 20, 40, pdfWidth, pdfHeight);
 
-      // Save PDF
       pdf.save(`${note.title || 'note'}_${format(new Date(note.created_at), 'yyyy-MM-dd')}.pdf`);
 
-      // Clean up temporary div
       document.body.removeChild(tempDiv);
 
     } catch (error) {
@@ -237,72 +238,74 @@ const Note: React.FC = () => {
 
             {notes.map((note) => (
               <div
-              key={note.id}
-              className="relative bg-yellow rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-200 ease-in-out"
-              onClick={() => handleNoteClick(note)}
-            >
-              {/* Three Dots Menu */}
-              <div className="absolute top-2 right-2">
-                <div className="relative">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent triggering the card click
-                      toggleMenu(note.id);
+                key={note.id}
+                className="relative bg-gray-light rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-200 ease-in-out"
+                onClick={() => handleNoteClick(note)}
+              >
+                {/* Three Dots Menu */}
+                <div className="absolute top-2 left-2 p-2">
+                  <div className="relative">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation(); 
+                        toggleMenu(note.id);
+                      }}
+                      className="p-1 rounded-full hover:bg-gray-200 focus:outline-none"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 text-gray-600"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path d="M10 3a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 5a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+                      </svg>
+                    </button>
+                    {menuVisible[note.id] && (
+                      <div
+                        className="absolute left-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10"
+                        onClick={(e) => e.stopPropagation()} // Prevent closing the menu when clicking inside
+                      >
+                        <button
+                          onClick={() => deleteNote(note.id)}
+                          className="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left"
+                        >
+                          حذف
+                        </button>
+                        <button
+                          onClick={() => exportAsPDF(note)}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                        >
+                          Export as PDF
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Note Content */}
+                <div className="p-5 mt-4 mr-4 max-h-60 overflow-y-auto">
+                  <h2 className="text-xl font-semibold mb-2 text-gray-800">{note.title}</h2>
+                  <div
+                    className="text-gray-700"
+                    dangerouslySetInnerHTML={{
+                      __html: draftToHtml(JSON.parse(note.content)), // Convert Draft.js JSON to HTML
                     }}
-                    className="p-1 rounded-full hover:bg-gray-200 focus:outline-none"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 text-gray-600"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path d="M10 3a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 5a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
-                    </svg>
-                  </button>
-                  {menuVisible[note.id] && (
-                    <div
-                      className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10"
-                      onClick={(e) => e.stopPropagation()} // Prevent closing the menu when clicking inside
-                    >
-                      <button
-                        onClick={() => deleteNote(note.id)}
-                        className="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left"
-                      >
-                        Delete
-                      </button>
-                      <button
-                        onClick={() => exportAsPDF(note)}
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                      >
-                        Export as PDF
-                      </button>
-                    </div>
-                  )}
+                  />
+                  <p className="text-sm text-gray-700 mt-4">
+                    {format(new Date(note.created_at), 'MMM dd, yyyy')}
+                  </p>
                 </div>
               </div>
-          
-              <div className="p-5">
-                <h2 className="text-xl font-semibold mb-2 text-gray-800">{note.title}</h2>
-                <div
-                  className="text-gray-700"
-                  dangerouslySetInnerHTML={{
-                    __html: draftToHtml(JSON.parse(note.content)), // Convert Draft.js JSON to HTML
-                  }}
-                />
-                <p className="text-sm text-gray-300 mt-4">
-                  {format(new Date(note.created_at), 'MMM dd, yyyy')}
-                </p>
-              </div>
-            </div>
             ))}
+
           </div>
         )}
 
         {/* New Note Form Modal */}
         {showForm && (
           <div
-            className={`fixed w-full inset-0 bg-gray-700 bg-opacity-50 flex justify-center items-center z-50 transition-opacity duration-300 ${showForm ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            className={`fixed w-full  inset-0 bg-gray-700 bg-opacity-50 flex justify-center items-center z-50 transition-opacity duration-300 ${showForm ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
             onClick={() => setShowForm(false)}
           >
             <div
@@ -329,7 +332,7 @@ const Note: React.FC = () => {
                   </div>
 
                   {/* Draft.js Editor */}
-                  <div className="border rounded-md p-2">
+                  <div className="border max-h-96 overflow-y-auto rounded-md p-2">
                   <Editor
                     editorState={editorState}
                     onEditorStateChange={setEditorState}

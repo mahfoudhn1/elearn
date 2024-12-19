@@ -31,7 +31,6 @@ class NoteViewst(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)  # Check if it's a partial update (PATCH)
         instance_id = kwargs.get('pk')  # Get the ID from the URL
-        print(request.data)
         try:
             instance = Note.objects.get(id=instance_id, user=request.user)  # Ensure the note belongs to the user
         except Note.DoesNotExist:
@@ -40,7 +39,19 @@ class NoteViewst(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
-
+    
+    def destroy(self, request, *args, **kwargs):
+        instence_id = kwargs.get('pk') 
+        try:
+            instance = Note.objects.get(id=instence_id, user=request.user)
+        except Note.DoesNotExist:
+            raise NotFound("Note not found.")
+        instance.delete()
+        return Response(
+            {"detail": "Note deleted successfully."},
+            status=status.HTTP_204_NO_CONTENT,
+        )
+    
     @action(detail=False, methods=['get'], url_path='subject/(?P<subject>.+)')
     def filter_bysubject(self, request, subject=None):
         decoded_subject = unquote(subject)
