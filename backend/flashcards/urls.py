@@ -1,11 +1,11 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from flashcards.views import FlashcardCollectionViewSet, FlashcardViewSet
-
+from .views import *
 
 router = DefaultRouter()
-router.register(r'flashcards', FlashcardViewSet,  basename='flashcard')
-router.register(r'flashcardcollection', FlashcardCollectionViewSet, basename='flashcardcollection')
+router.register(r'decks', Deckviewset)
+router.register(r'', FlashcardViewSet)
+router.register(r'progress', DeckProgressViewset)
 
 urlpatterns = [
     path('', include(router.urls)),

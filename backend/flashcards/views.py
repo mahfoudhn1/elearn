@@ -1,45 +1,69 @@
 # flashcards/views.py
 
-from rest_framework import viewsets
-from .models import Flashcard, FlashcardCollection
-from .serializers import FlashcardSerializer, FlashcardCollectionSerializer, FlashcardShareSerializer
+from rest_framework import viewsets, permissions
+from .models import Flashcard, Deck, Deckprogress
+from .serializers import FlashcardSerializer, DeckSerializer, DeckProgressSerializer
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Q  
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 
+class isOwnerOrReadOnly(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return obj.user == request.user
+    
+class Deckviewset(viewsets.ModelViewSet):
+    queryset = Deck.objects.all()
+    serializer_class = DeckSerializer
+    permission_classes = [permissions.IsAuthenticated, isOwnerOrReadOnly]
+    
+    def get_queryset(self):
+        return self.queryset.filter(deck__user=self.request.user)
 
 class FlashcardViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
     queryset = Flashcard.objects.all()
     serializer_class = FlashcardSerializer
-
-
-class FlashcardCollectionViewSet(viewsets.ModelViewSet):
-    serializer_class = FlashcardCollectionSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        # Fetch collections owned by the user or shared with the user
-        return FlashcardCollection.objects.filter(Q(user=user) | Q(shared_with=user))
+        return self.queryset.filter(deck__user=self.request.user)
+
+class DeckProgressViewset(viewsets.ModelViewSet):
+    queryset = Deckprogress.objects.all()
+    serializer_class = DeckProgressSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return self.queryset.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        deck = serializer.validated_data['deck']
+        total_flashcards = Flashcard.objects.filter(deck=deck).count()
+        serializer.save(user=self.request.user, total_flashcards=total_flashcards)
 
-    def perform_update(self, serializer):
-        serializer.save()
+    @action(detail=True, methods=['post'])
+    def update_progress(self, request, pk=None):
+          
+        progress = self.get_object()
+        action_type = request.data.get('action')
 
-class FlashcardShareViewSet(viewsets.ModelViewSet):
-    queryset = FlashcardCollection.objects.all()
-    serializer_class = FlashcardShareSerializer
-    permission_classes = [IsAuthenticated]
+        if action_type not in ['correct', 'wrong']:
+            return Response({"error": "Invalid action type"}, status=status.HTTP_400_BAD_REQUEST)
 
-    def update(self, request, *args, **kwargs):
-        collection = self.get_object()
+        if action_type == 'correct':
+            progress.correct_answers += 1
+        elif action_type == 'wrong':
+            progress.wrong_answers += 1
 
-        # Only the owner of the collection can share it
-        if collection.user != request.user:
-            return Response({"detail": "Not authorized to share this collection"}, status=status.HTTP_403_FORBIDDEN)
+        if (progress.correct_answers + progress.wrong_answers) == progress.total_flashcards:
+            progress.completed = True
 
-        return super().update(request, *args, **kwargs)
+        progress.save()
+
+        return Response({
+            "correct_answers": progress.correct_answers,
+            "wrong_answers": progress.wrong_answers,
+            "completed": progress.completed
+        }, status=status.HTTP_200_OK)

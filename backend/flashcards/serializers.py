@@ -1,30 +1,23 @@
 from rest_framework import serializers
 
 from users.models import User
-from .models import Flashcard, FlashcardCollection
+from .models import Flashcard, Deck, Deckprogress
 
 
 class FlashcardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Flashcard
-        fields = ['id', 'question', 'answer']
+        fields = ['id', "deck", "front", "back", "created_at"]
 
+class DeckProgressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Deckprogress
+        fields = ['id', 'deck', 'user', 'correct_answers', 'wrong_answers', 'total_flashcards', 'completed']
 
-class FlashcardCollectionSerializer(serializers.ModelSerializer):
+class DeckSerializer(serializers.ModelSerializer):
     flashcards = FlashcardSerializer(many=True, read_only=True)
+    progress = DeckProgressSerializer(many=True, read_only=True)
 
     class Meta:
-        model = FlashcardCollection
-        fields = ['id', 'title', 'user', 'flashcards']
-
-class FlashcardShareSerializer(serializers.ModelSerializer):
-    shared_with = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), many=True)
-
-    class Meta:
-        model = FlashcardCollection
-        fields = ['shared_with']
-
-    def update(self, instance, validated_data):
-        instance.shared_with.set(validated_data['shared_with'])
-        instance.save()
-        return instance
+        model = Deck
+        fields = ['id', 'title', 'description','subject', 'user', 'created_at', 'flashcards', 'progress']
