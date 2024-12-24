@@ -57,3 +57,35 @@ export interface Student{
     join_url: string;    
     agenda?: string | null
   }
+  export interface Flashcard {
+    id: string;
+    deck: string;
+    front: string;
+    back: string;
+    created_at: string;
+  }
+  
+  export interface Progress {
+    id: string;
+    deck: string;
+    user: string;
+    correct_answers: number;
+    wrong_answers: number;
+    total_flashcards: number;
+    completed: boolean;
+  }
+  
+  export interface Deck {
+    id: string;
+    title: string;
+    description: string;
+    subject: string;
+    user: string;
+    totalCards: number;
+    created_at: string;
+    
+    flashcards: Flashcard[];
+    progress : number;
+    Deckprogress: Progress[];
+  }
+  

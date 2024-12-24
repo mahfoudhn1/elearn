@@ -43,7 +43,6 @@ const Note: React.FC = () => {
       setError(null);
       try {
         const response = await axiosClientInstance.get(`/notes/subject/${encodeURIComponent(params.id)}/`);
-        console.log(response.data)
         setNotes(response.data);
       } catch (err) {
         setError('Failed to fetch notes. Please try again later.');

@@ -7,21 +7,34 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
+from django.db.models import Q
+from rest_framework.exceptions import NotAuthenticated
 
 class isOwnerOrReadOnly(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
+     def has_object_permission(self, request, view, obj):
+ 
+        if obj.visibility == 'public' and request.method in permissions.SAFE_METHODS:
             return True
+
         return obj.user == request.user
     
 class Deckviewset(viewsets.ModelViewSet):
     queryset = Deck.objects.all()
     serializer_class = DeckSerializer
-    permission_classes = [permissions.IsAuthenticated, isOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated, isOwnerOrReadOnly]
     
     def get_queryset(self):
-        return self.queryset.filter(deck__user=self.request.user)
+        return Deck.objects.filter(
+            Q(visibility='public') | Q(user=self.request.user)
+        )
 
+    def perform_create(self, serializer):
+        if not self.request.user.is_authenticated:
+            raise NotAuthenticated("User must be authenticated to create a deck.")
+        serializer.save(user=self.request.user)
+
+
+    
 class FlashcardViewSet(viewsets.ModelViewSet):
     queryset = Flashcard.objects.all()
     serializer_class = FlashcardSerializer

@@ -15,9 +15,10 @@ class DeckProgressSerializer(serializers.ModelSerializer):
         fields = ['id', 'deck', 'user', 'correct_answers', 'wrong_answers', 'total_flashcards', 'completed']
 
 class DeckSerializer(serializers.ModelSerializer):
+
     flashcards = FlashcardSerializer(many=True, read_only=True)
     progress = DeckProgressSerializer(many=True, read_only=True)
 
     class Meta:
         model = Deck
-        fields = ['id', 'title', 'description','subject', 'user', 'created_at', 'flashcards', 'progress']
+        fields = ['id', 'title', 'description','subject', 'created_at', 'flashcards', 'progress']

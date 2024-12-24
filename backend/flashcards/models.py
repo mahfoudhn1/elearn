@@ -16,11 +16,16 @@ class subjsctChoice(models.TextChoices):
     ECONOMICS = 'اقتصاد', 'اقتصاد'
 
 class Deck(models.Model):
+    VISIBILITY_CHOICES = [
+        ('public', 'Public'),
+        ('private', 'Private'),
+    ]
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     description = models.TextField()
     subject = models.CharField(max_length=20, choices = subjsctChoice.choices, null=True, blank=True) 
     created_at = models.DateTimeField(auto_now_add=True)
+    visibility = models.CharField(max_length=7, choices=VISIBILITY_CHOICES, default='private')
 
 class Flashcard(models.Model):
     deck = models.ForeignKey(Deck, on_delete=models.CASCADE, related_name='flashcards')
