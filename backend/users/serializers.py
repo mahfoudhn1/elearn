@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Student, Teacher
+from .models import FieldOfStudy, Grade, User, Student, Teacher
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
@@ -16,6 +16,18 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 
+class fieldofstudySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FieldOfStudy
+        fields = '__all__'
+
+class gradeSerializer(serializers.ModelSerializer):
+    
+    school_level = serializers.StringRelatedField()
+    class Meta:
+        model = Grade
+        fields = ['id', 'name', 'school_level' ]
+        
 class TeacherSerializer(serializers.ModelSerializer):
 
     class Meta:

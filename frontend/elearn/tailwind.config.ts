@@ -17,6 +17,12 @@ const config: Config = {
       animation: {
         spin: 'spin 1s linear infinite',
       },
+      perspective: {
+        1000: "1000px",
+      },
+      rotate: {
+        "y-180": "rotateY(180deg)",
+      },
     },
     colors: {
       'black':"#000",

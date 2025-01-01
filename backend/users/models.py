@@ -13,6 +13,26 @@ class User(AbstractUser):
     zoom_token_expires_at = models.DateTimeField(null=True, blank=True)
 
 
+class SchoolLevel(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Grade(models.Model):
+    name = models.CharField(max_length=50)
+    school_level = models.ForeignKey(SchoolLevel, on_delete=models.CASCADE, related_name="grades")
+
+    def __str__(self):
+        return f"{self.name} ({self.school_level.name})"
+
+
+class FieldOfStudy(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.name}"
 
 class SchoolChoice(models.TextChoices):
     PRIMARY = 'PRIMARY', 'Primary School'
@@ -63,9 +83,9 @@ class Student(models.Model):
     phone_number = models.CharField(max_length=10, null=True, blank=True)
     avatar = models.ImageField(upload_to='profile_pics/', default='profile_pics/student.jpg', null=True, blank=True)
     wilaya = models.CharField(max_length=20, null=True, blank=True)
-    school_level = models.ForeignKey("groups.SchoolLevel", on_delete=models.CASCADE, default=1)
-    grade = models.ForeignKey("groups.Grade", on_delete=models.CASCADE, default=1)
-    field_of_study = models.ForeignKey("groups.FieldOfStudy", on_delete=models.CASCADE, default=1)
+    school_level = models.ForeignKey(SchoolLevel, on_delete=models.CASCADE, default=1)
+    grade = models.ForeignKey(Grade, on_delete=models.CASCADE, default=1)
+    field_of_study = models.ForeignKey(FieldOfStudy, on_delete=models.CASCADE, default=1)
     
     def __str__(self) -> str:
         return f"{self.first_name} {self.last_name}"

@@ -6,7 +6,7 @@ import subjects from "../../public/data/subjects.json";
 interface AddDeck{
     isOpen : boolean;
     onClose:()=>void;
-    onCreate : (title :string)=> void;
+  
     onSubmit: (newDeck: { title: string; description: string; subject: string; visibility: string }) => void;
   }
 

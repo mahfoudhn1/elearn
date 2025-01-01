@@ -8,7 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Q
-from rest_framework.exceptions import NotAuthenticated
+from rest_framework.exceptions import NotAuthenticated, NotFound
 
 class isOwnerOrReadOnly(permissions.BasePermission):
      def has_object_permission(self, request, view, obj):
@@ -18,7 +18,7 @@ class isOwnerOrReadOnly(permissions.BasePermission):
 
         return obj.user == request.user
     
-class Deckviewset(viewsets.ModelViewSet):
+class DeckViewSet(viewsets.ModelViewSet):
     queryset = Deck.objects.all()
     serializer_class = DeckSerializer
     permission_classes = [IsAuthenticated, isOwnerOrReadOnly]
@@ -31,8 +31,18 @@ class Deckviewset(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         if not self.request.user.is_authenticated:
             raise NotAuthenticated("User must be authenticated to create a deck.")
-        serializer.save(user=self.request.user)
+        
 
+        deck = serializer.save(user=self.request.user)
+        
+        Deckprogress.objects.create(
+        user=self.request.user,
+        deck=deck,
+        total_flashcards=0,
+        correct_answers=0,
+        wrong_answers=0,
+        completed=False
+    )
 
     
 class FlashcardViewSet(viewsets.ModelViewSet):
@@ -42,7 +52,40 @@ class FlashcardViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return self.queryset.filter(deck__user=self.request.user)
+    
+    def perform_create(self, serializer):
+        flashcard = serializer.save()
+        
+        deck_progress = Deckprogress.objects.filter(deck=flashcard.deck).first()
+        if deck_progress:
+            deck_progress.total_flashcards += 1
+            deck_progress.save()
 
+    def destroy(self, request, *args, **kwargs):
+        instence_id = kwargs.get('pk') 
+        try:
+            instance = Flashcard.objects.get(id=instence_id)
+        except Flashcard.DoesNotExist:
+            raise NotFound("Note not found.")
+        instance.delete()
+        return Response(
+            {"detail": "Note deleted successfully."},
+            status=status.HTTP_204_NO_CONTENT,
+        )
+    def update(self, request, *args, **kwargs):
+
+        instance_id = kwargs.get('pk')  
+        try:
+            instance = Flashcard.objects.get(id=instance_id, deck__user=self.request.user)
+        except Flashcard.DoesNotExist:
+            raise NotFound("Flashcard not found or you don't have permission to update it.")
+
+        serializer = self.get_serializer(instance, data=request.data, partial=False)  # Use partial=True for partial updates
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+        
 class DeckProgressViewset(viewsets.ModelViewSet):
     queryset = Deckprogress.objects.all()
     serializer_class = DeckProgressSerializer
@@ -56,22 +99,25 @@ class DeckProgressViewset(viewsets.ModelViewSet):
         total_flashcards = Flashcard.objects.filter(deck=deck).count()
         serializer.save(user=self.request.user, total_flashcards=total_flashcards)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['PUT'])
     def update_progress(self, request, pk=None):
-          
         progress = self.get_object()
-        action_type = request.data.get('action')
+        
+        correct_total = request.data.get('correct_total')
+        wrong_total = request.data.get('wrong_total')
+        
+        if correct_total is None or wrong_total is None:
+            return Response({"error": "Both 'correct_total' and 'wrong_total' are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if action_type not in ['correct', 'wrong']:
-            return Response({"error": "Invalid action type"}, status=status.HTTP_400_BAD_REQUEST)
 
-        if action_type == 'correct':
-            progress.correct_answers += 1
-        elif action_type == 'wrong':
-            progress.wrong_answers += 1
+        progress.correct_answers = correct_total
+        progress.wrong_answers = wrong_total
 
-        if (progress.correct_answers + progress.wrong_answers) == progress.total_flashcards:
+
+        if progress.correct_answers == progress.total_flashcards and progress.wrong_answers == 0:
             progress.completed = True
+        else:
+            progress.completed = False
 
         progress.save()
 

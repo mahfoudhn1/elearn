@@ -2,8 +2,8 @@ from tokenize import TokenError
 from django.http import HttpResponse, HttpResponseRedirect
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from .models import User, Teacher, Student
-from .serializers import AuthSerializer, LoginSerializer, UserSerializer, TeacherSerializer, StudentSerializer, RegisterSerializer
+from .models import FieldOfStudy, Grade, SchoolLevel, User, Teacher, Student
+from .serializers import AuthSerializer, LoginSerializer, UserSerializer, TeacherSerializer, StudentSerializer, RegisterSerializer, fieldofstudySerializer, gradeSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.views import APIView
 
@@ -284,3 +284,26 @@ class LogoutViewSet(viewsets.ViewSet):
         return response
 
 
+class FieldOfStudysView(viewsets.ModelViewSet):
+    queryset = FieldOfStudy.objects.all()
+    serializer_class = fieldofstudySerializer
+    permission_classes = [IsAuthenticated]
+   
+   
+class GradeViewSet(viewsets.ModelViewSet):
+    queryset = Grade.objects.all()
+    serializer_class = gradeSerializer  # Ensure proper capitalization if `gradeSerializer` was a typo
+
+    def get_queryset(self):
+        school_level_name = self.request.query_params.get('school_level')
+        
+        if school_level_name:
+            try:
+                school_level = SchoolLevel.objects.get(name=school_level_name)
+
+                return Grade.objects.filter(school_level=school_level.id)
+            except SchoolLevel.DoesNotExist:
+                return Grade.objects.all()
+        
+
+        return Grade.objects.all()

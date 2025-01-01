@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .views import *
 
 router = DefaultRouter()
-router.register(r'decks', Deckviewset)
+router.register(r'decks', DeckViewSet)
 router.register(r'', FlashcardViewSet)
 router.register(r'progress', DeckProgressViewset)
 

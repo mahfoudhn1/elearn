@@ -58,7 +58,7 @@ export interface Student{
     agenda?: string | null
   }
   export interface Flashcard {
-    id: string;
+    id: number;
     deck: string;
     front: string;
     back: string;
@@ -66,7 +66,7 @@ export interface Student{
   }
   
   export interface Progress {
-    id: string;
+    id: number;
     deck: string;
     user: string;
     correct_answers: number;
@@ -83,9 +83,8 @@ export interface Student{
     user: string;
     totalCards: number;
     created_at: string;
-    
     flashcards: Flashcard[];
-    progress : number;
-    Deckprogress: Progress[];
+    progress: Progress[];
+    deckprogress : number;
   }
   

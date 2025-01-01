@@ -7,6 +7,8 @@ import axiosClientInstance from "../lib/axiosInstance";
 import { Deck } from "../types/student";
 import AddDeck from "./adddeck";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Sidebar from "../components/dahsboardcomponents/sidebar";
 
 
 const FlashcardDeckPage = () => {
@@ -15,6 +17,10 @@ const FlashcardDeckPage = () => {
   const [decks, setDecks] = useState<Deck[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModelOpen, setIsModelOpen] = useState<Boolean>(false)
+  const [selectedDeckId, setSelectedDeckId] = useState(null)
+
+  const router = useRouter();
+
 
   useEffect(() => {
     const fetchDecks = async () => {
@@ -22,19 +28,18 @@ const FlashcardDeckPage = () => {
       try {
         const response = await axiosClientInstance.get("/flashcards/decks/");
         const data = response.data;
-        console.log(data);
-        
+
         const processedDecks = data.map((deck: Deck) => ({
           ...deck,
           totalCards: Array.isArray(deck.flashcards) ? deck.flashcards.length : 0,
-          progress: 
-            Array.isArray(deck.Deckprogress) && deck.Deckprogress.length > 0
-              ? Math.round(
-                  (deck.Deckprogress[0].correct_answers / deck.Deckprogress[0].total_flashcards) * 100
-                )
-              : 0,
+          deckprogress: Array.isArray(deck.progress) && deck.progress.length > 0 
+            ? Math.round(
+                (Number(deck.progress[0]?.correct_answers || 0) / 
+                Number(deck.progress[0]?.total_flashcards || 1)) * 100
+              )
+            : 0,
         }));
-  
+   
         setDecks(processedDecks);
       } catch (error) {
         console.error("Error fetching decks:", error);
@@ -49,7 +54,9 @@ const FlashcardDeckPage = () => {
   const handleCreateDeck = async (newDeck: { title: string; description: string; subject: string; visibility: string }) => {
     try {
       const response = await axiosClientInstance.post('/flashcards/decks/', newDeck)
-      console.log(response.data);
+      if(response.data){
+        setDecks((prevDeck)=>[...prevDeck, response.data])
+      }
       
       setIsModelOpen(false); 
     } catch (error) {
@@ -58,16 +65,34 @@ const FlashcardDeckPage = () => {
   };
 
   const subjects = ["all", ...Array.from(new Set(decks.map((deck) => deck.subject)))];
-
+  
   const filteredDecks = decks.filter((deck) => {
     const matchesSearch = deck.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesSubject = selectedSubject === "all" || deck.subject === selectedSubject;
     return matchesSearch && matchesSubject;
   });
 
+  const onDelete = async(id: string)=>{
+    try {
+      await axiosClientInstance.delete(`/flashcards/decks/${id}/`);
+      setDecks((prevDecks) => prevDecks.filter((deck) => deck.id !== id));
+    } catch (error) {
+      console.error("Error deleting deck:", error);
+    }
+  
+  }
+
+  function toggleMenu(deckId:any ): void {
+
+    setSelectedDeckId(selectedDeckId === deckId ? null : deckId);
+
+  }
+
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
-      {/* Header Card */}
+    <div className="min-h-screen  bg-gray-light p-6 flex">
+      <Sidebar/>
+    <div className="container mx-auto p-6 w-full max-w-4xl">
+
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <h1 className="text-xl font-bold mb-4">Flashcard Decks</h1>
         <div className="flex items-center gap-4">
@@ -136,29 +161,58 @@ const FlashcardDeckPage = () => {
           </>
         ) : (
           filteredDecks.map((deck) => (
-            <Link href={`/flashcards/${deck.id}`} key={deck.id}>
-            <div key={deck.id} className="bg-white cursor-pointer rounded-lg shadow-md hover:shadow-lg transition-shadow">
-              <div className="p-4">
-                <div className="flex flex-col gap-2">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-semibold text-lg">{deck.title}</h3>
-                    <span className="text-sm text-gray-500">{deck.subject}</span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-blue-500 rounded-full transition-all duration-500 ease-out"
-                        style={{ width: `${deck.progress}%` }}
-                      />
+            <div key={deck.id} 
+            className="bg-white cursor-pointer rounded-lg shadow-md hover:shadow-lg transition-shadow"
+            onClick={() => router.push(`/flashcards/${deck.id}`)}
+            >
+             
+                <div className="p-4">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-semibold text-lg">{deck.title}</h3>
+                      <span className="text-sm text-gray-500">{deck.subject}</span>
+                      <div className="relative"
+                        onClick={(e)=>e.stopPropagation()}
+                      >
+                        <button
+                          className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleMenu(deck.id);
+                          }}
+                        >
+                          &#x22EE; {/* Vertical three-dot icon */}
+                        </button>
+                        {selectedDeckId === deck.id && (
+                          <div className="absolute top-6 left-0 bg-white shadow-md rounded-md p-2 z-10">
+                            <button
+                              className="text-red-500 hover:text-red-700 focus:outline-none"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(deck.id);
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <span className="text-sm text-gray-500">
-                      {deck.progress}% • {deck.totalCards} cards
-                    </span>
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-blue-500 rounded-full transition-all duration-500 ease-out"
+                          style={{ width: `${deck.deckprogress}%` }}
+                        />
+                      </div>
+                      <span className="text-sm text-gray-500">
+                        {deck.deckprogress}% • {deck.totalCards} cards
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
+
             </div>
-            </Link>
           ))
         )
         
@@ -172,7 +226,8 @@ const FlashcardDeckPage = () => {
       )}
       </div>
     </div>
-  );
+    </div> 
+    );
 };
 
 export default FlashcardDeckPage;

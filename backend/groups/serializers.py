@@ -1,8 +1,9 @@
 from rest_framework import serializers
 
 from users.serializers import StudentSerializer, TeacherSerializer
-from .models import FieldOfStudy, Grade, Group, Schedule, SchoolLevel, StudentGroupRequest
-from users.models import Teacher, Student
+from .models import Group, Schedule, StudentGroupRequest
+from users.models import Teacher, Student, SchoolLevel
+from users.serializers import gradeSerializer, fieldofstudySerializer 
 
 class StudentGroupRequestSerializer(serializers.ModelSerializer):
     student = serializers.PrimaryKeyRelatedField(queryset=Student.objects.all())
@@ -27,17 +28,6 @@ class ScheduleSerializer(serializers.ModelSerializer):
         model = Schedule
         fields = ['id', 'user', 'day_of_week', 'scheduled_date', 'start_time', 'end_time', 'group','color','zoom_meeting_id','zoom_join_url']
 
-class fieldofstudySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FieldOfStudy
-        fields = '__all__'
-
-class gradeSerializer(serializers.ModelSerializer):
-    
-    school_level = serializers.StringRelatedField()
-    class Meta:
-        model = Grade
-        fields = ['id', 'name', 'school_level' ]
 
 
 class GroupSerializer(serializers.ModelSerializer):

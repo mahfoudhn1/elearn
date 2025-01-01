@@ -1,5 +1,4 @@
 from django.db import models
-from groups.models import FieldOfStudy
 from users.models import User
 
 class subjsctChoice(models.TextChoices):

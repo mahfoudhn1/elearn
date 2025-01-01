@@ -8,7 +8,6 @@ import { RootState, AppDispatch } from '../../../store/store';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons';
 import { logout } from '../../../store/authSlice';
-
 const Header: React.FC = () => {
   
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -26,7 +25,9 @@ const Header: React.FC = () => {
 
   const pathname = usePathname(); 
   
-  const isDashboard = pathname === '/dashboard' || pathname.startsWith('/dashboard/') || pathname === '/groups' || pathname.startsWith('/groups/');
+  const dashboardPaths = ['/dashboard', '/groups', '/flashcards', '/notes'];
+  const isDashboard = dashboardPaths.some(path => pathname === path || pathname.startsWith(`${path}/`));
+  
   const isHomePage = pathname === '/' 
   
   const handleClick = () => {
@@ -47,9 +48,11 @@ const Header: React.FC = () => {
     {!isDashboard ?
 
     <header className={`header flex justify-between items-center py-4 bg-transparent px-20  w-full text-black ${!isHomePage? "shadow-sm sticky" : "shadow-none" } `}>
-    <div className='relative group'>
-      <div className="text-3xl text-gray-dark font-bold">منبت</div>
-      <span className="absolute left-0 bottom-0 w-full h-2.5 bg-green bg-opacity-80 transform scale-y-100  transition-all duration-300"></span>
+    <div className='relative group w-1/4'>
+      <div className="text-3xl w-2/3 text-gray-dark font-bold">
+        <img src="./logo1.png" alt="logo riffaa" className='cursor-pointer'/>
+         </div>
+      {/* <span className="absolute left-0 bottom-0 w-full h-2.5 bg-green bg-opacity-80 transform scale-y-100  transition-all duration-300"></span> */}
 
     </div>
 
