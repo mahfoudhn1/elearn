@@ -1,3 +1,4 @@
+from django.forms import ValidationError
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from datetime import datetime, time, timedelta
@@ -17,28 +18,43 @@ import requests
 
 from .serializers import * 
 from .models import *
-from users.models import Student, Teacher
+from users.models import Student, Teacher, SchoolLevel, Grade
 
 class GroupViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user  
-        field_of_study_id = self.request.query_params.get('field_of_study', None) 
+        user = self.request.user
+        field_of_study_id = self.request.query_params.get('field_of_study', None)
+        school_level_name = self.request.query_params.get('school_level', None)
+        group_id = self.kwargs.get('pk', None)
 
-        queryset = Group.objects.all()  
+        queryset = Group.objects.all()
 
+        if group_id:
+            try:
+                return Group.objects.filter(id=group_id)
+            except Group.DoesNotExist:
+                raise NotFound("Group not found")
+
+        if school_level_name:
+            school_level = SchoolLevel.objects.get(name=school_level_name)
         if field_of_study_id:
-            queryset = queryset.filter(field_of_study=field_of_study_id)
+            queryset = queryset.filter(school_level=school_level.id, field_of_study=field_of_study_id)
+        else:
+            queryset = queryset.filter(school_level=school_level.id)
+
         if user.role == 'teacher':
             try:
-                teacher = user.teacher  
+                teacher = user.teacher
                 queryset = queryset.filter(admin=teacher)
             except Teacher.DoesNotExist:
                 return Group.objects.none()
 
         return queryset
+    
+
     
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def add_student_to_group(self, request, pk=None):

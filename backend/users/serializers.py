@@ -15,11 +15,10 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', "first_name" ,"last_name",'role']
 
 
-
 class fieldofstudySerializer(serializers.ModelSerializer):
     class Meta:
         model = FieldOfStudy
-        fields = '__all__'
+        fields = ['id', 'name' ]
 
 class gradeSerializer(serializers.ModelSerializer):
     

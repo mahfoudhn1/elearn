@@ -1,10 +1,11 @@
 "use client"
 
 import React, { useEffect, useState } from 'react'
-import { useParams, useSearchParams } from 'next/navigation';
+
 import axiosClientInstance from '../../../lib/axiosInstance';
 import { Student } from '../../../types/student';
 import { Grade } from '../../../types/student';
+import { useSearchParams } from 'next/navigation';
 
 function CreateGroup() {
 
@@ -16,12 +17,13 @@ function CreateGroup() {
   const [filteredStudents, setFilteredStudents] = useState(students);
   
   const searchParams = useSearchParams()
-  const school_level = searchParams.get('school_Level')
-  const params = useParams<{ id: string; create: string }>()
-  const field_of_study = params.id
+  const school_Level = searchParams.get('school_Level')
+  const field_of_study = searchParams.get('field')
 
+ 
 
   useEffect(() => {
+    
     const fetchStudents = () => {
       axiosClientInstance
         .get(`/subscriptions/subscribed_students/`)
@@ -34,8 +36,9 @@ function CreateGroup() {
         });
     };
     const fetchGrade = ()=>{
-      axiosClientInstance.get(`/groups/grades/?school_level=${school_level}`)
+      axiosClientInstance.get(`/grades/?school_level=${school_Level}`)
       .then((response) => {
+        
         setGrade(response.data);
       })
       .catch((error) => {
@@ -45,7 +48,7 @@ function CreateGroup() {
     }
     fetchGrade();
     fetchStudents();
-  }, [school_level]);
+  }, []);
 
   
 
@@ -77,16 +80,19 @@ function CreateGroup() {
   
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-
-    const dataToSubmit= {
-      name :name,
-      students: selectedStudents.map((student) => student.id), // Submit only student IDs
-      grade: selectedGrade?.id,
-      field_of_study : parseInt(field_of_study) ,
-      school_level: 1,
-    };
-    console.log(dataToSubmit);
+    console.log(selectedGrade?.id);
     
+    const dataToSubmit: any = {
+      name: name,
+      students: selectedStudents.map((student) => student.id),
+      grade: selectedGrade?.id,
+      school_level: school_Level,
+    };
+  
+    if (field_of_study) {
+      dataToSubmit.field_of_study = field_of_study;
+    }
+  
     try {
       const response = await axiosClientInstance.post('/groups/', dataToSubmit);
       console.log('Response:', response.data);
@@ -94,6 +100,7 @@ function CreateGroup() {
       console.error('Error submitting data:', error);
     }
   };
+  
   
 
   return (

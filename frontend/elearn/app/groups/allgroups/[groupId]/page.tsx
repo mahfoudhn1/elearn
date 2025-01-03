@@ -23,6 +23,7 @@ async function getStudents(group_id:number){
           group_id: group_id
         },
       });
+      
     return response.data
     ;
   } catch (error) {

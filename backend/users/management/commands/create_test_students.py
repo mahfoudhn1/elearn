@@ -2,8 +2,8 @@
 
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from users.models import Student  # Adjust with your actual app name
-from groups.models import SchoolLevel, Grade, FieldOfStudy  # Adjust based on your models
+from users.models import Student ,SchoolLevel, Grade, FieldOfStudy  # Adjust with your actual app name
+
 from django.contrib.auth import get_user_model  # Use this to get the custom user model
 User = get_user_model()  # Get the custom user model
 
@@ -41,7 +41,7 @@ class Command(BaseCommand):
                     'wilaya': 'Some Wilaya',  # Replace with actual wilaya
                     'school_level': SchoolLevel.objects.get(pk=1),  # Adjust as needed
                     'grade': Grade.objects.get(pk=1),  # Adjust as needed
-                    'field_of_study': FieldOfStudy.objects.get(pk=1),  # Adjust as needed
+                    'field_of_study': FieldOfStudy.objects.get(pk=2),  # Adjust as needed
                 }
             )
             if created:

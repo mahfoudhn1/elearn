@@ -34,7 +34,7 @@ export interface Student{
     id: number;
     name: string;
     school_level: string;
-    grade: Grade;
+    grade: number;
     schedule?: Schedule[];
     students?: Student[];
   }

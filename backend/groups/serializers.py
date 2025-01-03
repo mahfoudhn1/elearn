@@ -31,42 +31,47 @@ class ScheduleSerializer(serializers.ModelSerializer):
 
 
 class GroupSerializer(serializers.ModelSerializer):
-    students = serializers.PrimaryKeyRelatedField(many=True, queryset=Student.objects.all())
-    school_level = serializers.PrimaryKeyRelatedField(queryset=SchoolLevel.objects.all())
-    grade = gradeSerializer()
-    field_of_study = fieldofstudySerializer()
-    admin = serializers.PrimaryKeyRelatedField(queryset=Teacher.objects.all())
+    school_level = serializers.CharField()  # Accepts a name for school_level
+
     class Meta:
         model = Group
-        fields = ['id', 'name','admin', 'students', 'school_level', 'grade', 'field_of_study','created_at', 'updated_at', 'status']
+        fields = ['id', 'name', 'students', 'school_level', 'grade', 'field_of_study', 'created_at', 'updated_at', 'status']
 
     def create(self, validated_data):
         request = self.context['request']
-        
-        # Fetch the Teacher instance associated with the logged-in user
+
+        # Ensure the user is a teacher
         try:
-            teacher = request.user.teacher  # Accessing the Teacher instance through the User
+            teacher = request.user.teacher
         except Teacher.DoesNotExist:
             raise serializers.ValidationError("User is not associated with any teacher.")
 
-        # Pop the 'students' and 'schedule' fields from validated_data
-        students = validated_data.pop('students', [])
-        schedule_data = validated_data.pop('schedule', [])
+        # Resolve school_level name to ID
+        school_level_name = validated_data.pop('school_level', None)
+        if not school_level_name:
+            raise serializers.ValidationError({"school_level": "This field is required."})
 
-        # Create the group instance and set the admin to the fetched Teacher
+        try:
+            school_level = SchoolLevel.objects.get(name=school_level_name)
+        except SchoolLevel.DoesNotExist:
+            raise serializers.ValidationError({"school_level": f"School level '{school_level_name}' does not exist."})
+
+        # Replace the name with the resolved SchoolLevel instance
+        validated_data['school_level'] = school_level
+
+        # Extract students
+        students = validated_data.pop('students', [])
+
+        # Create the group
         group = Group.objects.create(admin=teacher, **validated_data)
 
         # Associate students with the group
         group.students.set(students)
 
-        # Create and associate schedules if provided
-        for schedule in schedule_data:
-            Schedule.objects.create(group=group, **schedule)
-
         return group
-    
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['students'] = StudentSerializer(instance.students.all(), many=True).data
+        representation['school_level'] = instance.school_level.name  # Return the name instead of the ID
         return representation
-

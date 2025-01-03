@@ -1,107 +1,85 @@
 "use client"
-import React, { useState, FC, useEffect } from 'react';
-import Navbar from '../components/dahsboardcomponents/navbar';
+import React from 'react'
+// Import the icons from lucid-icons library
+import { Book, University, Blocks, School, GraduationCap } from 'lucide-react'
 import Sidebar from '../components/dahsboardcomponents/sidebar';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBook, faCompassDrafting, faFlask, faLandmark, faLanguage, faRuler, faSquareRootAlt } from '@fortawesome/free-solid-svg-icons';
 import { useRouter } from 'next/navigation';
-import axiosClientInstance from '../lib/axiosInstance';
 
+function Level() {
+    const levels = [
+        { name: "ابتدائي", icon: <Blocks className="h-8 w-8 text-gray-800 transform transition-transform duration-200 ease-in-out hover:scale-125 group-hover:text-white" />, description:'بما أن طلبتنا الأطفال الصغار سهل التشتيت احرص ان تقلل من عدد الطلبة في كل مجموعة' },
+        { name: "متوسط", icon: <School className="h-8 w-8 text-gray-800 transform transition-transform duration-200 ease-in-out hover:scale-125 group-hover:text-white" />, description:'انشىء و تفاعل مع طلبة المتوسط و لا تنسى وضع توقيت خاص بكل مجموعة' },
+        { name: "ثانوي", icon: <Book className="h-8 w-8 text-gray-800 transform transition-transform duration-200 ease-in-out hover:scale-125 group-hover:text-white" />, description:'لدى طلبة الثانوي مجموعة من التخصصات يجب اخذها بعين الاعتبار في كل مجموعة' },
+        { name: "جامعي", icon: <University className="h-8 w-8 text-gray-800 transform transition-transform duration-200 ease-in-out hover:scale-125 group-hover:text-white" />, description:'لدى طلبة الجامعة مجموعة من التخصصات يجب اخذها بعين الاعتبار في كل مجموعة' },
+        { name: "تدرس حر", icon: <GraduationCap className="h-8 w-8 text-gray-800 transform transition-transform duration-200 ease-in-out hover:scale-125 group-hover:text-white" />, description:'التعامل مع الطلبة الاحرار الذين يحضرون دورات أو دروس في مجال معين يكون أكثر مرونة' }
+    ];
 
-
-
-interface GradeIcon {
-  icon: any;
-  bgColor: string;
-}
-interface fieldofstudy{
-  id:number;
-  name:string
-}
-interface schoolLevel{
-  id:number;
-  name:string;
-}
-
-
-const gradeIconMapping: { [key: string]: GradeIcon } = {
-  'رياضيات': { icon: faSquareRootAlt, bgColor: 'bg-blue' },
-  'نقني رياضي': { icon: faCompassDrafting, bgColor: 'bg-orange' },
-  'علوم تجريبية': { icon: faFlask, bgColor: 'bg-green' },
-  'تسيير و  اقتصاد': { icon: faLandmark, bgColor: 'bg-gray-dark' },
-  'ادب و فلسفة': { icon: faBook, bgColor: 'bg-yellow-400' },
-  'لغات اجنبية': { icon: faLanguage, bgColor: 'bg-purple-600' },
-
-};
-
-const GroupsList: FC = () => {
-
-  const [fieldofstudy, setfieldofstudy] = useState<fieldofstudy[]>([]);
-  const [schoolLevel, setSchoolLevel] = useState<schoolLevel>()
-  const router = useRouter()
-  
-
-  useEffect(()=>{
-    const fetchGrades = async () => {
-      try {
-        const response = await axiosClientInstance.get('/groups/fieldofstudy/'); 
-        setfieldofstudy(response.data); 
-
-      } catch (error) {
-        console.error('Error fetching grades:', error);
-
-      }
-    };
-
-    fetchGrades();
-  }, []);
-
-  const school_Level = "ثانوي"
-  
-  const handelGroup = (id: number)=>{
-    router.push(`/groups/${id}?school_Level=${school_Level}`);
+    const router = useRouter()
+    function handelGroup(name: string): React.MouseEventHandler<HTMLDivElement> | undefined {
+        if(name === "ثانوي" ){
+           router.push('/groups/scondary')
+        }
+        else{
+            router.push(`/groups/allgroups?school_Level=${encodeURIComponent(name)}`)
+        }
+        return
     }
 
-  return (
-    <div className="flex flex-row w-full h-full">
-      <Sidebar />
-      <div className="w-full bg-gray-300 flex flex-col">
-        <Navbar />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-8">
+    return (
+        <div className="min-h-screen  bg-gray-light p-6 flex">
+            <Sidebar/>
+            <div className='m-auto p-8 h-screen'>
           
-          {fieldofstudy.map((field) => (
-            <div key={field.id} 
-              className="relative flex flex-col justify-center overflow-hidden bg-gray-300"
-              onClick={() => handelGroup(field.id)}
-            >
-              <div className="group relative cursor-pointer overflow-hidden bg-white px-6 pt-10 pb-8 shadow-xl ring-1 ring-gray-800/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl sm:mx-auto sm:max-w-sm sm:rounded-lg sm:px-10">
-                <span className={`absolute top-10 z-0 h-20 w-20 rounded-full ${gradeIconMapping[field.name]?.bgColor} transition-all duration-300 group-hover:scale-[10]`}></span>
-                <div className="relative z-10 mx-auto max-w-md">
-                  <div className="flex">
-                  <span className={`grid h-20 w-20 place-items-center rounded-full ${gradeIconMapping[field.name]?.bgColor} transition-all duration-300 group-hover:${gradeIconMapping[field.name]?.bgColor}`}>
-                  <FontAwesomeIcon icon={gradeIconMapping[field.name]?.icon} className='text-2xl text-gray-300' />
-                    </span>
-                    <h1 className='text-gray-dark group-hover:text-white text-xl font-semibold'>{field.name}</h1>
-                  </div>
-                  <div className="space-y-6 pt-5 text-base leading-7 text-gray-600 transition-all duration-300 group-hover:text-white/90">
-                  <div> <p> يمكنك إنشاء مجموعات تخصصية للتواصل مع الطلبة وجدولة بثوث أسبوعية مباشرة، مع تحديد عدد الطلبة في كل مجموعة إلى 30 لضمان أفضل تجربة تعليمية. </p> </div>
-                    
-                    <div> <p>عدد المجموعات: </p> </div>
-                    
-                  </div>
-                  <div className="pt-5 text-base font-semibold leading-7">
-                    <p>
-                      <a href="#" className="text-sky-500 transition-all duration-300 group-hover:text-white">Read the docs &rarr;</a>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
+               <h1 className=' text-xl text-center font-semibold text-gray-700 p-4 '> يرجي اختيار الطور الدراسي  </h1>
 
-export default GroupsList;
+            <div className="max-w-5xl mt-2 mx-auto">
+                <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 not-prose">
+                {levels.map((level, index) => (
+                    <div
+                        key={index}
+                        onClick={()=>handelGroup(level.name)}
+                        className="relative cursor-pointer flex flex-col items-start justify-between p-6 overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 group hover:scale-105 transition-all ease-in-out duration-300 shadow-lg"
+                    >
+                        <span className="absolute w-full h-full inset-0 bg-white group-hover:bg-gray-light group-hover:bg-opacity-30 pointer-events-none"></span>
+
+                        <div className="flex items-center justify-between w-full mb-4 relative">
+                        <div className="flex items-center justify-center space-x-3">
+                         
+                            <span className="text-gray-800 group-hover:text-white ml-4">
+                            {level.icon}
+                            </span>
+                      
+                            <span className="text-lg font-semibold text-gray-800 group-hover:text-white transition-colors duration-300 ease-in-out">
+                            {level.name}
+                            </span>
+                        </div>
+             
+                        <span className="opacity-0 -translate-x-2 flex-shrink-0 group-hover:translate-x-0 py-1 px-2.5 text-[0.6rem] group-hover:opacity-100 transition-all ease-out duration-200 rounded-full bg-blue text-white flex items-center justify-center">
+                            <span>افتح المجوعات</span>
+                            <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            className="w-3 translate-x-0.5 h-3"
+                            >
+                            <path
+                                fillRule="evenodd"
+                                d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                                clipRule="evenodd"
+                            />
+                            </svg>
+                        </span>
+                        </div>
+                        <span className="relative text-xs md:text-sm text-gray-600">
+                        {level.description}
+                        </span>
+                    </div>
+))}
+                </div>
+            </div>
+            </div>
+        </div>
+    );
+}
+
+export default Level;

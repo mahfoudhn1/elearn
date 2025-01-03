@@ -87,11 +87,10 @@ class UserViewSet(viewsets.ModelViewSet):
         return self.request.user
 
     def update(self, request, *args, **kwargs):
-        self.object = self.get_object()  # Get the authenticated user
-        
-        # Create a data dictionary with the fields you want to update
+        self.object = self.get_object()  
+       
         data = {
-            'role': request.data.get('role', self.object.role),  # Update only the role, keep the existing values for others
+            'role': request.data.get('role', self.object.role), 
         }
 
         serializer = self.get_serializer(self.object, data=data, partial=True)  # Use partial=True to allow partial updates
@@ -286,13 +285,14 @@ class LogoutViewSet(viewsets.ViewSet):
 
 class FieldOfStudysView(viewsets.ModelViewSet):
     queryset = FieldOfStudy.objects.all()
+    print(queryset)
     serializer_class = fieldofstudySerializer
     permission_classes = [IsAuthenticated]
-   
-   
+    
+
 class GradeViewSet(viewsets.ModelViewSet):
     queryset = Grade.objects.all()
-    serializer_class = gradeSerializer  # Ensure proper capitalization if `gradeSerializer` was a typo
+    serializer_class = gradeSerializer  
 
     def get_queryset(self):
         school_level_name = self.request.query_params.get('school_level')

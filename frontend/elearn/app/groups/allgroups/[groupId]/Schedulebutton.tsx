@@ -17,7 +17,7 @@ const Schedulebutton=({id, group_id}:SchedulebuttonProps)=> {
         <div className=''>
         { user?.role === "teacher" &&
             <button className=' bg-gray-dark py-2 px-4 text-white rounded hover:bg-gray-700'>
-            <Link href={`/groups/${id}/${group_id}/calender/add`}
+            <Link href={`/groups/allgroups/${group_id}/calender/add`}
             className='flex'
             >
             <CalendarCheck className='mx-2'/>

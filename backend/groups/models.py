@@ -17,10 +17,10 @@ GROUP_STATUS_CHOICES = [
 class Group(models.Model):
     name = models.CharField(max_length=200)
     admin = models.ForeignKey("users.Teacher", on_delete=models.CASCADE)
-    students = models.ManyToManyField("users.Student")
+    students = models.ManyToManyField("users.Student", blank=True, null=True)
     school_level = models.ForeignKey("users.SchoolLevel", on_delete=models.CASCADE, default=1)
     grade = models.ForeignKey('users.Grade', on_delete=models.CASCADE, default=1)
-    field_of_study = models.ForeignKey("users.FieldOfStudy", on_delete=models.CASCADE, default=1)
+    field_of_study = models.ForeignKey("users.FieldOfStudy", on_delete=models.CASCADE, blank=True, null=True)  
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=20, choices=GROUP_STATUS_CHOICES, default='open')
