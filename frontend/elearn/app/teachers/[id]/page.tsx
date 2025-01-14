@@ -3,11 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUniversity, faChalkboardTeacher, faLocationPin } from '@fortawesome/free-solid-svg-icons';
 import { RootState } from '../../../store/store';
-import ZoomAuthButton from '../../components/profile/zoombutton';
-import { PlanComponent } from '../../components/profile/plans';
+;
 import { useSelector } from 'react-redux';
-import ConfirmationPage from '../../components/profile/confirmationpage';
 import axiosClientInstance from '../../lib/axiosInstance';
+import ConfirmationPage from './components/confirmationpage';
+import { PlanComponent } from './components/plans';
 
 
 
@@ -44,20 +44,19 @@ const Profile: React.FC<TeacherProps> = ({ params }) => {
     const fetchTeacher = async () => {
       try {
         const response = await axiosClientInstance.get<Teacher>(`http://localhost:8000/api/teachers/${params.id}/`);
+        console.log(response.data);
+        
         setTeacher(response.data);
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
     };
-    fetchTeacher();
-  }, [params.id]);
-
-  useEffect(() => {
     const checkSubscriptionStatus = async () => {
       try {
         const response = await axiosClientInstance.get('/subscriptions/'); 
         const subscriptions = response.data;
-
+        console.log();
+        
         const isAlreadySubscribed = subscriptions.some((sub: any) => 
           sub.teacher === params.id && sub.is_active
         );
@@ -68,7 +67,10 @@ const Profile: React.FC<TeacherProps> = ({ params }) => {
       }
     };
     checkSubscriptionStatus();
-  }, [params.id]); 
+    fetchTeacher();
+  }, [params.id]);
+
+ 
 
   const isOwner = currentUser && teacher && currentUser.id === teacher.user; 
 
@@ -89,7 +91,7 @@ const Profile: React.FC<TeacherProps> = ({ params }) => {
   };
 
   return (
-    <div className='flex flex-row'>
+    <div className='flex flex-row relative'>
       <div className="md:p-16 p-8">
         <div className="p-8 bg-white shadow mt-24">
           <div className="grid grid-cols-1 md:grid-cols-3">
@@ -161,7 +163,7 @@ const Profile: React.FC<TeacherProps> = ({ params }) => {
             </p>
           </div>
 
-          {isOwner ? (
+          {/* {isOwner ? (
             <div className="profile-edit">
               <button>Edit Profile</button>
               <button>Create Group</button>
@@ -169,7 +171,7 @@ const Profile: React.FC<TeacherProps> = ({ params }) => {
             </div>
           ) : (
             <button onClick={() => setPlanPopup(true)}>Subscribe</button>
-          )}
+          )} */}
 
           {isPopupVisible && (
             <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center z-50">
@@ -192,11 +194,13 @@ const Profile: React.FC<TeacherProps> = ({ params }) => {
           )}
 
           {showConfirmation && (
+
             <ConfirmationPage
               teacherId={params.id}
               planId={selectedPlanId || 0}
               onConfirm={handleConfirm}
-          />
+              onclose={() => setShowConfirmation(false)}
+              />
           )}
         </div>
       </div>

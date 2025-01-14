@@ -18,8 +18,6 @@ const Loginpage = () => {
   const [password, setPassword] = useState('');
   const router = useRouter()
 
-
-  console.log(loginStatus);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +36,7 @@ const Loginpage = () => {
 
 const handleGoogleSuccess = () => {
   const state = "random"
-  return router.push(`https://accounts.google.com/o/oauth2/auth?client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent('http://localhost:3000/api/auth/google/callback/')}&response_type=code&scope=profile email&state=${state}`)
+  return router.push(`https://accounts.google.com/o/oauth2/auth?client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent('http://localhost:3000/api/auth/google/callback')}&response_type=code&scope=profile email&state=${state}`)
 };
 
 

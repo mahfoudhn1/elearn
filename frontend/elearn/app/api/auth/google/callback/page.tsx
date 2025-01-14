@@ -1,51 +1,99 @@
 "use client"
-import { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { loginSuccess } from '../../../../../store/authSlice';
-import { useRouter , useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 
 const GoogleCallback = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [status, setStatus] = useState({ loading: true, error: null });
 
   useEffect(() => {
-      
     const code = searchParams.get('code');
-
+    
     const exchangeCodeForTokens = async () => {
-      if (typeof code === 'string') {
-        try {
+      if (!code) {
+        setStatus({ 
+          loading: false, 
+          error: null 
+        });
+        return;
+      }
 
-          
-          const response = await axios.post(`http://localhost:8000/api/auth/callback/google/`, 
-            {code},
-            {
-              withCredentials: true,
+      try {
+        setStatus({ loading: true, error: null });
+        
+        const response = await axios.post(
+          'http://localhost:8000/api/auth/callback/google/', 
+          { code },
+          {
+
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
             }
-          )
-
-          if (response) {
-            const data = await response.data;
-            
-            dispatch(loginSuccess({ user: data.user, message: 'Login successful' }));
-            router.push('/dashboard'); 
-          } else {
-            console.error('Failed to authenticate');
           }
-        } catch (error) {
-          console.error('Error during token exchange:', error);
+        );
+
+        if (response.data?.user) {
+          dispatch(loginSuccess({ 
+            user: response.data.user, 
+            message: response.data.message || 'Login successful' 
+          }));
+          router.push('/dashboard');
+        } else {
+          throw new Error('Invalid response format');
         }
+      } catch (error:any) {
+        console.error('Authentication error:', error);
+        setStatus({ 
+          loading: false, 
+          error: error.response?.data?.error || 'Authentication failed. Please try again.' 
+        });
+        
+  
+        setTimeout(() => {
+          router.push('/login');
+        }, 3000);
       }
     };
 
     exchangeCodeForTokens();
-  }, [dispatch, router]);
+  }, [dispatch, router, searchParams]);
+
+  if (status.error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full space-y-4 p-6 bg-white rounded-lg shadow-md">
+          <div className="text-center text-red-600">
+            <h2 className="text-xl font-semibold mb-2">Authentication Error</h2>
+            <p>{status.error}</p>
+            <p className="text-sm text-gray-500 mt-2">
+              Redirecting to login page...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <h1>Processing Google Authentication...</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full space-y-4 p-6 bg-white rounded-lg shadow-md">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">
+            Processing Google Authentication
+          </h2>
+          <div className="animate-pulse flex justify-center">
+            <div className="h-4 w-4 bg-blue-600 rounded-full mx-1"></div>
+            <div className="h-4 w-4 bg-blue-600 rounded-full mx-1 animate-pulse delay-75"></div>
+            <div className="h-4 w-4 bg-blue-600 rounded-full mx-1 animate-pulse delay-150"></div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

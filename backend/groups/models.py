@@ -17,7 +17,7 @@ GROUP_STATUS_CHOICES = [
 class Group(models.Model):
     name = models.CharField(max_length=200)
     admin = models.ForeignKey("users.Teacher", on_delete=models.CASCADE)
-    students = models.ManyToManyField("users.Student", blank=True, null=True)
+    students = models.ManyToManyField("users.Student", blank=True, related_name="groups")
     school_level = models.ForeignKey("users.SchoolLevel", on_delete=models.CASCADE, default=1)
     grade = models.ForeignKey('users.Grade', on_delete=models.CASCADE, default=1)
     field_of_study = models.ForeignKey("users.FieldOfStudy", on_delete=models.CASCADE, blank=True, null=True)  
@@ -43,12 +43,12 @@ class Schedule(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE, default=6)
     schedule_type = models.CharField(max_length=10, choices=SCHEDULE_TYPE_CHOICES, default='weekly')
     color = models.CharField(max_length=20, default='blue-500')
-    zoom_meeting_id = models.CharField(max_length=255, blank=True, null=True)  # New field for Zoom meeting ID
-    zoom_join_url = models.URLField(blank=True, null=True)  # New field for Zoom meeting URL
+    zoom_meeting_id = models.CharField(max_length=255, blank=True, null=True) 
+    zoom_join_url = models.URLField(blank=True, null=True) 
     def update_scheduled_date(self):
         today = datetime.now().date()
         
-        # Check if the schedule type is weekly and if the date has passed
+
         if self.schedule_type == 'weekly' and self.scheduled_date < today:
             self.scheduled_date = self.get_next_occurrence_of_day()
         self.save()

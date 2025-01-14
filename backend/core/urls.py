@@ -25,6 +25,7 @@ urlpatterns = [
     path("api/", include("users.urls")),
     path("api/subscriptions/", include("subscription.urls")),
     path("api/livestream/", include("livestream.urls")),
+    path("api/live/", include("jitsi.urls")),
     path("api/courses/", include("courses.urls")),
     path("api/groups/", include("groups.urls")),
     path("api/privet/", include("privetsessions.urls")),

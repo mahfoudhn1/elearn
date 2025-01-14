@@ -1,4 +1,5 @@
 from tokenize import TokenError
+from django.forms import ValidationError
 from django.http import HttpResponse, HttpResponseRedirect
 from rest_framework import viewsets, status
 from rest_framework.response import Response
@@ -87,15 +88,33 @@ class UserViewSet(viewsets.ModelViewSet):
         return self.request.user
 
     def update(self, request, *args, **kwargs):
-        self.object = self.get_object()  
-       
-        data = {
-            'role': request.data.get('role', self.object.role), 
-        }
+        self.object = self.get_object()
+        new_role = request.data.get('role', self.object.role)
 
-        serializer = self.get_serializer(self.object, data=data, partial=True)  # Use partial=True to allow partial updates
+        if new_role not in ['teacher', 'student']:
+            raise ValidationError({"detail": "Invalid role provided."})
+
+        data = {'role': new_role}
+        serializer = self.get_serializer(self.object, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+
+
+        if new_role == 'teacher':
+            if not Teacher.objects.filter(user=self.object).exists():
+                Teacher.objects.create(
+                    user=self.object,
+                    first_name=self.object.first_name,
+                    last_name=self.object.last_name
+                )
+        elif new_role == 'student':
+            if not Student.objects.filter(user=self.object).exists():
+                Student.objects.create(
+                    user=self.object,
+                    firstName=self.object.firstName,
+                    lastName=self.object.secondName
+                )
+
         return Response(serializer.data)
 
 class TeacherProfileView(viewsets.ModelViewSet):
@@ -121,7 +140,7 @@ class TeacherProfileView(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data)
-
+    
 
 class RegisterView(viewsets.ModelViewSet):
     serializer_class = RegisterSerializer
@@ -164,9 +183,10 @@ class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
             'code': code,
             'client_id': settings.GOOGLE_CLIENT_ID,
             'client_secret': settings.GOOGLE_CLIENT_SECRET,
-            'redirect_uri': 'http://localhost:3000/api/auth/callback/google/',
+            'redirect_uri': 'http://localhost:3000/api/auth/google/callback',  
             'grant_type': 'authorization_code',
         }
+
         try:
             response = req.post(token_url, data=data)
             response.raise_for_status()
@@ -174,14 +194,23 @@ class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
 
         except req.exceptions.RequestException as e:
             logger.error(f"Token exchange failed: {e}")
-            return Response({'error': 'Failed to exchange authorization code for tokens'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'error': 'Failed to exchange authorization code for tokens', 'details': str(e)}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         access_token = response_data.get('id_token')
         if not access_token:
+            logger.error(f"Response data: {response_data}")  # Add logging to see what we received
             return Response({'error': 'Access token not found in response'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            id_info = id_token.verify_oauth2_token(access_token, requests.Request(), settings.GOOGLE_CLIENT_ID)
+            id_info = id_token.verify_oauth2_token(
+                access_token, 
+                requests.Request(), 
+                "730892242385-e4lf4aaobplaabfi7lbofo3d8867crff.apps.googleusercontent.com"  # Use direct client ID
+            )
+            
             user_email = id_info.get('email')
             user_name = id_info.get('name', '')
             profile_picture = id_info.get('picture', '')
@@ -190,8 +219,9 @@ class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
             first_name = names[0]
             last_name = names[1] if len(names) > 1 else ''
             username = user_email.split('@')[0]
+            
             User = get_user_model()
-            user, created = User.objects.get_or_create(email=user_email )
+            user, created = User.objects.get_or_create(email=user_email)
             
             if created:
                 user.username = username
@@ -203,8 +233,21 @@ class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
             tokens = get_tokens_for_user(user)
             response = HttpResponse()
 
-            response.set_cookie('access_token', tokens['access'], httponly=True, secure=False)
-            response.set_cookie('refresh_token', tokens['refresh'], httponly=True, secure=False)
+            # Set cookies with appropriate settings
+            response.set_cookie(
+                'access_token', 
+                tokens['access'], 
+                httponly=True, 
+                secure=False,  # Set to True in production
+                samesite='Lax'  # Added SameSite attribute
+            )
+            response.set_cookie(
+                'refresh_token', 
+                tokens['refresh'], 
+                httponly=True, 
+                secure=False,  # Set to True in production
+                samesite='Lax'  # Added SameSite attribute
+            )
             
             response_data = {
                 'user': UserSerializer(user).data,
@@ -218,7 +261,10 @@ class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
 
         except ValueError as e:
             logger.error(f"Token verification failed: {e}")
-            return Response({'error': 'Token verification failed'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'error': 'Token verification failed',
+                'details': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TeacherViewSet(viewsets.ModelViewSet):
@@ -226,7 +272,17 @@ class TeacherViewSet(viewsets.ModelViewSet):
     serializer_class = TeacherSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = TeacherFilter
+    
+    def perform_create(self, serializer):
+        user = self.request.user
 
+        teacher, created = Teacher.objects.get_or_create(user=user)
+
+        if not created:
+            serializer.update(instance=teacher, validated_data=self.request.data)
+        else:
+            # Save a new Teacher instance
+            serializer.save(user=user)
 
 class StudentViewSet(viewsets.ModelViewSet):
     serializer_class = StudentSerializer
@@ -285,7 +341,6 @@ class LogoutViewSet(viewsets.ViewSet):
 
 class FieldOfStudysView(viewsets.ModelViewSet):
     queryset = FieldOfStudy.objects.all()
-    print(queryset)
     serializer_class = fieldofstudySerializer
     permission_classes = [IsAuthenticated]
     

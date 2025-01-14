@@ -7,6 +7,7 @@ import ScheduleList from './calender/add/List';
 import Link from 'next/link';
 import { CalendarCheck } from 'lucide-react';
 import Schedulebutton from './Schedulebutton';
+import DeleteButton from './DeleteButton';
 
 
 
@@ -56,6 +57,17 @@ async function getSchedule(group_id:number){
   }
 }
 
+async function deleteGroup(group_id: number) {
+  try {
+    await axiosSSRInstance.delete(`/groups/${group_id}/`);
+    alert('Group deleted successfully');
+    window.location.href = '/groups';
+  } catch (error) {
+    console.error('Error deleting group:', error);
+    alert('Failed to delete the group');
+  }
+}
+
 async function SnigleGrpoup({params} :{params:Params}) {
   
   try{
@@ -77,6 +89,10 @@ async function SnigleGrpoup({params} :{params:Params}) {
         <ScheduleList schedules={schedules}/>
       </div>
       <StudentsList studentlist={students} />
+      </div>
+      <div className="mt-4">
+        <DeleteButton groupId={group_id} />
+
       </div>
     </div>
     </div>

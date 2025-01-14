@@ -38,12 +38,23 @@ class GroupViewSet(viewsets.ModelViewSet):
             except Group.DoesNotExist:
                 raise NotFound("Group not found")
 
+
         if school_level_name:
-            school_level = SchoolLevel.objects.get(name=school_level_name)
-        if field_of_study_id:
-            queryset = queryset.filter(school_level=school_level.id, field_of_study=field_of_study_id)
-        else:
+            try:
+                school_level = SchoolLevel.objects.get(name=school_level_name)
+            except SchoolLevel.DoesNotExist:
+                return Group.objects.none()
+            
             queryset = queryset.filter(school_level=school_level.id)
+
+            if school_level_name == "ثانوي":
+                if not field_of_study_id:
+                  
+                    return Group.objects.none()
+                queryset = queryset.filter(field_of_study=field_of_study_id)
+
+        elif field_of_study_id:
+            queryset = queryset.filter(field_of_study=field_of_study_id)
 
         if user.role == 'teacher':
             try:
@@ -51,7 +62,8 @@ class GroupViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(admin=teacher)
             except Teacher.DoesNotExist:
                 return Group.objects.none()
-
+        if user.role == 'student':
+            return queryset.filter(students=user.student)
         return queryset
     
 

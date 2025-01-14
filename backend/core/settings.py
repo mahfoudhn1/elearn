@@ -54,7 +54,8 @@ INSTALLED_APPS = [
     "groups",
     "privetsessions",
     "flashcards",
-    'notes'
+    'notes',
+    "jitsi",
 ]
 
 MIDDLEWARE = [
@@ -80,6 +81,8 @@ GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
 ZOOM_SDK_ID = os.getenv('ZOOM_SDK_ID')
 ZOOM_SDK_SECRET = os.getenv('ZOOM_SDK_SECRET')
+JITSI_APP_SECRET= os.getenv('JITSI_APP_SECRET')
+JITSI_APP_ID = os.getenv('JITSI_APP_ID')
 
 TEMPLATES = [
     {
@@ -100,8 +103,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'core.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
    'default': {

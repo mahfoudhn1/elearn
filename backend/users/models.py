@@ -2,6 +2,7 @@ from django.db import models
 
 from django.contrib.auth.models import AbstractUser, Group, Permission
 
+
 class User(AbstractUser):
     ROLE_CHOICE=(
         ("teacher", "Teacher"),
@@ -11,6 +12,8 @@ class User(AbstractUser):
     zoom_access_token = models.CharField( null=True, blank=True)
     zoom_refresh_token = models.CharField( null=True, blank=True)
     zoom_token_expires_at = models.DateTimeField(null=True, blank=True)
+
+    
 
 
 class SchoolLevel(models.Model):
@@ -55,7 +58,7 @@ class subjsctChoice(models.TextChoices):
 
 
 class Teacher(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="teacher")
     profile_privet = models.BooleanField(default=True)
     teaching_level = models.CharField(max_length=20, choices = SchoolChoice.choices, null=True, blank=True) 
     teaching_subjects = models.CharField(max_length=20, choices = subjsctChoice.choices, null=True, blank=True) 
@@ -77,7 +80,7 @@ class Teacher(models.Model):
 
 
 class Student(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="student")
     first_name =models.CharField( max_length=20, null=True, blank=True)
     last_name =models.CharField( max_length=20, null=True, blank=True)
     phone_number = models.CharField(max_length=10, null=True, blank=True)

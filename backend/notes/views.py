@@ -55,8 +55,7 @@ class NoteViewst(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='subject/(?P<subject>.+)')
     def filter_bysubject(self, request, subject=None):
         decoded_subject = unquote(subject)
-        print(subject)
-        print(decoded_subject)
+
         queryset = Note.objects.filter(subject=decoded_subject)
         if not queryset.exists():
             raise NotFound(f"No notes found for subject '{subject}'.")

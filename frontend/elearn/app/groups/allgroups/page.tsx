@@ -17,7 +17,7 @@ async function getData(field_of_study_id?: number, school_level?: string) {
   
   try {
     if (field_of_study_id) {
-      const response = await axiosSSRInstance.get(`/groups/?school_level=${school_level}&?field_of_study=${field_of_study_id}`);
+      const response = await axiosSSRInstance.get(`/groups/?school_level=${school_level}&field_of_study=${field_of_study_id}`);
       return response.data;
     } else if (school_level) {
       const response = await axiosSSRInstance.get(`/groups/?school_level=${school_level}`);

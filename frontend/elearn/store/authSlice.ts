@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import updateUserRole from './authThunks'
+import Cookies from 'js-cookie';
 
 
 interface User {
@@ -9,6 +10,7 @@ interface User {
   role: string;
   first_name:string;
   last_name:string;
+  access_token : string;
 }
 
 
@@ -36,11 +38,14 @@ interface AuthState {
         state.isAuthenticated = true;
         state.loginStatus = action.payload.message; 
         state.registrationStatus = '';  
+        Cookies.set('user_role', action.payload.user.role || '', { expires: 7 });
       },
       logout(state) {
         state.user = null;
         state.isAuthenticated = false;
         state.loginStatus = '';  
+        Cookies.remove('user_role');
+        Cookies.remove('access_token');
       },
       registerSuccess(state, action: PayloadAction<{ message: string }>) {
         state.registrationStatus = action.payload.message;
