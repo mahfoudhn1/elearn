@@ -4,6 +4,8 @@ from users.serializers import StudentSerializer, TeacherSerializer
 from .models import Group, Schedule, StudentGroupRequest
 from users.models import Teacher, Student, SchoolLevel
 from users.serializers import gradeSerializer, fieldofstudySerializer 
+from jitsi.serializers import MeetingSerializer
+from jitsi.models import Meeting
 
 class StudentGroupRequestSerializer(serializers.ModelSerializer):
     student = serializers.PrimaryKeyRelatedField(queryset=Student.objects.all())
@@ -24,9 +26,11 @@ class StudentGroupRequestSerializer(serializers.ModelSerializer):
 
 
 class ScheduleSerializer(serializers.ModelSerializer):
+    Meeting = MeetingSerializer(read_only=True, required=False)
+
     class Meta:
         model = Schedule
-        fields = ['id', 'user', 'day_of_week', 'scheduled_date', 'start_time', 'end_time', 'group','color','zoom_meeting_id','zoom_join_url']
+        fields = ['id', 'user', 'day_of_week', 'scheduled_date', 'start_time', 'end_time', 'group','color', "Meeting"]
 
 
 

@@ -86,7 +86,7 @@ const SchedulePage = () => {
       if (dayOfWeek === 'friday' || dayOfWeek === 'saturday') {
         return start[0] >= 8 && end[0] <= 22; // 08:00 to 20:00
       } else {
-        return start[0] >= 18 && end[0] <= 22; // 18:00 to 20:00
+        return start[0] >= 12 && end[0] <= 22; // 18:00 to 20:00
       }
     };
     

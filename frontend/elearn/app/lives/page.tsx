@@ -1,85 +1,71 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useSelector } from "react-redux";
-import { RootState } from "../../store/store";
 import axiosClientInstance from "../lib/axiosInstance";
-import JitsiMeetingComponent from "./JistiMeeting";
 
-interface Room {
-  room_name: string;
-  start_time: string;
-  end_time: string;
+
+declare global {
+  interface Window {
+    JitsiMeetExternalAPI: any;
+  }
 }
 
-export default function Meeting() {
-  const [room, setRoom] = useState<Room | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  const searchParams = useSearchParams();
-  const roomId = searchParams.get('roomId');
-  const user = useSelector((state: RootState) => state.auth.user);
+const StartLive = () => {
+  const [room, setRoom] = useState<any>(null);
+  const query = useSearchParams();
+  const roomID = query.get("roomId");
+  console.log(roomID);
+  
+  useEffect(() => {
+    if (roomID) {
+      const getRoom = async () => {
+        try {
+          const response = await axiosClientInstance.get(`/live/${roomID}/start_meeting/`);
+          const data = response.data;
+          setRoom(data);
+        } catch (error) {
+          console.error("Error starting the live session:", error);
+        }
+      };
+
+      getRoom();
+    }
+  }, [roomID]);
 
   useEffect(() => {
-    const fetchRoom = async () => {
-      if (!roomId) {
-        setError("No room ID provided");
-        setLoading(false);
-        return;
-      }
+    if (room && room.room && room.token) {
+      const domain = room.domain.replace("https://", ""); // Jitsi needs domain only
+      const options = {
+        roomName: room.room,
+        parentNode: document.getElementById("jitsi-container"),
+        jwt: room.token, // Pass the Jitsi token
+        width: "100%",
+        height: "100vh",
+        configOverwrite: {
+          prejoinPageEnabled: false,
+        },
+        interfaceConfigOverwrite: {
+          filmStripOnly: false,
+        },
+      };
 
-      try {
-        const {data} = await axiosClientInstance.get(`/live/${roomId}/get_room_and_token/`);
-        if (data) {
-          setRoom(data.meeting);
-          console.log(room);
-          
-        } else {
-          setError("Room not found");
-        }
-      } catch (error) {
-        console.error("Error fetching room data:", error);
-        setError("Failed to fetch room data");
-      } finally {
-        setLoading(false);
-      }
-    };
+      const api = new window.JitsiMeetExternalAPI(domain, options);
+      
+      api.executeCommand("displayName", "Teacher"); // Example: Set the display name
+    }
+  }, [room]);
 
-
-    fetchRoom();
-  }, [roomId]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[200px]">
-        <p>Loading meeting room...</p>
-      </div>
-    );
-  }
-
-  if (error || !room) {
-    return (
-      <div className="p-4 text-red-500 bg-red-50 rounded">
-        {error || "Room not found"}
-      </div>
-    );
+  if (!room) {
+    return <div>Loading...</div>;
   }
 
   return (
-    <div className="w-full">
-      <JitsiMeetingComponent
-        roomName={room.room_name}
-        displayName={user?.first_name || "Guest"}
-        email={user?.email || "guest@example.com"}
-        onMeetingJoined={() => {
-          console.log("User joined the meeting");
-        }}
-        onMeetingLeft={() => {
-          console.log("User left the meeting");
-        }}
-        height="600px"
-      />
+    <div className="min-h-screen flex items-center justify-center">
+      <div id="jitsi-container" className="w-full h-screen"></div>
     </div>
   );
-}
+};
+
+export default StartLive;
+

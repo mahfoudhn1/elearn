@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import FieldOfStudysView, GradeViewSet, RegisterView, TeacherProfileView,LogoutViewSet, UserViewSet,AuthViewSet, TeacherViewSet, StudentViewSet, MyTokenObtainPairView, MyTokenRefreshView, GoogleOAuthCallbackViewSet
+from .views import (FieldOfStudysView, GradeViewSet, RegisterView, TeacherProfileView,LogoutViewSet, UserViewSet,AuthViewSet, TeacherViewSet, StudentViewSet, MyTokenObtainPairView, MyTokenRefreshView, GoogleOAuthCallbackViewSet)
 from django.conf import settings
 from django.conf.urls.static import static
 

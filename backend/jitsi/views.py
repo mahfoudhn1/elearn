@@ -1,74 +1,203 @@
+from datetime import timedelta
+import uuid
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
-from rest_framework import viewsets
+from rest_framework import viewsets,status
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
-from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.decorators import api_view, permission_classes
+
+from groups.models import Group
 from jitsi.generate_jitsi_token import generate_jitsi_token
 from .models import Meeting
 from rest_framework.views import APIView
 from .serializers import MeetingSerializer
-import random
-import string
 
+from django.utils import timezone
 
     
-class MeetingViewset(viewsets.ViewSet):
+from django.utils import timezone
+import uuid
+
+class MeetingViewSet(viewsets.ModelViewSet):
     queryset = Meeting.objects.all()
     serializer_class = MeetingSerializer
     permission_classes = [IsAuthenticated]
-    
-    def generate_room_name(self):
-    # Generate a random room name (or use your own logic to define it)
-        return ''.join(random.choices(string.ascii_lowercase + string.digits, k=10))
 
-    @action(detail=True, methods=['GET'])
-    def get_room_and_token(self, request, pk=None):
-        try:
-            meeting = Meeting.objects.get(id=pk)
-            user = request.user
+    def get_queryset(self):
+        # scheduled_date = self.request.query_params.get('scheduled_date')
 
-            if user.role != "teacher":
-                return Response({"error": "Only teachers can access this endpoint"}, status=403)
+        group_id = self.request.query_params.get('group_id')
+        user = self.request.user
+        queryset = Meeting.objects.none()
 
-            serializer = MeetingSerializer(meeting)
-            room_url = f"https://meet.jit.si/{meeting.room_name}"
+        if hasattr(user, "teacher"):
+            queryset = Meeting.objects.filter(teacher=user.teacher)
+        elif hasattr(user, "student"):
+            queryset = Meeting.objects.filter(students=user.student)
 
-            # Generate the Jitsi token
-            token = generate_jitsi_token(user, meeting.room_name)
+        if group_id:
+            queryset = queryset.filter(group__id=group_id)
+        # if scheduled_date:
+        #     print(scheduled_date)
+        #     queryset = queryset.filter(schedule__scheduled_date=scheduled_date)
 
-            # Create response and set the token as a cookie
-            response = JsonResponse({
-                "room_url": room_url,
-                "meeting": serializer.data
-            })
-            response.set_cookie(
-                key="jitsi_token",
-                value=token,
-                httponly=False,  # Make it HTTP-only for security
-                secure=False,  # Use True in production with HTTPS
-                samesite="Lax",  # Adjust based on your requirements
-            )
-            return response
-        except Meeting.DoesNotExist:
-            return Response({"error": "Meeting not found"}, status=404)
+        return queryset
 
-    @action(detail=False, methods=['POST'])
-    def create_room(self, request):
+    @action(detail=False, methods=['post'])
+    def create_meeting(self, request, *args, **kwargs):
+        data = request.data  
         user = request.user
+
         if not hasattr(user, 'teacher'):
-            return Response({"error": "Authenticated user is not a teacher"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Only teachers can create meetings."}, status=status.HTTP_403_FORBIDDEN)
 
-        teacher = user.teacher 
+        teacher = user.teacher
+        group_id = data.get('group_id')
+        group = get_object_or_404(Group, id=group_id)
 
-        room_name = self.generate_room_name()
+        room_name = f"Room_{teacher.id}_{uuid.uuid4().hex[:6]}"
+
         meeting = Meeting.objects.create(
             teacher=teacher,
-            room_name=room_name
+            room_name=room_name,
+            group=group,
+            start_time=data.get('start_time'),
+            end_time=data.get('end_time'),
+            is_active=True  # Meeting is active when created
         )
+
+        meeting.students.set(group.students.all())
+
+        return Response({
+            "message": "Meeting created successfully.",
+            "meeting": MeetingSerializer(meeting).data
+        }, status=status.HTTP_201_CREATED)
+
+    
+    @action(detail=True, methods=['GET'])
+    def start_meeting(self, request, pk=None):
+        try:
+            meeting = Meeting.objects.get(id=pk)
+        except Meeting.DoesNotExist:
+            return Response(
+                {"error": "Meeting with the specified roomId does not exist."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        user = request.user
+
+        if not hasattr(user, 'teacher') or meeting.teacher != user.teacher:
+            return Response(
+                {"error": "Only the meeting owner can start the meeting."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        meeting.start_time = timezone.now()
         meeting.save()
 
-        room_url = f"https://meet.jit.si/{room_name}" 
-        return Response({"room_url": room_url, "room_name": room_name, "meeting_id": meeting.id}, status=status.HTTP_201_CREATED)
+        jwt_token = generate_jitsi_token(user, meeting.room_name)
+
+        jitsi_domain = "https://localhost:8444"  
+        join_url = f"{jitsi_domain}/{meeting.room_name}?jwt={jwt_token}"
+
+        return Response({
+            "message": "Meeting started successfully.",
+            "meeting": MeetingSerializer(meeting).data,
+            "token": jwt_token,
+            "room": meeting.room_name,
+            "domain": jitsi_domain,
+            "join_url": join_url  # Use the self-hosted Jitsi URL
+        })
+
+
+    @action(detail=True, methods=['post'])
+    def join_meeting(self, request, pk=None):
+        meeting = self.get_object()
+        user = request.user
+
+        # Check if user is allowed to join
+        if not (
+            (hasattr(user, 'teacher') and meeting.teacher == user.teacher) or
+            (hasattr(user, 'student') and user.student in meeting.students.all())
+        ):
+            return Response(
+                {"error": "You don't have permission to join this meeting."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if not meeting.is_active:
+            return Response(
+                {"error": "Meeting is not active."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Generate JWT token
+        jwt_token = generate_jwt_token(user, meeting.room_name)
+
+        return Response({
+            "message": "Joined meeting successfully.",
+            "meeting": MeetingSerializer(meeting).data,
+            "token": jwt_token,
+            "room": meeting.room_name,
+            "domain": "8x8.vc",
+            "join_url": f"https://8x8.vc/{meeting.room_name}?jwt={jwt_token}"
+        })
+
+    @action(detail=True, methods=['post'])
+    def close_meeting(self, request, pk=None):
+        meeting = self.get_object()
+        user = request.user
+
+        if not hasattr(user, 'teacher') or meeting.teacher != user.teacher:
+            return Response(
+                {"error": "Only the meeting owner can close the meeting."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if not meeting.is_active:
+            return Response(
+                {"error": "Meeting is already closed."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        meeting.is_active = False
+        meeting.end_time = timezone.now()
+        meeting.save()
+
+        return Response({
+            "message": "Meeting closed successfully.",
+            "meeting": MeetingSerializer(meeting).data
+        })
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def refresh_jitsi_token(request, meeting_id):
+    try:
+        meeting = Meeting.objects.get(meeting_id=meeting_id)
+        
+        # Check if user has access to the meeting
+        if request.user.role != 'teacher':  # Use role field instead of hasattr
+            if not request.user.groups.filter(id=meeting.group.id).exists():
+                return JsonResponse({'error': 'Access denied'}, status=403)
+        
+        # Generate new token
+        token = generate_jitsi_token(
+            room_name=meeting.room_name,
+            user=request.user,
+            meeting=meeting,
+            expires_in=7200
+        )
+        
+        return JsonResponse({
+            'token': token,
+            'expires_at': (timezone.now() + timedelta(seconds=7200)).isoformat()
+        })
+        
+    except Meeting.DoesNotExist:
+        return JsonResponse({'error': 'Meeting not found'}, status=404)
+
+

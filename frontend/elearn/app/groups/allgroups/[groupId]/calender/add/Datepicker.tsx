@@ -80,7 +80,7 @@ const handleStartTimeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         times.push(`${String(hour).padStart(2, '0')}:00`);
       }
     } else {
-      for (let hour = 18; hour <= 20; hour++) {
+      for (let hour = 12; hour <= 20; hour++) {
         times.push(`${String(hour).padStart(2, '0')}:00`);
       }
     }
@@ -93,7 +93,7 @@ const handleStartTimeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         times.push(`${String(hour).padStart(2, '0')}:00`);
       }
     } else {
-      for (let hour = 18; hour <= 22; hour++) {
+      for (let hour = 12; hour <= 22; hour++) {
         times.push(`${String(hour).padStart(2, '0')}:00`);
       }
     }

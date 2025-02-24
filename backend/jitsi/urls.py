@@ -1,11 +1,13 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import  MeetingViewset
+from .views import  MeetingViewSet, refresh_jitsi_token
 
 router = DefaultRouter()
-router.register(r'', MeetingViewset)
+router.register(r'', MeetingViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('/<uuid:meeting_id>/refresh-token/', refresh_jitsi_token, name='refresh_token'),
+
 
 ]

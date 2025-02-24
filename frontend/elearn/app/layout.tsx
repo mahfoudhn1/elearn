@@ -20,12 +20,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl">
+
       <body className={inter.className}>
       <StoreProvider>
       <Header/>
          {children}
         <Footer />
         </StoreProvider>
+        <script src="https://meet.jit.si/external_api.js"></script>
 
       </body>
 

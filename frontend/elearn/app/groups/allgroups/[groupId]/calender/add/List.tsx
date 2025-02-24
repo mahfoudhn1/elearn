@@ -26,7 +26,7 @@ const ScheduleList: React.FC<ScheduleListProps> = ({ schedules, onCancel, role }
   const params = useParams()
   const router = useRouter()
   const GoToMetting = (id:number)=>{
-    router.push(`/groups/${params.id}/${params.groupId}/livestream/${id}`)
+    router.push(`/lives?roomId=${id}`)
   } 
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg mt-4">
@@ -35,7 +35,7 @@ const ScheduleList: React.FC<ScheduleListProps> = ({ schedules, onCancel, role }
         <div key={index} className={`mb-4 last:mb-0 p-2 shadow rounded-lg bg-${schedule.color} bg-opacity-70`}>
           <div className="flex justify-between items-start mb-1">
             <div className="flex cursor-pointer"
-              onClick={()=>GoToMetting(schedule.id)}>
+              onClick={()=>GoToMetting(schedule.Meeting.id)}>
             <div className='flex flex-col border-l justify-center'>
               <p className="text-white text-sm flex ml-4 items-center">
                 <Clock size={14} className="mr-1" />

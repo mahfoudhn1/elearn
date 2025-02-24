@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 import { loginSuccess } from '../../../../../store/authSlice';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
+import axiosClientInstance from '../../../../lib/axiosInstance';
 
 const GoogleCallback = () => {
   const dispatch = useDispatch();
@@ -26,15 +27,15 @@ const GoogleCallback = () => {
       try {
         setStatus({ loading: true, error: null });
         
-        const response = await axios.post(
+        const response = await axiosClientInstance.post(
           'http://localhost:8000/api/auth/callback/google/', 
           { code },
           {
-
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json'
-            }
+            },
+            
           }
         );
 

@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { CalendarCheck } from 'lucide-react';
 import Schedulebutton from './Schedulebutton';
 import DeleteButton from './DeleteButton';
+import StartNowButton from './StartNowButton';
 
 
 
@@ -68,6 +69,8 @@ async function deleteGroup(group_id: number) {
   }
 }
 
+
+
 async function SnigleGrpoup({params} :{params:Params}) {
   
   try{
@@ -76,6 +79,9 @@ async function SnigleGrpoup({params} :{params:Params}) {
   const StudentsReqGroup = await getStudents(group_id)
   const {students} = await getGroupStudents(group_id)
   const schedules = await getSchedule(group_id)
+
+  console.log(schedules);
+  
   
   return (
     <div className="flex flex-row bg-stone-50">
@@ -84,6 +90,11 @@ async function SnigleGrpoup({params} :{params:Params}) {
  
       <div className="p-4 flex flex-col">
       <StudentsRequest studentsreqroup={StudentsReqGroup} />
+      <div className="flex float-lef">
+        <StartNowButton schedules={schedules} />
+
+      </div>
+
       <div className='md:w-1/2 w-full p-4'>
         <Schedulebutton id={params.id} group_id={params.groupId}  />
         <ScheduleList schedules={schedules}/>

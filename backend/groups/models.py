@@ -43,8 +43,9 @@ class Schedule(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE, default=6)
     schedule_type = models.CharField(max_length=10, choices=SCHEDULE_TYPE_CHOICES, default='weekly')
     color = models.CharField(max_length=20, default='blue-500')
-    zoom_meeting_id = models.CharField(max_length=255, blank=True, null=True) 
-    zoom_join_url = models.URLField(blank=True, null=True) 
+    Meeting = models.ForeignKey('jitsi.Meeting', on_delete=models.SET_NULL, blank=True, null=True)
+    # zoom_meeting_id = models.CharField(max_length=255, blank=True, null=True) 
+    # zoom_join_url = models.URLField(blank=True, null=True) 
     def update_scheduled_date(self):
         today = datetime.now().date()
         
