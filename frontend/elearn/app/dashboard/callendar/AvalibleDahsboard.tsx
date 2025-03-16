@@ -133,7 +133,7 @@ export const ScheduleProfile: React.FC<ScheduleProps> = ({ selectedDate, schedul
                       const group = groups.find(g => g.id === schedule.group);
                       return (
                         <div>
-                          <h3 className="font-semibold"> {group?.grade?.name} {group?.grade.school_level} </h3>
+                          <h3 className="font-semibold"> {group?.grade.name} {group?.grade.school_level} </h3>
                           <h3 className="font-semibold">({group?.name || "Unknown Group"})</h3>
                         </div>
                       );
@@ -148,8 +148,8 @@ export const ScheduleProfile: React.FC<ScheduleProps> = ({ selectedDate, schedul
                     {groups.find(g => g.id === schedule.group)?.students?.slice(0, 3).map((student, i) => (
                       <img 
                         key={i} 
-                        src={`http://localhost:8000/${student.avatar}`} // Assuming each student object has an `avatarUrl` field
-                        alt={`${student.first_name}'s avatar`} // Optional: Add student name to the alt attribute
+                        src={`${student.user.avatar_file}`} // Assuming each student object has an `avatarUrl` field
+                        alt={`${student.user.first_name}'s avatar`} // Optional: Add student name to the alt attribute
                         className="w-6 h-6 rounded-full bg-gray-300 border-2 border-white"
                       />
                     ))}

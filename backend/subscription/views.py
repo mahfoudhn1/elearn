@@ -2,8 +2,8 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 
 from users.serializers import StudentSerializer
-from .models import Subscription
-from .serializers import SubscriptionSerialize
+from .models import Subscription, SubscriptionPlan
+from .serializers import SubscriptionPlanSerializer, SubscriptionSerialize
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from users.models import Student, Teacher
@@ -37,6 +37,7 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
 
         subscription = self.get_object()
         if subscription.is_active:
+            subscription.activate()  
             subscription.renew()
             serializer = self.get_serializer(subscription)
             return Response(serializer.data)
@@ -75,3 +76,28 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
         serializer = SubscriptionSerialize(subscriptions, many=True)
 
         return Response(serializer.data)
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def teacher_subscriptions(self, request):
+
+        user = request.user
+
+        try:
+            # Ensure the authenticated user is a teacher
+            teacher = Teacher.objects.get(user=user)
+            print(teacher)
+        except Teacher.DoesNotExist:
+            return Response(
+                {'error': 'The authenticated user is not a teacher'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        subscriptions = Subscription.objects.filter(teacher=teacher)
+        print(subscriptions)
+        serializer = SubscriptionSerialize(subscriptions, many=True, context={'request': request})
+
+        return Response(serializer.data)
+
+class subscriptionPlanView(viewsets.ModelViewSet):
+    queryset = SubscriptionPlan.objects.all()
+    serializer_class = SubscriptionPlanSerializer
+    permission_classes = [IsAuthenticated]

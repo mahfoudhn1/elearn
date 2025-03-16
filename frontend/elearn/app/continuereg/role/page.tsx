@@ -22,7 +22,7 @@ function ChooseRole() {
         // Check if the action was successful
         if (updateUserRole.fulfilled.match(resultAction)) {
             console.log('Role updated successfully:', resultAction.payload);
-            router.push('/continuereg/informationform')
+            router.push(`/continuereg/informationform?id=${resultAction.payload.id}`)
         } else {
             console.error('Failed to update role:', resultAction.error.message);
         }

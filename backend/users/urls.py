@@ -1,5 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+
+from users.views.payement_view import PaymentViewSet
 from .views import (FieldOfStudysView, GradeViewSet, RegisterView, TeacherProfileView,LogoutViewSet, UserViewSet,AuthViewSet, TeacherViewSet, StudentViewSet, MyTokenObtainPairView, MyTokenRefreshView, GoogleOAuthCallbackViewSet)
 from django.conf import settings
 from django.conf.urls.static import static
@@ -19,7 +21,7 @@ router.register(r'grades', GradeViewSet, basename='grades')
 router.register(r'auth', AuthViewSet, basename='auth')
 
 router.register(r'auth/callback/google', GoogleOAuthCallbackViewSet, basename='google_callback')
-
+router.register(r'payments', PaymentViewSet, basename='payment')
 
 
 urlpatterns = [

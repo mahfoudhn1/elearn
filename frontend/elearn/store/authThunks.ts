@@ -6,12 +6,16 @@ import axiosClientInstance from '../app/lib/axiosInstance';
 
 export const register = createAsyncThunk(
     '/register',
-    async (userData: { username: string; email: string; first_name: string, last_name: string, password: string; password2: string; role: string }, { dispatch }) => {
+    async (userData: FormData, { dispatch }) => {
       try {
-        const response = await axiosClientInstance.post('/register/', userData);
+        const response = await axiosClientInstance.post('/register/', userData,{
+          headers: {
+            'Content-Type': 'multipart/form-data', 
+          },
+        });
         const { message } = response.data;
         dispatch(registerSuccess({ message }));
-        return { success: true }; // Return success status
+        return { success: true }; 
       } catch (error) {
         dispatch(registerFailure({ message: 'Registration failed' }));
         console.error('Registration failed', error);
@@ -24,7 +28,7 @@ export const register = createAsyncThunk(
     async (role: string, { rejectWithValue }) => {
       try {
         const response = await axiosClientInstance.put('/users/me/', { role });
-        return response.data; // This should be the entire user object
+        return response.data; 
       } catch (error) {
         return rejectWithValue("No update made");
       }
@@ -40,6 +44,7 @@ export const register = createAsyncThunk(
       try {
         const response = await axiosClientInstance.post('/auth/', userData);
         const {  user } = response.data;
+        
         const { message } = response.data
         dispatch(loginSuccess({user, message}));
         return { success: true }; 

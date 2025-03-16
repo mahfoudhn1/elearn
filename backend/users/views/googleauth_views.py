@@ -97,14 +97,14 @@ class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
                     'username': username,
                     'first_name': first_name,
                     'last_name': last_name,
-                    'avatar': profile_picture
+                    'avatar_file': profile_picture
                 }
             )
             
             if not created:
                 user.first_name = first_name
                 user.last_name = last_name
-                user.avatar = profile_picture
+                user.avatar_file = profile_picture
                 user.save()
 
             tokens = get_tokens_for_user(user)

@@ -28,3 +28,13 @@ class Note(models.Model):
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
     def __str__(self) -> str:
         return f"note from {self.user.username} title: {self.title} "
+
+
+class TodoList(models.Model):
+    time = models.CharField(max_length=10)  # e.g., "10:00 AM"
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True)
+    completed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.title

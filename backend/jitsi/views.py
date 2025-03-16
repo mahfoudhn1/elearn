@@ -97,7 +97,7 @@ class MeetingViewSet(viewsets.ModelViewSet):
             )
 
         meeting.start_time = timezone.now()
-        meeting.save()
+        meeting.save() 
 
         jwt_token = generate_jitsi_token(user, meeting.room_name)
 
@@ -110,7 +110,7 @@ class MeetingViewSet(viewsets.ModelViewSet):
             "token": jwt_token,
             "room": meeting.room_name,
             "domain": jitsi_domain,
-            "join_url": join_url  # Use the self-hosted Jitsi URL
+            "join_url": join_url 
         })
 
 

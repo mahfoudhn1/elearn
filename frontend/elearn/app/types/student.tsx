@@ -1,15 +1,48 @@
-export interface Student{
+
+  export interface User{
     id: number;
-    user: number;
+    username:string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    avatar_file:string;
+    avatar_url : string;
+  }
+  export interface Grade{
+    id:number;
+    name: string;
+    school_level: string;
+  }
+  export interface field_of_study  {
+    id: number;
+    name: string;
+  }
+  export interface Student{
+    id: number;
+    user: User;
     first_name:string;
     last_name:string;
     avatar:string;
     wilaya:string;
-    grade: number;
-
+    phone_number:string;
+    grade: Grade;
+    field_of_study: field_of_study;
     school_level: string;
     hightschool_speciality: string;
   }
+  export interface Teacher {
+    id: number;
+    user: User;
+    teaching_level:string;
+    phone_number:string;
+    profession:string;
+    degree: string;
+    university: string;
+    price: number;
+    wilaya:string;
+    teaching_subjects: string;
+
+}
 
   export interface Schedule {
     id: number;
@@ -25,27 +58,28 @@ export interface Student{
     zoom_meeting_id: string;
     zoom_join_url: string;
 }
-  export interface Grade{
-    id:number;
-    name: string;
-    school_level: string;
-  }
+ 
   export interface Group {
     id: number;
     name: string;
     school_level: string;
-    grade: number;
+    grade: Grade;
     schedule?: Schedule[];
     students?: Student[];
   }
   export interface Grade{
     id:number;
     name:string;
+    school_level : string;
   }
   export interface Subscription {
     id: number;
-    student: number;
+    student: Student;
+    teacher: Teacher;
     is_active:boolean;
+    start_date:string;
+    end_date:string;
+
   }
   export interface Meeting{
     teacher: number;       
@@ -87,4 +121,8 @@ export interface Student{
     progress: Progress[];
     deckprogress : number;
   }
-  
+  export interface payement{
+    current_balance : string;
+    teacher : number;
+    total_earned : string;
+  }

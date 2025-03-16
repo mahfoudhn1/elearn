@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import FieldOfStudy, Grade, User, Student, Teacher
+from .models import FieldOfStudy, Grade, Payment, User, Student, Teacher
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
@@ -10,10 +10,15 @@ class AuthSerializer(serializers.Serializer):
 
     
 class UserSerializer(serializers.ModelSerializer):
+    avatar_url = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', "first_name" ,"last_name",'role']
-
+        fields = ['id', 'username', 'email', "first_name" ,"last_name",'role', 'avatar_url', 'avatar_file']
+    def get_avatar_url(self, obj):
+        if obj.avatar_file:
+            return obj.avatar_file.url
+        return None
 
 class fieldofstudySerializer(serializers.ModelSerializer):
     class Meta:
@@ -28,10 +33,10 @@ class gradeSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'school_level' ]
         
 class TeacherSerializer(serializers.ModelSerializer):
-
+    user = UserSerializer(read_only=True)
     class Meta:
         model = Teacher
-        fields = ["id","user","price", "phone_number","first_name","last_name", "avatar","profession" ,"degree" ,"university", "profile_privet","teaching_level","teaching_subjects","wilaya","created_at","updated_at"]
+        fields = ["id","user","price", "phone_number","profession" ,"degree" ,"university", "profile_privet","teaching_level","teaching_subjects","wilaya","created_at","updated_at"]
         read_only_fields = ['user']
     
     def create(self, validated_data):
@@ -42,45 +47,58 @@ class TeacherSerializer(serializers.ModelSerializer):
 
         return teacher
     
-    def update(self, instance, validated_data):
-
-
-        instance.profile_privet = validated_data.get('profile_privet', instance.profile_privet)
-        instance.save()
-
-        return instance
-
 class StudentSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)  # Read-only for responses
+    
+    # Read-only nested representations for responses
+    grade = gradeSerializer(read_only=True)
+    field_of_study = fieldofstudySerializer(read_only=True)
 
+    # Write-only ID fields for creation/updates
+    grade_id = serializers.PrimaryKeyRelatedField(
+        queryset=Grade.objects.all(),
+        source="grade",  # Links to the `grade` field in the model
+        write_only=True,
+        required=False,  # Optional
+        allow_null=True  # Allows null values
+    )
+    field_of_study_id = serializers.PrimaryKeyRelatedField(
+        queryset=FieldOfStudy.objects.all(),
+        source="field_of_study",  # Links to the `field_of_study` field in the model
+        write_only=True,
+        required=False,  # Optional
+        allow_null=True  # Allows null values
+    )
 
     class Meta:
         model = Student
-        fields = ['id', 'user',"avatar","first_name","last_name", "wilaya","school_level", "grade", "field_of_study", "phone_number"]
-        read_only_fields = ['user']
+        fields = [
+            'id', 'user', 'wilaya', 
+            'grade', 'grade_id',  # grade is read-only, grade_id is write-only
+            'field_of_study', 'field_of_study_id',  # field_of_study is read-only, field_of_study_id is write-only
+            'phone_number'
+        ]
+        read_only_fields = ['id', 'user']  # Ensure `id` and `user` are read-only
 
     def create(self, validated_data):
+        # Get the request object from the context
         request = self.context.get('request')
-        user = request.user
+        if not request or not request.user:
+            raise serializers.ValidationError("No user found in the request context.")
 
-
-        student = Student.objects.create(user=user, **validated_data)
-
+        validated_data['user'] = request.user
+        student = Student.objects.create(**validated_data)
         return student
-
-    def update(self, instance, validated_data):
-
-        instance.save()
-        return instance
     
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
     password2 = serializers.CharField(write_only=True, required=True, help_text="Confirm your password")
-    role = serializers.ChoiceField(choices=get_user_model().ROLE_CHOICE)
+    role = serializers.ChoiceField(choices=get_user_model().ROLE_CHOICE, required=False, allow_null=True)
 
     class Meta:
         model = get_user_model()
-        fields = ('username',"first_name","last_name", 'email', 'password', 'password2', 'role')
+        fields = ('username', "first_name", "last_name", 'email', 'password', 'password2', 'role', 'avatar_url', 'avatar_file')
 
     def validate(self, data):
         if data['password'] != data['password2']:
@@ -88,15 +106,16 @@ class RegisterSerializer(serializers.ModelSerializer):
         return data
     
     def create(self, validated_data):
+        role = validated_data.get('role', None)  # Get role if provided, otherwise None
+
         user = get_user_model().objects.create_user(
             username=validated_data['username'],
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
             email=validated_data['email'],
             password=validated_data['password'],
-            role=validated_data['role']
+            role=role  # Can be None
         )
-
         return user
     
 class LoginSerializer(serializers.Serializer):
@@ -128,3 +147,7 @@ class LoginSerializer(serializers.Serializer):
 
         return data
     
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = ['teacher', 'current_balance', 'total_earned']

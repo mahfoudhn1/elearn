@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'daphne',
     'django.contrib.staticfiles',
     'corsheaders',
 
@@ -47,6 +48,7 @@ INSTALLED_APPS = [
     
     'rest_framework_simplejwt',
     'rest_framework.authtoken',
+    'channels',
     'users',
     'subscription',
     'livestream',
@@ -56,6 +58,7 @@ INSTALLED_APPS = [
     "flashcards",
     'notes',
     "jitsi",
+    "notifications",
 ]
 
 MIDDLEWARE = [
@@ -102,8 +105,16 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'core.wsgi.application'
-
-
+ASGI_APPLICATION = 'core.asgi.application'
+ 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],  
+        },
+    },
+}
 
 DATABASES = {
    'default': {

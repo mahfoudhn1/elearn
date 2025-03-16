@@ -2,11 +2,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axiosClientInstance from "../../../lib/axiosInstance";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../../store/store";
 
 export default function StartNowButton({ schedules }: { schedules: any[] }) {
   const [showButton, setShowButton] = useState(false);
   const [currentMeeting, setCurrentMeeting] = useState(null);
   const router = useRouter();
+  const user = useSelector((state: RootState) => state.auth.user);
 
   useEffect(() => {
     const checkSchedule = async () => {
@@ -48,19 +51,22 @@ export default function StartNowButton({ schedules }: { schedules: any[] }) {
 //       router.push(`/meeting-room/${currentMeeting.id}`);
 //     }
 //   };
-  console.log(currentMeeting);
   
   if (!showButton || !currentMeeting) return null;
 
   return (
+    
     <div className="bottom-4 right-4 animate-pulse">
-      <button
-        // onClick={handleClick}
-        className="bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-2 transition-all"
-      >
-        <span className="w-3 h-3 bg-white rounded-full"></span>
-        Start Now
-      </button>
-    </div>
+
+    <button
+      className="bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-2 transition-all"
+    >
+      {user?.role !== "student" ? (
+        <span className="w-3 h-3 bg-white rounded-full">ابدأ البث</span>
+      ) : (
+        <span className="w-3 h-3 bg-blue-500 rounded-full">ادخل البث</span> // Example of different output
+      )}
+    </button>
+        </div>
   );
 }

@@ -23,7 +23,10 @@ class Subscription(models.Model):
     subs_history = models.JSONField(default=list, null=True, blank=True)
 
     def is_active_subscription(self):
-        return self.is_active and self.end_date >= timezone.now().date()
+        """Check if the subscription is active and not expired."""
+        if not self.is_active or not self.end_date:
+            return False
+        return self.end_date >= timezone.now().date()
 
     def renew(self):
         self.start_date = timezone.now().date()
@@ -31,17 +34,39 @@ class Subscription(models.Model):
         self.add_subs_to_history("Renewed")
         self.save()
 
+    def activate(self):
+        """Activate the subscription and set start_date and end_date."""
+        if not self.is_active:
+            self.is_active = True
+            self.start_date = timezone.now().date()
+            self.end_date = self.start_date + timezone.timedelta(days=self.plan.duration_days)
+            self.add_subs_to_history("Activated")
+            self.save(update_fields=['is_active', 'start_date', 'end_date', 'subs_history'])
+
+    def renew(self):
+        """Renew the subscription, updating start_date and end_date."""
+        self.start_date = timezone.now().date()
+        self.end_date = self.start_date + timezone.timedelta(days=self.plan.duration_days)
+        self.is_active = True  # Ensure it stays active
+        self.add_subs_to_history("Renewed")
+        self.save(update_fields=['start_date', 'end_date', 'is_active', 'subs_history'])
+
     def cancel(self):
+        """Cancel the subscription."""
         self.is_active = False
         self.add_subs_to_history("Cancelled")
-        self.save()
+        self.save(update_fields=['is_active', 'subs_history'])
 
     def add_subs_to_history(self, status):
+        """Add an entry to subscription history."""
+        if not isinstance(self.subs_history, list):
+            self.subs_history = []
         self.subs_history.append({
             "status": status,
             "date": timezone.now().date().isoformat()
         })
-        self.save()
 
     def __str__(self):
         return f'{self.student} -> {self.teacher}'
+    
+

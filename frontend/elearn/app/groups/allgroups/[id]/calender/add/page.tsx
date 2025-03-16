@@ -20,8 +20,8 @@ interface ScheduleFormData {
 
 const SchedulePage = () => {
     const today = new Date();
-    const params = useParams<{ groupId: string }>();
-    const groupId = Number(params.groupId);
+    const params = useParams<{ id: string }>();
+    const groupId = Number(params.id);
     const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     const newDayOfWeek = daysOfWeek[today.getDay()];
     const [schedules, setSchedules] = useState<Schedule[]>([]);

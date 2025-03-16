@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
@@ -19,7 +20,6 @@ class GroupViewSet(viewsets.ModelViewSet):
         field_of_study_id = self.request.query_params.get('field_of_study', None)
         school_level_name = self.request.query_params.get('school_level', None)
         group_id = self.kwargs.get('pk', None)
-
         queryset = Group.objects.all()
 
         if group_id:
@@ -56,7 +56,31 @@ class GroupViewSet(viewsets.ModelViewSet):
             return queryset.filter(students=user.student)
         return queryset
     
+    @action(detail=False, methods=['get'])
+    def student_groups(self, request):
+        """API endpoint for fetching student groups"""
+        user = request.user
+        if user.role != 'student':
+            return Response({"error": "Only students can access this."}, status=403)
 
+        student_groups = Group.objects.filter(students=user.student)
+        serializer = self.get_serializer(student_groups, many=True)
+        return Response(serializer.data)
+    
+    
+    def destroy(self,request, pk=None):
+        group_id = pk  
+
+        try:
+            group = Group.objects.get(id=group_id)
+        except Group.DoesNotExist:
+            return Response({'error': 'Group not found.'}, status=status.HTTP_404_NOT_FOUND) 
+
+        if group.admin != request.user.teacher:
+            return Response({'error': 'You do not have permission to remove students from this group'}, status=status.HTTP_403_FORBIDDEN)
+        
+        group.delete()
+        return Response({'message': 'Group deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)   
     
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def add_student_to_group(self, request, pk=None):
@@ -64,7 +88,6 @@ class GroupViewSet(viewsets.ModelViewSet):
         student_id = request.data.get('student_id')
 
         try:
-            # Fetch the group and student
             group = Group.objects.get(id=group_id)
             student = Student.objects.get(id=student_id)
 
@@ -84,11 +107,12 @@ class GroupViewSet(viewsets.ModelViewSet):
         try:
             group = self.get_object()  
             student_id = request.data.get('student_id') 
-            
+
+            if group.admin != request.user.teacher:
+                return Response({'error': 'You do not have permission to remove students from this group'}, status=status.HTTP_403_FORBIDDEN)
             if not student_id:
                 return Response({'error': 'Student ID is required'}, status=status.HTTP_400_BAD_REQUEST)
             
-            # Assuming you have a Many-to-Many relationship between Group and Student
             try:
                 student = group.students.get(id=student_id)  # Get the student from the group
                 group.students.remove(student)  # Remove the student from the group
@@ -102,27 +126,23 @@ class GroupViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def Noroup_students(self, request):
         user = request.user
-        group_id = request.query_params.get('group_id', None)
+        group_id = request.query_params.get('group_id')
 
         if not group_id:
             return Response({'error': 'group_id parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            group = Group.objects.get(id=group_id)
-        except Group.DoesNotExist:
-            return Response({'error': 'Group not found'}, status=status.HTTP_404_NOT_FOUND)
+        group = get_object_or_404(Group, id=group_id)
 
         try:
             teacher = Teacher.objects.get(user=user)
         except Teacher.DoesNotExist:
             return Response({'error': 'The authenticated user is not a teacher'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Fetch active subscriptions where students don't belong to any group
+        # Get students subscribed to this teacher and not in any group
         subscriptions = Subscription.objects.filter(
             teacher=teacher,
-            is_active=True,
-            student__group__isnull=True
-        )
+            is_active=True
+        ).exclude(student__groups__isnull=False)
 
         subscriptions = subscriptions.filter(
             student__school_level=group.school_level,

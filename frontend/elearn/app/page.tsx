@@ -11,26 +11,25 @@ import FAQ from './components/homecomponents/FAQ'
 
 
 export default function page() {
-// 
-const [isLoading, setIsLoading] = useState(true);
 
-const timer = setTimeout(() => {
-  setIsLoading(false);
-}, 1000); 
+  const [isLoading, setIsLoading] = useState(true);
+  const timer = setTimeout(() => {
+    setIsLoading(false);
+  }, 1000); 
 
-if (isLoading) {
-  return(<div className="flex justify-center items-center h-screen bg-gray-200">
-    <div className="w-16 h-16 border-4 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
-  </div>) 
-}
-  return (
-    <div> 
-      <Hero />
-      <Whyus />
-      <TeacherSection />
-      <Mission/>
-      <Review/>
-      <FAQ/>
-    </div>
-  )
+  if (isLoading) {
+    return(<div className="flex justify-center items-center h-screen bg-gray-200">
+      <div className="w-16 h-16 border-4 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
+    </div>) 
+  }
+    return (
+      <div> 
+        <Hero />
+        <Whyus />
+        <TeacherSection />
+        <Mission/>
+        <Review/>
+        <FAQ/>
+      </div>
+    )
 }

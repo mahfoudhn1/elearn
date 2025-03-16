@@ -20,4 +20,4 @@ class Meeting(models.Model):
         related_name='speaking_in'
     )
     def __str__(self):
-        return f"Room: {self.id} {self.room_name} by {self.teacher.first_name}"
+        return f"Room: {self.id} {self.room_name} by {self.teacher.user.first_name}"

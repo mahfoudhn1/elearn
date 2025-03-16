@@ -5,7 +5,8 @@ import React, { useEffect, useState } from 'react'
 import axiosClientInstance from '../../../lib/axiosInstance';
 import { Student } from '../../../types/student';
 import { Grade } from '../../../types/student';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 function CreateGroup() {
 
@@ -19,8 +20,13 @@ function CreateGroup() {
   const searchParams = useSearchParams()
   const school_Level = searchParams.get('school_Level')
   const field_of_study = searchParams.get('field')
+  const router = useRouter()
+  const pathname = usePathname();
+  const newPath = pathname.replace("/create", "");
 
- 
+  const queryString = searchParams.toString();
+  const newUrl = queryString ? `${newPath}?${queryString}` : newPath;
+
 
   useEffect(() => {
     
@@ -60,7 +66,7 @@ function CreateGroup() {
     setSelectedGrade(selectedGradeObj); 
 
     if (selectedGradeObj) {
-      const filtered = students.filter((student) => student.grade === selectedGradeObj.id);
+      const filtered = students.filter((student) => student.grade.id === selectedGradeObj.id);
       
       setFilteredStudents(filtered);
     } else {
@@ -80,7 +86,7 @@ function CreateGroup() {
   
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    console.log(selectedGrade?.id);
+    
     
     const dataToSubmit: any = {
       name: name,
@@ -96,6 +102,8 @@ function CreateGroup() {
     try {
       const response = await axiosClientInstance.post('/groups/', dataToSubmit);
       console.log('Response:', response.data);
+      window.location.replace(newUrl);
+
     } catch (error) {
       console.error('Error submitting data:', error);
     }
@@ -178,10 +186,10 @@ function CreateGroup() {
                     </span>
                   </label>
                   <label className="cursor-pointer ml-2 text-gray-600 text-sm" htmlFor={`${student.id}`}>
-                    { student.first_name } {student.last_name}
+                    { student.user.first_name } {student.user.last_name}
                   </label>
-                    {grade.find(g => g.id === student.grade)?.name || "Grade not found"}
-                </div>
+                  {grade.find(g => g.id === student?.grade.id)?.name || "Grade not found"}
+                  </div>
               </label>
             </div>
 

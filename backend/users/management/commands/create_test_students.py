@@ -45,7 +45,7 @@ class Command(BaseCommand):
                 }
             )
             if created:
-                self.stdout.write(self.style.SUCCESS(f'Student {student.first_name} {student.last_name} created.'))
+                self.stdout.write(self.style.SUCCESS(f'Student {student.user.first_name} {student.user.last_name} created.'))
             else:
                 self.stdout.write(self.style.WARNING(f'Student for user {user.username} already exists.'))
 

@@ -42,7 +42,12 @@ const Note: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await axiosClientInstance.get(`/notes/subject/${encodeURIComponent(params.id)}/`);
+        const response = await axiosClientInstance.get(`/notes/notes/`,{
+          params:{
+            subject :  params.id
+          }
+        }
+        );
         setNotes(response.data);
       } catch (err) {
         setError('Failed to fetch notes. Please try again later.');
@@ -72,14 +77,14 @@ const Note: React.FC = () => {
     try {
       let response: any;
       if (selectedNote) {
-        response = await axiosClientInstance.put(`/notes/${selectedNote.id}/`, {
+        response = await axiosClientInstance.put(`/notes/notes/${selectedNote.id}/`, {
           ...newNote,
           content: contentAsJson,
         });
         setNotes((prev) => prev.map((note) => (note.id === selectedNote.id ? response.data : note)));
       } else {
 
-        response = await axiosClientInstance.post('/notes/', {
+        response = await axiosClientInstance.post('/notes/notes/', {
           ...newNote,
           content: contentAsJson, 
         });
@@ -121,7 +126,7 @@ const Note: React.FC = () => {
   const deleteNote = async (noteId: number) => {
     if (window.confirm("متأكد من حذف المذكرة ؟")) {
       try {
-        await axiosClientInstance.delete(`/notes/${noteId}/`);
+        await axiosClientInstance.delete(`/notes/notes/${noteId}/`);
         
 
         setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));

@@ -36,11 +36,11 @@ class ScheduleSerializer(serializers.ModelSerializer):
 
 class GroupSerializer(serializers.ModelSerializer):
     school_level = serializers.CharField()  # Accepts a name for school_level
-
+    admin = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = Group
-        fields = ['id', 'name', 'students', 'school_level', 'grade', 'field_of_study', 'created_at', 'updated_at', 'status']
-
+        fields = ['id',"admin", 'name', 'students', 'school_level', 'grade', 'field_of_study', 'created_at', 'updated_at', 'status']
+        extra_kwargs = {'admin': {'read_only': True}}
     def create(self, validated_data):
         request = self.context['request']
 
@@ -73,9 +73,15 @@ class GroupSerializer(serializers.ModelSerializer):
         group.students.set(students)
 
         return group
+    def get_admin(self, obj):
+        return {
 
+            "name": obj.admin.user.get_full_name(),  # Assuming `user` has `first_name` and `last_name`
+            "email": obj.admin.user.email,
+        }
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['students'] = StudentSerializer(instance.students.all(), many=True).data
+
         representation['school_level'] = instance.school_level.name  # Return the name instead of the ID
         return representation

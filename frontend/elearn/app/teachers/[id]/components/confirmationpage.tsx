@@ -17,10 +17,13 @@ const ConfirmationPage: React.FC<ConfirmationPageProps> = ({
   const handleConfirmSubscription = async () => {
     try {
       const response = await axiosClientInstance.post('/subscriptions/', {
-        teacher: teacherId,
+        teacher_id: teacherId,
         plan: planId,
       });
+      if(response.data){
+      }
       onConfirm();
+
     } catch (error) {
       console.error('Subscription failed:', error);
     }
