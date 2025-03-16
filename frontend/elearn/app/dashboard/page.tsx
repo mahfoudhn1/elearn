@@ -50,7 +50,7 @@ function Dashboard() {
     
   return (
     <div className='flex flex-row w-full h-full'>
-        <div className='' >
+        <div className='relative' >
           <Sidebar/>
         </div>
         <div className=' w-full bg-gray-300 flex flex-col'>
