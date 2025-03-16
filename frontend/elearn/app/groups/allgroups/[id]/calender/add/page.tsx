@@ -39,8 +39,13 @@ const SchedulePage = () => {
         if (groupId) {
             fetchSchedules();
         }
+        
     }, [groupId]);
-
+    
+    useEffect(() => {
+      console.log('Selected Color:', selectedColor); // Log the updated state
+    }, [selectedColor]); // Run this effect when selectedColor changes
+  
     const fetchSchedules = async () => {
         if (!groupId) return;
 
@@ -51,6 +56,7 @@ const SchedulePage = () => {
                     group_id: groupId
                 }
             });
+            
             setSchedules(response.data);
         } catch (error) {
             console.error('Error fetching schedules:', error);
@@ -140,6 +146,7 @@ const SchedulePage = () => {
     };
     const handleColorSelect = (color:string) => {
       setSelectedColor(color)
+      
     };
 
       return (

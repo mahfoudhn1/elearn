@@ -48,7 +48,7 @@ class ScheduleViewSet(viewsets.ModelViewSet):
         group_id = request.data.get('group_id')
         schedule_type = request.data.get('schedule_type', 'weekly')
         scheduled_date_str = request.data.get('scheduled_date')
-
+        color = request.data.get('color')
         # Check if user is a teacher
         try:
             teacher = Teacher.objects.get(user=user)
@@ -111,6 +111,7 @@ class ScheduleViewSet(viewsets.ModelViewSet):
             "schedule_type": schedule_type,
             "scheduled_date": scheduled_date,
             "day_of_week": day_of_week,
+            "color":color,
             "start_time": start_time,
             "end_time": end_time,
         })
