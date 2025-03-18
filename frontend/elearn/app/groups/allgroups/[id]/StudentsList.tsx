@@ -27,7 +27,7 @@ function StudentsList({ studentlist }: StudentsListProps) {
         try {
           const studentIds = studentlist.map((student) => student.id);
           const response = await axiosClientInstance.post(
-            "/subscriptions/filtered_subscribed_students/",
+            "/subscriptions/subscriptions/filtered_subscribed_students/",
             { student_ids: studentIds }
           );
           if (response) {

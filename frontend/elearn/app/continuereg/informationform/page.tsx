@@ -8,11 +8,13 @@ import axiosClientInstance from "../../lib/axiosInstance";
 import Link from "next/link";
 import StudentReg from "./studentReg";
 import TeacherReg from "./teacherReg";
+import { set } from "lodash";
 
 function CompletInformations() {
   const user = useSelector((state: RootState) => state.auth.user);
   const rolestate = useSelector((state: RootState) => state.auth.user?.role);
   const [phone_number, setPhone_number] = useState("");
+  const [bio, setBio]=  useState('')
   const [teaching_level, setTeaching_level] = useState("");
   const [wilaya, setWilaya] = useState("");
   const [grades, setGrades] = useState([]);
@@ -55,11 +57,14 @@ function CompletInformations() {
           wilaya: submitData.wilaya,
         };
         const response = await axiosClientInstance.put(`/students/${id}/`, studentpayload, config);
-        console.log("Response from backend:", response.data);
+        if(response.data){
+          router.push('/dashboard')
+        }
 
       } else if (user?.role === "teacher") {
         const teacherpayload = {
           teaching_level:submitData.teaching_level,
+          bio : submitData.bio,
           teaching_subjects: submitData.teaching_subjects,
           degree: submitData.degree,
           phone_number: submitData.phone_number,
@@ -67,12 +72,11 @@ function CompletInformations() {
           university: submitData.university,
         };
         const response = await axiosClientInstance.put(`/teachers/${id}/`, teacherpayload, config);
-        console.log("Response from backend:", response.data);
+        if(response.data){
+          router.push('/dashboard')
+        }
 
       }
-
-  
-      // Redirect or show a success message
       router.push("/dashboard");
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -97,6 +101,8 @@ function CompletInformations() {
 
             {rolestate === "teacher" ? (
               <TeacherReg
+                bio = {bio}
+                setBio = {setBio}
                 phone_number={phone_number}
                 setPhone_number={setPhone_number}
                 teaching_level={teaching_level}

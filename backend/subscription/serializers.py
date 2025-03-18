@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from users.serializers import StudentSerializer, TeacherSerializer
 from users.models import Teacher, Student
-from .models import Subscription, SubscriptionPlan
+from .models import CheckUpload, Subscription, SubscriptionPlan
 from datetime import datetime, timedelta
 
 
@@ -10,6 +10,7 @@ class SubscriptionPlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubscriptionPlan
         fields = ['id', 'name', 'price', 'duration_days', 'description']
+
 
 class SubscriptionSerialize(serializers.ModelSerializer):
     # For writing: Accept a teacher ID
@@ -25,13 +26,18 @@ class SubscriptionSerialize(serializers.ModelSerializer):
     # Student remains read-only
     student = StudentSerializer(read_only=True)
     
-    # Plan is writable via ID
-    plan = serializers.PrimaryKeyRelatedField(queryset=SubscriptionPlan.objects.all())
+    plan_id = serializers.PrimaryKeyRelatedField(
+        queryset=SubscriptionPlan.objects.all(),
+        source='plan', 
+        write_only=True  
+    )
+    
+    plan = SubscriptionPlanSerializer(read_only=True)
 
     class Meta:
         model = Subscription
         fields = [
-            'id', 'teacher', 'teacher_id', 'student', 'plan',
+            'id', 'teacher', 'teacher_id', 'student', 'plan', 'plan_id',
             'start_date', 'end_date', 'is_active', 'subs_history'
         ]
         read_only_fields = ['student', 'start_date', 'end_date', 'is_active', 'subs_history']
@@ -61,7 +67,10 @@ class SubscriptionSerialize(serializers.ModelSerializer):
         # Add subscription creation to history
         subscription.add_subs_to_history("Created")
         return subscription
-class SubscriptionPlanSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = SubscriptionPlan
-            field='__all__'
+
+
+
+class CheckUploadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CheckUpload
+        fields = ['id', 'student', 'subscription', 'check_image', 'is_verified', 'uploaded_at']

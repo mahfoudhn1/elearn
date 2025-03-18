@@ -65,6 +65,7 @@ class subjsctChoice(models.TextChoices):
 
 class Teacher(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="teacher")
+    bio = models.TextField(max_length= 600, null=True, blank=True)
     profile_privet = models.BooleanField(default=True)
     teaching_level = models.CharField(max_length=20, choices = SchoolChoice.choices, null=True, blank=True) 
     teaching_subjects = models.CharField(max_length=20, choices = subjsctChoice.choices, null=True, blank=True) 

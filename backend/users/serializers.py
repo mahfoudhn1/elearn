@@ -36,7 +36,7 @@ class TeacherSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     class Meta:
         model = Teacher
-        fields = ["id","user","price", "phone_number","profession" ,"degree" ,"university", "profile_privet","teaching_level","teaching_subjects","wilaya","created_at","updated_at"]
+        fields = ["id","user","price",'bio', "phone_number","profession" ,"degree" ,"university", "profile_privet","teaching_level","teaching_subjects","wilaya","created_at","updated_at"]
         read_only_fields = ['user']
     
     def create(self, validated_data):

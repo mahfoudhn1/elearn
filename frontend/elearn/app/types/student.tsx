@@ -33,6 +33,7 @@
   export interface Teacher {
     id: number;
     user: User;
+    bio: string;
     teaching_level:string;
     phone_number:string;
     profession:string;
@@ -72,6 +73,12 @@
     name:string;
     school_level : string;
   }
+  export interface SubPlan{
+    id:number
+    price: string;
+    duration_days : string;
+    name:string;
+  }
   export interface Subscription {
     id: number;
     student: Student;
@@ -79,8 +86,10 @@
     is_active:boolean;
     start_date:string;
     end_date:string;
+    plan : SubPlan;
 
   }
+
   export interface Meeting{
     teacher: number;       
     group?: number | null; 
@@ -125,4 +134,14 @@
     current_balance : string;
     teacher : number;
     total_earned : string;
+  }
+
+  export interface PrivateSession {
+    id: number;
+    student:Student;
+    teacher: Teacher;
+    proposed_date: string;
+    status: string;
+    student_notes?: string;
+    teacher_notes?: string;
   }

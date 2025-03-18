@@ -8,10 +8,11 @@ interface StudentTablesProps {
 function teacherTable({ studentSubcriptions }: StudentTablesProps) {
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Filter subscriptions based on search query
-  const filteredSubscriptions = studentSubcriptions.filter((sub) =>
-    sub.teacher.user.first_name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  console.log(studentSubcriptions);
+    const filteredSubscriptions = studentSubcriptions.filter((sub) =>
+      sub.teacher.user.first_name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
 
   return (
     <div className="w-full mx-auto p-4">

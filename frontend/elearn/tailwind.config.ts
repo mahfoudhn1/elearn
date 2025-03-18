@@ -28,13 +28,14 @@ const config: Config = {
       'black':"#000",
       'white':"#fff",
       'blue': '#1fb6ff',
- 
       'orange': '#ff7849',
       'green': '#97c680',
       'red-300':'#fca5a5',
       'red-500':'#ef4444',
       'red-800':'#991b1b',
       'yellow': '#ffc82c',
+      'yellow-800': '#894b00',
+
       'gray-dark': '#273444',
       'gray': '#8492a6',
       'gray-700': '#374151',

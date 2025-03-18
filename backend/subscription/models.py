@@ -1,5 +1,5 @@
 from django.db import models
-from users.models import  Teacher, Student
+from users.models import  Teacher, Student, User
 from django.utils import timezone
 
 
@@ -70,3 +70,13 @@ class Subscription(models.Model):
         return f'{self.student} -> {self.teacher}'
     
 
+
+class CheckUpload(models.Model):
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='check_uploads')
+    subscription = models.ForeignKey('Subscription', on_delete=models.CASCADE, related_name='check_uploads')
+    check_image = models.ImageField(upload_to='checks/')
+    is_verified = models.BooleanField(default=False)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Check uploaded by {self.student.username} for subscription {self.subscription.id}"

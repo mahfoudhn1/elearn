@@ -118,6 +118,9 @@ class RegisterView(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+            user_folder = os.path.join(settings.MEDIA_ROOT, f'user_{user.id}')
+            if not os.path.exists(user_folder):
+                os.makedirs(user_folder)
             return Response({
                 "user": serializer.data,
                 "message": "User created successfully."

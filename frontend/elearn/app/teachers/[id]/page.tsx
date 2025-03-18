@@ -11,6 +11,7 @@ import { PlanComponent } from './components/plans';
 import { Group, Teacher } from '../../types/student';
 import TeacherGroups from './components/groups';
 import Sidebar from '../../components/dahsboardcomponents/sidebar';
+import { useRouter } from 'next/navigation';
 
 
 
@@ -54,7 +55,7 @@ const Profile: React.FC<TeacherProps> = ({ params }) => {
     };
     const checkSubscriptionStatus = async () => {
       try {
-        const response = await axiosClientInstance.get('/subscriptions/'); 
+        const response = await axiosClientInstance.get('/subscriptions/subscriptions/'); 
         const subscriptions = response.data;    
         console.log(subscriptions);
         
@@ -94,10 +95,13 @@ const Profile: React.FC<TeacherProps> = ({ params }) => {
     setShowConfirmation(true); 
   };
 
-
-  const handleConfirm = () => {
+  const router = useRouter()
+  const handleConfirm = (id:any) => {
+    console.log(id);
+    
     setShowConfirmation(false);
-    window.location.reload();
+    router.push(`/subscriptions/${id}`)
+    // window.location.reload();
   };
 
   const handleClosePopup = () => {
@@ -107,7 +111,7 @@ const Profile: React.FC<TeacherProps> = ({ params }) => {
   return (
     <div className='flex flex-row relative'>
       <Sidebar/>
-      <div className="md:p-16 p-8">
+      <div className="md:p-16 p-8 w-full justify-center">
         <div className="p-8 bg-white shadow mt-24">
           <div className="grid grid-cols-1 md:grid-cols-3">
             <div className="grid text-center order-last md:order-first mt-20 md:mt-0">
@@ -150,7 +154,7 @@ const Profile: React.FC<TeacherProps> = ({ params }) => {
             <div>
               <h1 className="text-4xl font-medium text-gray-700">
                 <span className="font-light text-gray-dark">الأستاذ: </span>
-                {teacher?.user.first_name} {teacher?.user.last_name} {teacher?.user.email}
+                {teacher?.user.first_name} {teacher?.user.last_name} 
               </h1>
               <p className="font-light text-gray-600 mt-3">
                 <FontAwesomeIcon className='w-4 h-4 mx-2 text-gray' icon={faLocationPin} />
@@ -168,16 +172,16 @@ const Profile: React.FC<TeacherProps> = ({ params }) => {
               </div>
             </div>
           </div>
+          <div className="mt-12 flex flex-col justify-center">
           {!isSubscribed && !isOwner && (
-            <div className="mt-12 flex flex-col justify-center">
             <p className="text-gray-600 text-center font-light lg:px-16">
               قم بالتسجيل لدى الأستاذ {teacher?.user.first_name} الآن واستفد من العديد من المزايا الرائعة!
             </p>
+          )}
             <p className="text-gray-600 text-center font-light lg:px-16">
-              سجل للحصول على ميزة حضور الدروس المقدمة من قبله، وتفاعل مباشرة معها عبر البث المباشر على منصتنا. كما يمكنك الوصول إلى جميع الدروس التي يرفعها الأستاذ بشكل مستمر. اغتنم الفرصة لتطوير مهاراتك وحضور جلسات تعليمية حية ومباشرة.
+              {teacher?.bio}
             </p>
           </div>
-          )}
   
 
           {/* {isOwner ? (

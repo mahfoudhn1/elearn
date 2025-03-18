@@ -4,7 +4,7 @@ import axiosClientInstance from '../../../lib/axiosInstance';
 interface ConfirmationPageProps {
   teacherId: string;
   planId: number;
-  onConfirm: () => void;
+  onConfirm: (id:any) => void;
   onclose:()=>void
 }
 
@@ -16,13 +16,14 @@ const ConfirmationPage: React.FC<ConfirmationPageProps> = ({
 }) => {
   const handleConfirmSubscription = async () => {
     try {
-      const response = await axiosClientInstance.post('/subscriptions/', {
+      const response = await axiosClientInstance.post('/subscriptions/subscriptions/', {
         teacher_id: teacherId,
-        plan: planId,
+        plan_id: planId,
       });
       if(response.data){
+        onConfirm(response.data.id);
+      
       }
-      onConfirm();
 
     } catch (error) {
       console.error('Subscription failed:', error);

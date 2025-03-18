@@ -31,7 +31,10 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        # Create a Teacher or Student profile based on the role
+        user_folder = os.path.join(settings.MEDIA_ROOT, f'user_{user.id}')
+        if not os.path.exists(user_folder):
+            os.makedirs(user_folder)
+                    
         role = request.data.get('role')
         if role == 'teacher':
             Teacher.objects.get_or_create(user=user)

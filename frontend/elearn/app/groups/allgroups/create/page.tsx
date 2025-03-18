@@ -32,7 +32,7 @@ function CreateGroup() {
     
     const fetchStudents = () => {
       axiosClientInstance
-        .get(`/subscriptions/subscribed_students/`)
+        .get(`/subscriptions/subscriptions/subscribed_students/`)
         .then((response) => {
           setStudents(response.data);
         })

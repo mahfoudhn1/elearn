@@ -1,69 +1,84 @@
-from django.shortcuts import render
-from rest_framework import viewsets, status
-from .models import *
-from .serializers import *
-
+from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
-from rest_framework.exceptions import ValidationError
-from django.core.exceptions import PermissionDenied
-from rest_framework.permissions import IsAuthenticated
+from .models import PrivateSession, PrivateSessionRequest
+from .serializers import PrivateSessionRequestSerializer, PrivateSessionSerializer
+from users.models import Student, Teacher
 
-from users.models import Teacher, Student
+# Student creates a session request
+from rest_framework import status
+from rest_framework.response import Response
 
-
-
-class PrivateSessionViewSet(viewsets.ModelViewSet):
-    queryset = PrivetSession.objects.all()
-    serializer_class = PrivetSessionSerializer
-
-
-class PrivateSessionRequestViewSet(viewsets.ModelViewSet):
+class CreateSessionRequestView(viewsets.ModelViewSet):
     queryset = PrivateSessionRequest.objects.all()
     serializer_class = PrivateSessionRequestSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
-    def perform_create(self, serializer):
-        # Get the current user (student) from the request
-        user = self.request.user
-        student = Student.objects.get(user = user)
- 
-        if not hasattr(user, 'student'):
-            return Response({'detail': 'User is not a student.'}, status=status.HTTP_400_BAD_REQUEST)
+    def create(self, request, *args, **kwargs):
+        student = Student.objects.get(user=request.user)
+        
+        request.data['student_id'] = student.id
+        
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-        # Extract the teacher ID from the request data
-        teacher_id = self.request.data.get('teacher')
-        if not teacher_id:
-            return Response({'detail': 'Teacher ID is required.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Validate and retrieve the Teacher instance
-        try:
-            teacher = Teacher.objects.get(id=teacher_id)
-        except teacher.DoesNotExist:
-            return Response({'detail': 'Teacher not found.'}, status=status.HTTP_404_NOT_FOUND)
-
-        # Save the new PrivateSessionRequest with the current user as the student and the provided teacher
-        private_session_request = serializer.save(student=student, teacher=teacher)
-        print(f"Saved PrivateSessionRequest: {private_session_request}")
+class UpdateSessionRequestView(generics.UpdateAPIView):
+    queryset = PrivateSessionRequest.objects.all()
+    serializer_class = PrivateSessionRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def perform_update(self, serializer):
-        instance = serializer.save()
-        
-        # Ensure that the request is made by a teacher
-        user = self.request.user
-        if user.role != 'teacher':
-            raise PermissionDenied("Only teachers can update session requests.")
+        teacher = Teacher.objects.get(user=self.request.user)
+        instance = self.get_object()
+        if instance.teacher != teacher:
+            return Response({"error": "You are not authorized to update this request."}, status=status.HTTP_403_FORBIDDEN)
 
-        # Check if the user is the specific teacher associated with the request
-        if instance.teacher.user != user:
-            raise PermissionDenied("You are not authorized to update this request.")
-
-        # Create a PrivateSession if the status has been updated to 'accepted'
-        if instance.status == 'accepted':
-            PrivetSession.objects.create(
-                student=instance.student,
-                teacher=instance.teacher,
-                session_date=instance.session_date,
-                paid=False,  # You can adjust this as needed
-                notes=instance.notes
+        if serializer.validated_data.get('status') == 'accepted':
+            proposed_date = serializer.validated_data.get('proposed_date')
+            if not proposed_date:
+                return Response({"error": "Proposed date is required when accepting a request."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Create a PrivateSession
+            PrivateSession.objects.create(
+                session_request=instance,
+                session_date=proposed_date,
+                paid=False
             )
-            instance.delete()
+        
+        serializer.save()
+
+
+# List all session requests for a teacher
+class PrivateSessionListView(viewsets.ModelViewSet):
+    serializer_class = PrivateSessionRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Return the queryset based on the user's role.
+        """
+        user = self.request.user
+        if user.role == 'student':
+            return PrivateSessionRequest.objects.filter(student=user.student)
+        elif user.role == 'teacher':
+            return PrivateSessionRequest.objects.filter(teacher=user.teacher)
+        return PrivateSessionRequest.objects.none()
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Fetch a single PrivateSessionRequest by pk and ensure the user is authorized.
+        """
+        try:
+            instance = self.get_object()  # This uses get_queryset to filter based on user role
+            user = self.request.user
+            if user.role == 'student' and instance.student != user.student:
+                raise PermissionDenied("You do not have permission to access this session.")
+            elif user.role == 'teacher' and instance.teacher != user.teacher:
+                raise PermissionDenied("You do not have permission to access this session.")
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data)
+        except PrivateSessionRequest.DoesNotExist:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)

@@ -2,7 +2,7 @@ from time import timezone
 from django.contrib import admin
 
 from users.models import Payment, PaymentHistory
-from .models import Subscription,  SubscriptionPlan
+from .models import CheckUpload, Subscription,  SubscriptionPlan
 from django.utils.html import format_html
 
 # @admin.register(Subscription)
@@ -67,3 +67,9 @@ admin.site.register(SubscriptionPlan)
 # @admin.register(SubscriptionPlan)
 # class SubscriptionPlanAdmin(admin.ModelAdmin):
 #     list_display = ('name', 'price', 'duration_days')
+
+@admin.register(CheckUpload)
+class CheckUploadAdmin(admin.ModelAdmin):
+    list_display = ('student', 'subscription', 'is_verified', 'uploaded_at')
+    list_filter = ('is_verified',)
+    search_fields = ('student__username', 'subscription__id')

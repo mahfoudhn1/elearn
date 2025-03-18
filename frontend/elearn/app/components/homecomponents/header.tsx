@@ -25,7 +25,7 @@ const Header: React.FC = () => {
 
   const pathname = usePathname(); 
   
-  const dashboardPaths = ['/dashboard', '/groups', '/flashcards', '/notes', '/teachers', '/notifications','/lives'];
+  const dashboardPaths = ['/dashboard', '/groups', '/flashcards', '/notes', '/teachers', '/notifications','/lives','/subscriptions'];
   const isDashboard = dashboardPaths.some(path => pathname === path || pathname.startsWith(`${path}/`));
   
   const isHomePage = pathname === '/' 
@@ -39,6 +39,7 @@ const Header: React.FC = () => {
   };
   
   const authState = useSelector((state:RootState)=> state.auth.isAuthenticated)
+  const user = useSelector((state:RootState)=> state.auth.user)
 
   const handlelogout =()=>{
     dispatch(logout())
@@ -65,6 +66,16 @@ const Header: React.FC = () => {
             <span className="absolute left-0 bottom-0 w-full h-0 bg-green bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
           </Link>
         </li>
+        {user &&(
+          <li className="relative group">
+          <Link href="#about">
+          لوحة التحكم
+            <span className="absolute left-0 bottom-0 w-full h-0 bg-green bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
+          </Link>
+        </li>
+        )
+        }
+
         <li className="relative group">
           <Link href="#about">
           من نحن
