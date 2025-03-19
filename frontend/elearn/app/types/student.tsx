@@ -7,6 +7,7 @@
     email: string;
     avatar_file:string;
     avatar_url : string;
+    avatar:string;
   }
   export interface Grade{
     id:number;
@@ -67,6 +68,7 @@
     grade: Grade;
     schedule?: Schedule[];
     students?: Student[];
+    field_of_study_nest: string;
   }
   export interface Grade{
     id:number;
@@ -144,4 +146,5 @@
     status: string;
     student_notes?: string;
     teacher_notes?: string;
+    is_paied: boolean;
   }

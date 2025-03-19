@@ -28,7 +28,6 @@ const stickyNoteColors = [
 const Home = () => {
   return (
     <div className="min-h-screen bg-gray-light p-6 flex">
-      <Sidebar/>
     <div className="flex flex-col m-auto h-screen items-center w-full justify-center min-h-screen bg-gradient-to-br from-[#F9F9F9] to-[#E0E0E0] p-4">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {categories.map((category, index) => (

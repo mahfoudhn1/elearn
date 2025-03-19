@@ -2,13 +2,19 @@
 import Link from 'next/link';
 import React, { useState } from 'react'
 import { useDispatch, UseDispatch } from 'react-redux';
-import { AppDispatch } from '../../../store/store';
+import { AppDispatch, RootState } from '../../../store/store';
 import { logout } from '../../../store/authSlice';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons';
+import { useSelector } from 'react-redux';
+import { usePathname } from 'next/navigation';
 
 function Navbar() {
-    
+  const pathname = usePathname(); 
+  
+  const dashboardPaths = ['/login', '/register','/', '/continuereg'];
+  const isDashboard = dashboardPaths.some(path => pathname === path || pathname.startsWith(`${path}/`));
+  
     const dispatch = useDispatch<AppDispatch>()
 
     const [isOpen, setIsOpen] = useState(false);
@@ -20,9 +26,14 @@ function Navbar() {
       const handlelogout =()=>{
         dispatch(logout())
     }
-      
+    const user = useSelector((state:RootState)=>state.auth.user)
+    // console.log(user);
+    
   return (
-    <nav className="bg-white  top-0 left-0 w-full flex items-center justify-between px-6 py-1">
+    <>
+    {!isDashboard && (
+
+    <nav className="bg-white  top-0 left-0 w-full flex items-center justify-between px-6 py-1 mb-4">
         <div className="flex-grow mx-4">
       <input
         type="text"
@@ -37,7 +48,12 @@ function Navbar() {
         className="flex items-center justify-center rounded-full focus:outline-none hover:ring-2 hover:ring-offset-4 hover:ring-gray-300"
       >
         <div className="w-10 h-10 overflow-hidden rounded-full">
-          <img src="/teacher.jpg" className="w-full h-full object-cover" alt="Profile" />
+          {user ? (
+            <img src={user.avatar} className="w-full h-full object-cover" alt="Profile" />
+
+          ):
+            <img src="/teacher.jpg" className="w-full h-full object-cover" alt="Profile" />
+          }
         </div>
       </button>
 
@@ -65,6 +81,8 @@ function Navbar() {
     {/* Search Input */}
 
   </nav>
+    )}
+    </>
   )
 }
 

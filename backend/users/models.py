@@ -9,7 +9,7 @@ class User(AbstractUser):
         ("student", "Student")
     )
     role = models.CharField(max_length=10, choices=ROLE_CHOICE, null=True, blank=True)
-    avatar_url = models.URLField(blank=True, null=True)  # Stores Google profile picture
+    avatar_url = models.URLField(blank=True, null=True)
     avatar_file = models.ImageField(upload_to='avatars/', null=True, blank=True)
 
     def get_avatar(self):

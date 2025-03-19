@@ -47,43 +47,52 @@ const Profile: React.FC<TeacherProps> = ({ params }) => {
     const fetchTeacher = async () => {
       try {
         const response = await axiosClientInstance.get<Teacher>(`http://localhost:8000/api/teachers/${params.id}/`);
-        
         setTeacher(response.data);
+        
+        // Fetch groups after teacher data is set
+        await fetchGroups(response.data.id);
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
     };
+  
+    const fetchGroups = async (teacherId: number) => {
+      try {
+        const response = await axiosClientInstance.get('/groups/profile_groups/', {
+          params: {
+            teacher_id: teacherId
+          }
+        });
+
+        
+        setGroups(response.data);
+      } catch (error) {
+        console.error('Failed to fetch groups:', error);
+      }
+    };
+  
     const checkSubscriptionStatus = async () => {
       try {
         const response = await axiosClientInstance.get('/subscriptions/subscriptions/'); 
         const subscriptions = response.data;    
-        console.log(subscriptions);
         
         const isAlreadySubscribed = subscriptions.some((sub: any) => 
           sub.teacher.id == params.id
         );
-
+  
         setIsSubscribed(isAlreadySubscribed);
         const isAlreadySubscribedActive = subscriptions.some((sub: any) => 
           sub.teacher.id === params.id && sub.is_active
         );
-
+  
         setIsSubscribedActive(isAlreadySubscribedActive);
       } catch (error) {
         console.error('Failed to fetch subscriptions:', error);
       }
     };
-    const fetchGroups = async()=>{
-      try{
-        const response = await axiosClientInstance.get('/groups/');
-        setGroups(response.data)
-      }catch (error) {
-        console.error('Failed to fetch groups:', error);
-      }
-    }
-    fetchGroups()
-    checkSubscriptionStatus();
+  
     fetchTeacher();
+    checkSubscriptionStatus();
   }, [params.id]);
 
   
@@ -97,7 +106,6 @@ const Profile: React.FC<TeacherProps> = ({ params }) => {
 
   const router = useRouter()
   const handleConfirm = (id:any) => {
-    console.log(id);
     
     setShowConfirmation(false);
     router.push(`/subscriptions/${id}`)
@@ -107,10 +115,12 @@ const Profile: React.FC<TeacherProps> = ({ params }) => {
   const handleClosePopup = () => {
     setPopupVisible(false); // Close the popup
   };
+    const handlePrivet = (id:number)=>{
+      router.push(`/teachers/${id}/privetseassion/`)
+    }
 
   return (
     <div className='flex flex-row relative'>
-      <Sidebar/>
       <div className="md:p-16 p-8 w-full justify-center">
         <div className="p-8 bg-white shadow mt-24">
           <div className="grid grid-cols-1 md:grid-cols-3">
@@ -141,12 +151,14 @@ const Profile: React.FC<TeacherProps> = ({ params }) => {
                 التسجيل
               </button>
             )}
-
+            {teacher && (
               <button
                 className="text-white py-2 px-4 uppercase rounded bg-gray-700 hover:bg-gray-800 shadow hover:shadow-lg font-medium transition transform hover:-translate-y-0.5"
+                onClick={()=>{handlePrivet(teacher?.id)}}
               >
-                مراسلة
+                طلب حصة خاصة
               </button>
+            )}
             </div>
           </div>
 
@@ -214,11 +226,9 @@ const Profile: React.FC<TeacherProps> = ({ params }) => {
               <PlanComponent  onSelectPlan={handleSelectPlan}/>
             </div>
           )}
-        {!isSubscribedActive && (
-              <div >
-                <TeacherGroups groups={groups}/>
-              </div>
-            )}
+            <div >
+              <TeacherGroups groups={groups}/>
+            </div>
           {showConfirmation && (
 
             <ConfirmationPage

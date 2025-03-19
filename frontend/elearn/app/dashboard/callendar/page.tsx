@@ -1,7 +1,6 @@
 "use client"
 import { useEffect, useState } from "react";
 import { Calendar, ScheduleProfile } from "./AvalibleDahsboard";
-import Sidebar from "../../components/dahsboardcomponents/sidebar";
 import axiosClientInstance from "../../lib/axiosInstance";
 import { Schedule } from "../../types/student";
 
@@ -32,7 +31,6 @@ import { Schedule } from "../../types/student";
     return (
       <div className=" flex bg-white">
         <div>
-          <Sidebar/>
         </div>
         <div className='flex flex-col p-4'>
           <Calendar selectedDate={selectedDate} onDateSelect={setSelectedDate} schedules={schedules} />

@@ -123,6 +123,7 @@ class subscriptionPlanView(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
 class UploadCheckView(APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request, *args, **kwargs):
         subscription_id = request.data.get('subscription_id')
         check_image = request.FILES.get('check_image')

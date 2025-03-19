@@ -18,12 +18,12 @@ export default function page() {
   }, 1000); 
 
   if (isLoading) {
-    return(<div className="flex justify-center items-center h-screen bg-gray-200">
+    return(<div className="flex justify-center w-full items-center h-screen bg-gray-200">
       <div className="w-16 h-16 border-4 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
     </div>) 
   }
     return (
-      <div> 
+      <div className='w-full md:-mr-6 bg-white'> 
         <Hero />
         <Whyus />
         <TeacherSection />

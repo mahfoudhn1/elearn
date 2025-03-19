@@ -8,7 +8,6 @@ import { Deck } from "../types/student";
 import AddDeck from "./adddeck";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Sidebar from "../components/dahsboardcomponents/sidebar";
 
 
 const FlashcardDeckPage = () => {
@@ -90,7 +89,6 @@ const FlashcardDeckPage = () => {
 
   return (
     <div className="min-h-screen  bg-gray-light p-6 flex">
-      <Sidebar/>
     <div className="container mx-auto p-6 w-full max-w-4xl">
 
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">

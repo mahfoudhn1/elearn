@@ -11,6 +11,7 @@ interface StudentGroupsProps {
 const TeacherProps: React.FC<StudentGroupsProps> = ({ groups }) => {
   const router = useRouter();
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+  const [err,SetErr] = useState("");
 
   const handleGroup = (id: number) => {
     router.push(`/groups/allgroups/${id}`);
@@ -25,6 +26,8 @@ const TeacherProps: React.FC<StudentGroupsProps> = ({ groups }) => {
       return res;
     } catch (error: any) {
       console.log(error);
+      
+      SetErr(error.response.data[0])
     }
   };
 
@@ -61,6 +64,11 @@ const TeacherProps: React.FC<StudentGroupsProps> = ({ groups }) => {
                         </p>
                         <p className="mt-2 text-gray">{group.school_level}</p>
                       </div>
+                      <div className="text-left">
+                        <p className="text-sm mt-2 text-sky-400 font-semibold">
+                        {group.field_of_study_nest} 
+                        </p>
+                      </div>
                     {/* </div> */}
                     <div className="mt-4">
                       <button
@@ -79,6 +87,11 @@ const TeacherProps: React.FC<StudentGroupsProps> = ({ groups }) => {
                 </div>
               ))}
             </div>
+            {err && (
+              <div>
+                <p className="text-red text-sm-s"> {err} </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

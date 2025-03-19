@@ -1,7 +1,7 @@
 "use client"
 import React, { useEffect, useState } from 'react'
 import { Book, University, Blocks, School, GraduationCap } from 'lucide-react'
-import Sidebar from '../components/dahsboardcomponents/sidebar';
+;
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
@@ -44,7 +44,7 @@ function Level() {
 
     return (
         <div className="min-h-screen bg-gray-light p-6 flex">
-            <Sidebar />
+
             <div className='m-auto p-8 h-screen'>
                 <h1 className='text-xl text-center font-semibold text-gray-700 p-4'>يرجي اختيار الطور الدراسي</h1>
                 <div className="max-w-5xl mt-2 mx-auto">

@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { format, addDays, isToday, isSameDay, parseISO, isValid } from 'date-fns';
 import { ar } from 'date-fns/locale'; 
-import Sidebar from '../../components/dahsboardcomponents/sidebar';
 import axiosClientInstance from '../../lib/axiosInstance';
 import { Group, Schedule } from '../../types/student';
 

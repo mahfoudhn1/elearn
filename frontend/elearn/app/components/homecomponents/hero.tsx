@@ -35,7 +35,11 @@ const Hero: React.FC = () => {
     <>
     {!isMobile ? 
      <div className='flex flex-raw relative'>
-
+      
+      <link
+          href="https://fonts.googleapis.com/css2?family=Amiri+Quran&display=swap"
+          rel="stylesheet"
+        />
      <section className={` flex flex-raw mr-10 space-x-2 w-2/3 pt-4`}>
  
      <div onMouseEnter={enterMouse} onMouseLeave={leaveMouse} 
@@ -99,11 +103,13 @@ const Hero: React.FC = () => {
          </div>
          </div>
        </section>
-       <section className='w-1/3 items-center text-start h-full text-8xl text-gray-dark pt-20 mx-auto relative'>
-         <h1>دروس،</h1>
-         <h1>دعم،</h1>
-         <h1>و دورات</h1>
-       </section>
+       <section className='w-1/3 items-center text-start h-full text-gray-dark cursor-pointer  relative'>
+          <div className="mt-20 translate-x-20 text-6xl text-center font-arabic  mx-auto transition-all duration-300">
+            <p className="font-quran ">
+              يَرْفَعِ اللَّهُ الَّذِينَ آمَنُوا مِنكُمْ <br/><br/>وَالَّذِينَ أُوتُوا الْعِلْمَ دَرَجَاتٍ
+            </p>
+          </div>
+        </section>
        <section className='absolute bottom-2 drop-shadow-xl overflow-hidden right-1/2 bg-gray-dark -translate-x-7 '>
        <div className='relative group cursor-pointer'>
           <button className='px-7 py-10 font-semibold text-lg text-white '>

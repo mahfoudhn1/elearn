@@ -8,6 +8,8 @@ import { WebSocketProvider } from "./contexts/notificationContext";
 
 import GlobalNotifications from "./components/Globalnotifications";
 import UserRoleWarper from "./components/userRole";
+import Sidebar from "./components/dahsboardcomponents/sidebar";
+import Navbar from "./components/dahsboardcomponents/navbar";
 
 
 const inter = Inter({ subsets: ["latin"] });
@@ -32,7 +34,13 @@ export default function RootLayout({
     <WebSocketProvider>
         <UserRoleWarper>
         <Header/>
-          {children}
+        <div className="flex flex-row bg-gray-light">
+          <Sidebar/>
+          <div className="w-full md:mr-6 justify-center mx-auto flex-col">
+            <Navbar/>
+            {children}
+          </div>
+        </div>
           <GlobalNotifications />
           <Footer />
           </UserRoleWarper>

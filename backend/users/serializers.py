@@ -10,15 +10,13 @@ class AuthSerializer(serializers.Serializer):
 
     
 class UserSerializer(serializers.ModelSerializer):
-    avatar_url = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', "first_name" ,"last_name",'role', 'avatar_url', 'avatar_file']
-    def get_avatar_url(self, obj):
-        if obj.avatar_file:
-            return obj.avatar_file.url
-        return None
+        fields = ['id', 'username', 'email', "first_name" ,"last_name",'role', 'avatar_url', 'avatar_file', 'avatar']
+    def get_avatar(self, obj):
+        return obj.get_avatar()
 
 class fieldofstudySerializer(serializers.ModelSerializer):
     class Meta:

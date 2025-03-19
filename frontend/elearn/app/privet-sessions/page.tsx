@@ -44,7 +44,8 @@ const PrivateSessionsPage = () => {
   }, [userRole, router]);
 
   // Handle session deletion
-  const handleDelete = async (sessionId: number) => {
+  const handleDelete = async (sessionId: number, event: React.MouseEvent) => {
+    event.stopPropagation();
     const confirmed = window.confirm('هل أنت متأكد من حذف طلب الجلسة هذا؟');
     if (!confirmed) return;
 
@@ -128,7 +129,7 @@ const PrivateSessionsPage = () => {
                   </td>
                 )}
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-dark">
-                  {new Date(session.proposed_date).toLocaleDateString('ar-EG')}
+                  {new Date(session.proposed_date).toLocaleDateString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right">
                   <span
@@ -155,7 +156,7 @@ const PrivateSessionsPage = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
                   <button
-                    onClick={() => handleDelete(session.id)}
+                    onClick={(event) => handleDelete(session.id, event)}
                     className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-800 transition-colors"
                   >
                     حذف

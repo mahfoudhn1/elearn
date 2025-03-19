@@ -9,7 +9,7 @@ class Meeting(models.Model):
     students = models.ManyToManyField("users.Student", related_name="students", blank=True)
     group = models.ForeignKey("groups.Group", verbose_name=("groups"), on_delete=models.CASCADE, null=True, blank=True)
     is_active = models.BooleanField(default=False)
-    
+    privetsession = models.ForeignKey("privetsessions.PrivateSessionRequest", verbose_name=("privetsessions"), on_delete=models.CASCADE, null=True, blank=True)
     start_time = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField(auto_now_add=True)
     current_speaker = models.ForeignKey(

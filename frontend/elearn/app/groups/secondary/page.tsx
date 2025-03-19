@@ -1,6 +1,5 @@
 "use client"
 import React, { useState, FC, useEffect } from 'react';
-import Navbar from '../../components/dahsboardcomponents/navbar';
 import Sidebar from '../../components/dahsboardcomponents/sidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBook, faCompassDrafting, faFlask, faLandmark, faLanguage, faRuler, faSquareRootAlt } from '@fortawesome/free-solid-svg-icons';
@@ -66,9 +65,8 @@ const GroupsList: FC = () => {
 
   return (
     <div className="flex flex-row w-full h-full">
-      <Sidebar />
+      
       <div className="w-full bg-gray-300 flex flex-col">
-        <Navbar />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-8">
           
           {fieldofstudy.map((field) => (

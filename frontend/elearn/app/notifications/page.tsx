@@ -1,7 +1,7 @@
 "use client"
 import React, { useEffect, useState } from 'react';
 import axiosClientInstance from '../lib/axiosInstance';
-import Sidebar from '../components/dahsboardcomponents/sidebar';
+;
 
 const NotificationPage = () => {
     const [notifications, setNotifications] = useState([]);
@@ -67,7 +67,7 @@ const NotificationPage = () => {
 
     return (
         <div className="min-h-screen bg-gray-light p-6 flex">
-            <Sidebar />
+            
             <div className='m-auto p-8 h-screen mx-auto bg-white shadow-lg rounded-lg overflow-hidden'>
                 <div className="px-6 py-4 border-b border-gray-light">
                     <h2 className="text-2xl font-semibold text-gray-800">تنبيهات</h2>

@@ -24,6 +24,9 @@ const config: Config = {
         "y-180": "rotateY(180deg)",
       },
     },
+    fontFamily: {
+      quran: ['Amiri Quran', 'serif'], // Replace with your font
+    },
     colors: {
       'black':"#000",
       'white':"#fff",
@@ -61,6 +64,7 @@ const config: Config = {
       "purple":"#7e5bef",
       "purple-800":"#6b21a8",
       "pink-800":"#9d174d",
+      "golden":'#a67c00'
     },
   },
   variants: {

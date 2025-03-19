@@ -1,8 +1,6 @@
 "use client"
 import React from 'react';
 import { Group } from '../../types/student';
-import Navbar from '../../components/dahsboardcomponents/navbar';
-import Sidebar from '../../components/dahsboardcomponents/sidebar';
 import { useRouter } from 'next/navigation';
 
 interface StudentGroupsProps {
@@ -21,9 +19,8 @@ const StudentGroups: React.FC<StudentGroupsProps> = ({ groups }) => {
 
   return (
     <div className="flex flex-row bg-stone-50">
-    <Sidebar />
+    
     <div className="flex flex-col w-full">
-      <Navbar />
       <div className="p-4">
         <div className="flex md:flex-row justify-between flex-col p-6 mx-4 w-full">
           <h1 className="text-center text-gray-dark text-2xl font-semibold">كل مجموعات التخصص</h1>

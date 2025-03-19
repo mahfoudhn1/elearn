@@ -9,7 +9,7 @@ function Footer() {
         {/* Logo Section */}
         <div className="flex flex-col items-center md:items-start mb-6 md:mb-0">
           <h1 className='text-3xl font-bold mb-4'>منبت</h1>
-          <p className="text-center md:text-left text-lg">منبت - تطوير التعليم</p>
+          <p className="text-center md:text-left text-lg">رفعة- تطوير التعليم</p>
         </div>
         
         {/* Links Section */}

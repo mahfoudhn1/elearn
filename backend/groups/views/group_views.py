@@ -58,7 +58,6 @@ class GroupViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def student_groups(self, request):
-        """API endpoint for fetching student groups"""
         user = request.user
         if user.role != 'student':
             return Response({"error": "Only students can access this."}, status=403)
@@ -154,3 +153,22 @@ class GroupViewSet(viewsets.ModelViewSet):
         serializer = StudentSerializer(students, many=True)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def profile_groups(self, request):
+        user = request.user
+        teacher_id = request.query_params.get('teacher_id')
+        print(teacher_id)
+        print(user)
+        if user.role != 'student':
+            return Response({"detail": "This action is only available for students."}, status=status.HTTP_403_FORBIDDEN)
+
+        student = get_object_or_404(Student, user=user)
+
+        teacher = get_object_or_404(Teacher, id=teacher_id)
+
+        student_grade = student.grade  # Assuming the Student model has a ForeignKey to Grade
+
+        groups = Group.objects.filter(admin=teacher, grade=student_grade)
+
+        serializer = self.get_serializer(groups, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

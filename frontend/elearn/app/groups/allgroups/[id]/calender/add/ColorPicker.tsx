@@ -17,7 +17,7 @@ const colors = [
 
 const ColorPicker: React.FC<ColorPickerProps> = ({  onColorSelect }) => {
   return (
-    <div className="flex">
+    <div className="flex mt-4">
       <h3> اختر لون : </h3>
       {colors.map((color) => (
         <div

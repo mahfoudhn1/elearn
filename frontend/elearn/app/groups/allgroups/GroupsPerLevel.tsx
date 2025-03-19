@@ -1,7 +1,5 @@
 'use client';
 import { useEffect, useState } from 'react';
-import Sidebar from '../../components/dahsboardcomponents/sidebar';
-import Navbar from '../../components/dahsboardcomponents/navbar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowDownWideShort } from '@fortawesome/free-solid-svg-icons';
 import { useParams, useSearchParams } from 'next/navigation';
@@ -69,9 +67,7 @@ const GroupsPerLevel = ({ groupsCategories, allGrades }: GroupsPerLevelProps) =>
 
   return (
     <div className="flex flex-row bg-stone-50">
-      <Sidebar />
       <div className="flex flex-col w-full">
-        <Navbar />
         <div className="p-4">
           <div className="flex md:flex-row justify-between flex-col p-6 mx-4 w-full">
             <h1 className="text-center text-gray-dark text-2xl font-semibold">كل مجموعات التخصص</h1>

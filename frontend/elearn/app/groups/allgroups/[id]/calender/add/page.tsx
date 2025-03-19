@@ -153,10 +153,10 @@ const SchedulePage = () => {
         <div className="container mx-auto p-4">
           <h1 className="text-2xl font-bold mb-4">جدولت تواقيت المجموعة  {groupId}</h1>
           <div className='flex md:flex-row flex-col'>
-          <div className='w-1/2 md:ml-2 ' >
+          <div className='md-w-1/2 w-full md:ml-2 ' >
             <ScheduleList schedules={schedules} onCancel={deleteSchedule} role={user?.role}/>
           </div>
-            <div className="w-1/2">
+            <div className="md-w-1/2 w-full">
             {user?.role == "teacher" && 
               <CustomDatePicker onDateSelect={handleDateSelect}
                                 onFrequencySelect={handleFrequencySelect}

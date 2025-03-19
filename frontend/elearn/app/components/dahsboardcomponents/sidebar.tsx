@@ -15,11 +15,17 @@ import {
   User,
   Menu,
 } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+
 
 const Sidebar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false); // Track sidebar visibility on mobile
   const [isExpanded, setIsExpanded] = useState(false); // Track sidebar expansion
-
+  const pathname = usePathname(); 
+  
+  const dashboardPaths = ['/login', '/register','/', '/continuereg'];
+  const isDashboard = dashboardPaths.some(path => pathname === path || pathname.startsWith(`${path}/`));
+  
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
@@ -30,11 +36,13 @@ const Sidebar: React.FC = () => {
 
   return (
     <>
+    {!isDashboard && (
+    <div>
       {/* Mobile Toggle Button */}
       <button
         type="button"
         onClick={toggleSidebar}
-        className="sm:hidden fixed top-4 right-4 z-50 p-2 text-gray-500 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200"
+        className="sm:hidden fixed bottom-4 right-4 z-50 p-2 text-gray-500 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200"
       >
         <Menu className="w-6 h-6" />
       </button>
@@ -50,7 +58,11 @@ const Sidebar: React.FC = () => {
           <div className="h-full px-3 fixed bg-transparent py-4 overflow-y-auto bg-opacity-60 backdrop-blur-md text-gray-700 shadow-[-0.5px_0px_0.3px_0px_rgba(0,0,0,0.3)]">
             {/* Sidebar Expansion Button */}
             <div className="flex flex-row justify-between">
-              <h1 className={`${isExpanded ? 'block' : 'hidden'}`}>رفعة</h1>
+              <Link href={'/dashboard'} >
+                <img src="./logoblack.png" alt="logo riffaa" className={`${isExpanded ? 'block' : 'hidden'} h-24 w-16 ml-8 -translate-x-10 `}/>
+              
+              </Link>
+
               <button
                 onClick={toggleExpand}
                 className="text-xl cursor-pointer p-2 hover:bg-gray-100 rounded-lg"
@@ -181,6 +193,8 @@ const Sidebar: React.FC = () => {
           </div>
         </aside>
       </div>
+    </div>
+    )}
     </>
   );
 };

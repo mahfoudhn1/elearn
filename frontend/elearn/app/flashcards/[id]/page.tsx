@@ -4,7 +4,6 @@ import { Deck, Flashcard } from '../../types/student'
 import axiosClientInstance from '../../lib/axiosInstance'
 import { useParams } from 'next/navigation'
 import { Edit2, Play, Plus } from 'lucide-react'
-import Sidebar from '../../components/dahsboardcomponents/sidebar'
 import AddFlashCard from './addFlashCard'
 import StartLearning from './StartLearning'
 
@@ -90,7 +89,6 @@ function singleDeck() {
     
   return (
     <div className="min-h-screen  bg-gray-light p-6 flex">
-      <Sidebar/>
       <div className="w-full relative mx-4">
         <div className="flex justify-between items-center mb-6">
           <div className='flex flex-col'>

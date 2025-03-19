@@ -10,6 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.decorators import api_view, permission_classes
 
+from privetsessions.models import PrivateSessionRequest
 from groups.models import Group
 from jitsi.generate_jitsi_token import generate_jitsi_token
 from .models import Meeting
@@ -173,6 +174,7 @@ class MeetingViewSet(viewsets.ModelViewSet):
             "meeting": MeetingSerializer(meeting).data
         })
 
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def refresh_jitsi_token(request, meeting_id):
@@ -199,5 +201,7 @@ def refresh_jitsi_token(request, meeting_id):
         
     except Meeting.DoesNotExist:
         return JsonResponse({'error': 'Meeting not found'}, status=404)
+
+
 
 

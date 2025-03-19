@@ -11,6 +11,7 @@ interface User {
   first_name:string;
   last_name:string;
   avatar_url: string;
+  avatar : string;
   avatar_file:string;
   access_token : string;
 }

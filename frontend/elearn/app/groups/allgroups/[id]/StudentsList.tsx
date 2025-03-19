@@ -46,7 +46,10 @@ function StudentsList({ studentlist }: StudentsListProps) {
   }, [studentlist, user]);
 
   const handleDelete = async (id: number) => {
-    const group_id = Number(params.groupId);
+    const confirmDelete = window.confirm("هل أنت متأكد أنك تريد حذف هذا الطالب؟");
+    if (!confirmDelete) return;
+  
+    const group_id = Number(params.id);
     try {
       await axiosClientInstance.delete(`groups/${group_id}/remove_student/`, {
         data: { student_id: id },
@@ -58,6 +61,7 @@ function StudentsList({ studentlist }: StudentsListProps) {
       alert("فشل حذف الطالب");
     }
   };
+  
 
   // Handle popup visibility
   const handleOpenPopup = () => setPopupVisible(true);

@@ -19,7 +19,7 @@ function teacherTable({ studentSubcriptions }: StudentTablesProps) {
       <div className="bg-white rounded-lg shadow-xl overflow-hidden">
         {/* Header with Search Bar */}
         <div className="p-6 border-b border-gray-light flex flex-row justify-between items-center">
-          <h6 className="text-xl font-semibold text-gray-800">قائمة التلاميذ المسجلين</h6>
+          <h6 className="text-xl font-semibold text-gray-800">قائمة اشتراكاتكم </h6>
           <input
             type="text"
             placeholder="ابحث بالاسم..."

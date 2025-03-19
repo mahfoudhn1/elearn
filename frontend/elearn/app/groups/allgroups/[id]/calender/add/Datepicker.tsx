@@ -158,7 +158,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
     <div className="bg-white p-6 rounded-lg shadow-lg w-full">
       <h2 className="text-lg font-semibold mb-4">حدد توقيت المجموعة</h2>
       <p className="text-sm text-gray-700 mb-4">يمكنك برمجة توقيت اسبوعي او يومي حسب الحاجة.</p>
-      <div className="flex justify-center">
+      <div className="flex md-flex-row flex-col w-full justify-center">
         <div className="flex flex-col ml-4">
           <div className="flex justify-between items-center mb-4">
             <button onClick={handlePrevMonth} className="p-1">

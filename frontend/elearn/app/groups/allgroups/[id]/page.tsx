@@ -60,7 +60,7 @@ function SnigleGrpoup({ params }: { params: Params }) {
 
   return (
     <div className="flex flex-row bg-gray-50 min-h-screen">
-      <Sidebar />
+      
       <div className="flex flex-col w-full p-8">
         {/* Group Header */}
         <div className="flex justify-between items-center mb-8">

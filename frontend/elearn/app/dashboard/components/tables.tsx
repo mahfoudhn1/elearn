@@ -8,10 +8,10 @@ interface TachersTablesProps {
 function TeachersTable({ subscriptions }: TachersTablesProps) {
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Filter subscriptions based on search query
-  const filteredSubscriptions = subscriptions.filter((sub) =>
-    sub.student.user.first_name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredSubscriptions = subscriptions.filter((sub) => {
+    const firstName = sub?.student?.user?.first_name;
+    return firstName?.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   return (
     <div className="w-full mx-auto p-4">
@@ -65,7 +65,7 @@ function TeachersTable({ subscriptions }: TachersTablesProps) {
                           />
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-gray-dark">
                             {sub.student.user.first_name} {sub.student.user.last_name}
 
                           </div>

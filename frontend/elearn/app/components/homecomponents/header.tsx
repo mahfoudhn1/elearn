@@ -25,7 +25,7 @@ const Header: React.FC = () => {
 
   const pathname = usePathname(); 
   
-  const dashboardPaths = ['/dashboard', '/groups', '/flashcards', '/notes', '/teachers', '/notifications','/lives','/subscriptions'];
+  const dashboardPaths = ['/login', '/register','/', '/continuereg'];
   const isDashboard = dashboardPaths.some(path => pathname === path || pathname.startsWith(`${path}/`));
   
   const isHomePage = pathname === '/' 
@@ -46,7 +46,7 @@ const Header: React.FC = () => {
   }
   return (
     <>
-    {!isDashboard ?
+    {isDashboard ?
 
     <header className={`header flex justify-between items-center py-4 bg-transparent px-20  w-full text-black ${!isHomePage? "shadow-sm sticky" : "shadow-none" } `}>
     <div className='relative group w-1/4'>

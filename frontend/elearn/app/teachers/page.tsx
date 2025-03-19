@@ -66,7 +66,6 @@ const TeacherFilter: React.FC = () => {
 
   return (
     <div className="p-6 bg-white min-h-screen flex">
-        <Sidebar/>
       <div className="max-w-7xl mx-auto px-6 py-2">
         {/* Header */}
         <div className="text-center mb-8">

@@ -1,8 +1,8 @@
 from rest_framework import serializers
 
-from users.serializers import StudentSerializer, TeacherSerializer
+from users.serializers import StudentSerializer, TeacherSerializer, UserSerializer
 from users.models import Student, Teacher
-from .models import PrivateSessionRequest, PrivateSession
+from .models import CheckSessionPaiment, PrivateSessionRequest, PrivateSession
 
 class PrivateSessionRequestSerializer(serializers.ModelSerializer):
     teacher_id = serializers.PrimaryKeyRelatedField(
@@ -21,9 +21,9 @@ class PrivateSessionRequestSerializer(serializers.ModelSerializer):
         model = PrivateSessionRequest
         fields = [
             'id', 'student', 'teacher','teacher_id', 'student_id', 'requested_at', 'status', 
-            'student_notes', 'teacher_notes', 'proposed_date'
+            'student_notes', 'teacher_notes', 'proposed_date', 'is_paied'
         ]
-        read_only_fields = ['id', 'requested_at'] 
+        read_only_fields = ['id', 'requested_at', 'is_paied'] 
 
 
 class PrivateSessionSerializer(serializers.ModelSerializer):
@@ -40,3 +40,10 @@ class PrivateSessionSerializer(serializers.ModelSerializer):
         if value <= timezone.now():
             raise serializers.ValidationError("Session date must be in the future.")
         return value
+    
+
+class CheckSessionPaimentSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+    class Meta:
+        model = CheckSessionPaiment
+        fields = ['id', 'user', 'PrivateSession', 'check_image', 'is_verified', 'uploaded_at']

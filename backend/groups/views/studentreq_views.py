@@ -36,7 +36,7 @@ class StudentGroupRequestViewSet(viewsets.ModelViewSet):
 
             subscription_exists = Subscription.objects.filter(student=student, teacher=teacher, is_active=True).exists()
             if not subscription_exists:
-                raise serializers.ValidationError("You must be subscribed to the teacher to join their group.")
+                raise serializers.ValidationError("تستطيع دخول المجمواعات بعد تفعيل اشتراكم.")
             
             # Create the request object
             student_group_request = StudentGroupRequest.objects.create(

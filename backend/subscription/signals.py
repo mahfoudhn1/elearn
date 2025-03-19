@@ -6,7 +6,7 @@ from django.dispatch import receiver
 from notifications.models import Notification
 from notifications.utils import send_notification
 from users.models import Payment
-
+from datetime import timedelta
 from .models import Subscription
 
 logger = logging.getLogger(__name__)
@@ -44,9 +44,16 @@ def update_teacher_payment_and_notify_student(sender, instance, created, raw, **
     # Handle teacher payment updates
     if instance.is_active and (previous_is_active is False or previous_is_active is None):
         logger.info(f"Subscription activated for {instance.teacher}, adding {instance.plan.price}")
+
+        # Update end_date: start_date + plan.duration_days
+        instance.end_date = instance.start_date + timedelta(days=instance.plan.duration_days)
+        instance.save(update_fields=['end_date'])  # Save only the end_date field
+
+        # Subtract 500 from the plan price before updating payment
+        adjusted_price = instance.plan.price - 500
         teacher = instance.teacher
         payment, _ = Payment.objects.get_or_create(teacher=teacher)
-        payment.add_earnings(instance.plan.price)  # Price comes from SubscriptionPlan.price
+        payment.add_earnings(adjusted_price)  # Use the adjusted price
 
         # Notify the student when subscription becomes active
         student = instance.student
@@ -66,9 +73,12 @@ def update_teacher_payment_and_notify_student(sender, instance, created, raw, **
     # Renewal: end_date changed and is_active is True
     elif instance.is_active and previous_end_date != instance.end_date and previous_end_date is not None:
         logger.info(f"Subscription renewed for {instance.teacher}, adding {instance.plan.price}")
+
+        # Subtract 500 from the plan price before updating payment
+        adjusted_price = instance.plan.price - 500
         teacher = instance.teacher
         payment, _ = Payment.objects.get_or_create(teacher=teacher)
-        payment.add_earnings(instance.plan.price)  # Price comes from SubscriptionPlan.price
+        payment.add_earnings(adjusted_price)  # Use the adjusted price
 
         # Notify the student when subscription is renewed
         student = instance.student
