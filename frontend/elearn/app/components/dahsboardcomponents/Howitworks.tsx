@@ -39,7 +39,7 @@ function Howitworks() {
          <span className="absolute  top-0 left-0 w-full h-full bg-center bg-cover bg-gradient-to-tl from-gray-800 to-gray-dark opacity-80"></span>
          <div className="relative z-10 flex flex-col flex-auto h-full p-8">
             <h5 className="pt-2 mb-6 font-bold text-white">العمل مع رفعة</h5>
-            <p className="text-white"> رفعة تهدف لتطوير التعليم و تقريب المسافات بين الاساتذة و الطلبة , يمكنك التدريس عبر منصتنا عبر جهاز الحاسوب مع كاميرة او طابلة كتابة توفرها المنصة .</p>
+            <p className="text-white"> رفعة تهدف لافضل منصة تعليمية و تقريب المسافات بين الاساتذة و الطلبة , يمكنك التدريس عبر منصتنا عبر جهاز الحاسوب مع كاميرة او طابلة كتابة توفرها المنصة .</p>
             <a className="mt-auto mb-0 font-semibold leading-normal text-white group text-sm" href="javascript:;">
             اعرف المزيد
             <i className="ease-bounce text-sm group-hover:translate-x-1 ml-1 leading-normal transition-all duration-200">

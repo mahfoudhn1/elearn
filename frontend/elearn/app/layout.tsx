@@ -34,9 +34,9 @@ export default function RootLayout({
     <WebSocketProvider>
         <UserRoleWarper>
         <Header/>
-        <div className="flex flex-row bg-gray-light">
+        <div className="flex flex-row bg-white">
           <Sidebar/>
-          <div className="w-full md:mr-6 justify-center mx-auto flex-col">
+          <div className="w-full md:mr-6 overflow-hidden justify-center mx-auto flex-col">
             <Navbar/>
             {children}
           </div>

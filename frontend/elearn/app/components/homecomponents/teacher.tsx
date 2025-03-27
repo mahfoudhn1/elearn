@@ -8,7 +8,7 @@ const TeacherSection = () => {
       <div className="md:w-1/2 text-center md:text-right md:pr-8">
         <h2 className="text-3xl font-bold mb-6 mr-4">اذا كنت أستاذا يمكنك الانضمام الينا</h2>
         <p className="text-lg mb-6">
-          انظم الى منصتنا الان و كن جزءا من مجتمع من المعلمين، و احصل على تجربة مرنة في جدولة أوقات العمل و الوصول الى عدد كبير من الطلبة.
+          انظم الى منصتنا الان و كن جزءا من مجتمع من المدرسين، و احصل على تجربة مرنة في جدولة أوقات العمل و الوصول الى عدد كبير من الطلبة.
         </p>
         <ul className="space-y-4 mb-6">
           <li className="flex items-center space-x-2">

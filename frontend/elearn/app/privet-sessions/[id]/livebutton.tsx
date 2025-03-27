@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store/store";
 
-export default function StartNowButton({ proposedDate }: { proposedDate: string }) {
+export default function StartNowButton({ proposedDate, onLive }: { proposedDate: string, onLive:()=>void }) {
   const [showButton, setShowButton] = useState(false);
   const [currentMeeting, setCurrentMeeting] = useState(null); // Not used yet, keeping it for future use
   const router = useRouter();
@@ -33,14 +33,15 @@ export default function StartNowButton({ proposedDate }: { proposedDate: string 
     return () => clearInterval(interval);
   }, [proposedDate]);
 
-  // Only render the button if showButton is true
+
   if (!showButton) return null;
 
   return (
     <div className="bottom-4 right-4 animate-pulse">
       <button
         className="bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-2 transition-all"
-      >
+        onClick={onLive}
+        >
         {user?.role !== "student" ? (
           <>
             <span className="w-3 h-3 bg-white rounded-full" />

@@ -15,6 +15,8 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', "first_name" ,"last_name",'role', 'avatar_url', 'avatar_file', 'avatar']
+
+
     def get_avatar(self, obj):
         return obj.get_avatar()
 
@@ -97,7 +99,24 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('username', "first_name", "last_name", 'email', 'password', 'password2', 'role', 'avatar_url', 'avatar_file')
-
+        extra_kwargs = {
+            'email': {'validators': []},  # We'll handle validation manually
+            'username': {'validators': []}
+        }
+    def validate_email(self, value):
+        if self.instance and User.objects.filter(email=value).exclude(id=self.instance.id).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        elif not self.instance and User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+    def validate_username(self, value):
+            if self.instance:  # For updates
+                if User.objects.filter(username=value).exclude(id=self.instance.id).exists():
+                    raise serializers.ValidationError("A user with this username already exists.")
+            else:  # For creates
+                if User.objects.filter(username=value).exists():
+                    raise serializers.ValidationError("A user with this username already exists.")
+            return value
     def validate(self, data):
         if data['password'] != data['password2']:
             raise serializers.ValidationError({"password": "Passwords must match."})
@@ -112,6 +131,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             last_name=validated_data['last_name'],
             email=validated_data['email'],
             password=validated_data['password'],
+            avatar_file=validated_data['avatar_file'],
             role=role  # Can be None
         )
         return user

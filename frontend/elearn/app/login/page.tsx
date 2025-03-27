@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import GoogleButton from 'react-google-button';
 import axios from 'axios';
 import { loginSuccess } from '../../store/authSlice';
+import Turnstile from "react-turnstile";
 
 
 const Loginpage = () => {
@@ -16,19 +17,33 @@ const Loginpage = () => {
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [captchaToken, setCaptchaToken] = useState("");
+
+  const [err, setErr] = useState<string>()
   const router = useRouter()
+
+
+  const handleCaptchaSuccess = (token: string) => {
+    setCaptchaToken(token);
+  };
 
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const resultAction = await dispatch(login({ username, password}));
+
+    if (!captchaToken) {
+      alert("Please complete the CAPTCHA.");
+      return;
+    }
+
+    const resultAction = await dispatch(login({ username, password, captcha:captchaToken }));
 
     if (login.fulfilled.match(resultAction)) {
       if (resultAction.payload?.success) {
         
         router.push('/dashboard');
       } else {
-        console.error('Registration failed');
+        setErr("اسم المستخدم او كلمة المرور غير صحيحة")
       }
     }
 };
@@ -81,7 +96,12 @@ const handleGoogleSuccess = () => {
             سجل الدخول
 
           </button>
-          <div className=' mt-6 items-center text-center mx-auto ' >
+            <Turnstile
+              className='my-6'
+              sitekey="0x4AAAAAABCXUolhlT329THY"
+              onSuccess={handleCaptchaSuccess}
+            />
+          <div className=' mt-6  items-center text-center mx-auto ' >
           <GoogleButton 
           label='استخدم حساب جوجل'
           type="light" 
@@ -89,6 +109,7 @@ const handleGoogleSuccess = () => {
 
           </div>
         </form>
+        {err && <p className='text-red-500'> {err} </p>}
       </div>
     </div>
   );

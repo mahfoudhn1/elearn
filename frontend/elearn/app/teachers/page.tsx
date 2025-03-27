@@ -168,7 +168,6 @@ const TeacherFilter: React.FC = () => {
                     </p>
                     <div className="flex justify-between items-center mt-4">
                       <p className="text-gray-600">{teacher.wilaya}</p>
-                      <p className="text-lg font-semibold text-sky-600">{teacher.price} دج</p>
                     </div>
                   </div>
                 </div>

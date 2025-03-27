@@ -23,7 +23,7 @@ export default function page() {
     </div>) 
   }
     return (
-      <div className='w-full md:-mr-6 bg-white'> 
+      <div className=' md:-mr-6 overflow-hidden bg-white'> 
         <Hero />
         <Whyus />
         <TeacherSection />

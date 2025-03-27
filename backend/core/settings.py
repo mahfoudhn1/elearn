@@ -87,7 +87,7 @@ ZOOM_SDK_ID = os.getenv('ZOOM_SDK_ID')
 ZOOM_SDK_SECRET = os.getenv('ZOOM_SDK_SECRET')
 JITSI_APP_SECRET= os.getenv('JITSI_APP_SECRET')
 JITSI_APP_ID = os.getenv('JITSI_APP_ID')
-
+CLOUDFLARE_TURNSTILE_SECRET_KEY = os.getenv('CLOUDFLARE_TURNSTILE_SECRET_KEY')
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -228,3 +228,11 @@ SIMPLE_JWT = {
 }
 
 
+# Email settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'your-smtp-server.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'your-email@example.com'
+EMAIL_HOST_PASSWORD = 'your-email-password'
+DEFAULT_FROM_EMAIL = 'your-email@example.com'

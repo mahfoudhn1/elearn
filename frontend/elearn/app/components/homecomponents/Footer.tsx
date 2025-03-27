@@ -1,5 +1,7 @@
+"use client"
 import React from 'react';
 import Link from 'next/link';
+import { Facebook, Instagram, Mail } from 'lucide-react'; // Import Lucide icons
 
 function Footer() {
   return (
@@ -8,8 +10,10 @@ function Footer() {
         
         {/* Logo Section */}
         <div className="flex flex-col items-center md:items-start mb-6 md:mb-0">
-          <h1 className='text-3xl font-bold mb-4'>منبت</h1>
-          <p className="text-center md:text-left text-lg">رفعة- تطوير التعليم</p>
+        <div className="text-3xl w-2/3 text-gray-dark font-bold">
+          <img src={`${window.location.origin}/logoblack.png`} alt="logo riffaa" className='cursor-pointer w-14 h-24'/>
+         </div>
+          <p className="text-center md:text-left text-lg">رفعة- افضل منصة تعليمية</p>
         </div>
         
         {/* Links Section */}
@@ -35,7 +39,7 @@ function Footer() {
               <li className="relative group">
                 <Link href="#services">
                   
-                    خدماتنا
+                    رؤيتنا
                     <span className="absolute left-0 bottom-0 w-full h-0 bg-green bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
                   
                 </Link>
@@ -52,34 +56,30 @@ function Footer() {
           </nav>
         </div>
         
-        {/* Contact Form */}
-        <div className="w-full md:w-1/3">
-          <h5 className="font-bold mb-4">تواصل معنا</h5>
-          <form className="space-y-4" >
-            <input 
-              type="email" 
-              placeholder="Email" 
-              className="w-full p-2 bg-gray-700 border border-white rounded-lg placeholder-gray-400"
-              aria-label="Email"
-            />
-            <input 
-              type="tel" 
-              placeholder="Phone" 
-              className="w-full p-2 bg-gray-700 border border-white rounded-lg placeholder-gray-400"
-              aria-label="Phone"
-            />
-            <textarea 
-              placeholder="Your Message" 
-              className="w-full p-2 bg-gray-700 border border-white rounded-lg placeholder-gray-400"
-              aria-label="Your Message"
-            ></textarea>
-            <button 
-              type="submit" 
-              className="px-4 bg-gray-dark hover:bg-green text-white py-2 rounded-lg"
-            >
-              Send
-            </button>
-          </form>
+        {/* Social Media Icons */}
+        <div className="flex ">
+          <a 
+            href="https://facebook.com" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-gray-700 mx-6 hover:text-blue-500 transition-colors duration-300"
+          >
+            <Facebook className="w-8 h-8 hover:scale-110 transition-transform duration-300" />
+          </a>
+          <a 
+            href="https://instagram.com" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-gray-700 mx-6 hover:text-purple transition-colors duration-300"
+          >
+            <Instagram className="w-8 h-8 hover:scale-110 transition-transform duration-300" />
+          </a>
+          <a 
+            href="mailto:example@example.com" 
+            className="text-gray-700 mx-6 hover:text-red-500 transition-colors duration-300"
+          >
+            <Mail className="w-8 h-8 hover:scale-110 transition-transform duration-300" />
+          </a>
         </div>
         
       </div>

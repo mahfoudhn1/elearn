@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../../store/store";
 import CheckUploadForm from "./CheckUploadForm";
 import StartNowButton from "./livebutton";
+import { useRouter } from "next/router";
 
 const PrivateSessionDetail = () => {
   const [session, setSession] = useState<any>(null);
@@ -14,7 +15,7 @@ const PrivateSessionDetail = () => {
   const [teacherNotes, setTeacherNotes] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
+  const [room, setRoom] = useState('')
   const params = useParams()
   const role = useSelector((state:RootState)=>state.auth.user?.role)
   const sessionId = params.id
@@ -39,11 +40,8 @@ const PrivateSessionDetail = () => {
       
       try {
         const response = await axiosClientInstance.get(`/privet/session-requests/${sessionId}/get_jitsi_room_for_session/`);
-        
-        setLoading(false);
+        setRoom(response.data)
       } catch (err) {
-        setError("فشل في جلب تفاصيل الحصة");
-        setLoading(false);
       }
     }
     fetchSession();
@@ -67,6 +65,13 @@ const PrivateSessionDetail = () => {
       setError("فشل في تحديث الحصة");
     }
   };
+  const router = useRouter();
+  const goTolive = ()=>{
+    if(!room){
+      return
+    }
+    router.push(`/lives?roomId=${room}`)
+  }
 
   if (loading) return <div className="text-center text-gray">جاري التحميل...</div>;
   if (error) return <div className="text-center text-red-500">{error}</div>;
@@ -76,13 +81,17 @@ const PrivateSessionDetail = () => {
       <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8 transform transition-all hover:shadow-2xl">
         <div className="flex">
         <h1 className="text-3xl font-bold text-gray-800 mb-6 text-right">طلب حصة خاصة</h1>
-        <StartNowButton proposedDate={proposedDate} />
 
         </div>
         <div className="space-y-8">
           {/* Student Details */}
           <div className="bg-gray-light p-6 rounded-xl">
-            <h2 className="text-xl font-semibold text-gray-700 mb-4 text-right">تفاصيل الطالب</h2>
+            <div className="flex justify-between">
+              <h2 className="text-xl font-semibold text-gray-700 mb-4 text-right">تفاصيل الطالب</h2>
+              {session?.is_paied && (
+                <StartNowButton proposedDate={session?.proposed_date} onLive={goTolive}/>
+              )}
+            </div>
             <div className="space-y-3 text-right">
               <p className="text-gray-700">
                 <span className="font-medium">الاسم: </span>
@@ -143,7 +152,7 @@ const PrivateSessionDetail = () => {
                 <label className="block text-sm font-medium text-gray-700 text-right">التاريخ المقترح</label>
                 <input
                   type="datetime-local"
-                  value={formattedDate}
+                  value={session?.proposed_date}
                   onChange={(e) => setProposedDate(e.target.value)}
                   className="mt-2 block w-full p-3 border border-gray-light rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-right"
                   required

@@ -15,11 +15,20 @@ axiosClientInstance.interceptors.response.use(
     // Prevent multiple retries
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
+      const refreshToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('refresh_token='))
+        ?.split('=')[1];
+
+      if (!refreshToken) {
+        console.error("Refresh token not found in cookies.");
+        return Promise.reject(error);
+      }
 
       try {
         const response = await axiosClientInstance.post(
           `http://localhost:8000/api/token/refresh/`,
-          {}, 
+
           {
             withCredentials: true, 
           }

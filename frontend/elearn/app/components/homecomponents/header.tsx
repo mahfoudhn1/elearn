@@ -51,7 +51,7 @@ const Header: React.FC = () => {
     <header className={`header flex justify-between items-center py-4 bg-transparent px-20  w-full text-black ${!isHomePage? "shadow-sm sticky" : "shadow-none" } `}>
     <div className='relative group w-1/4'>
       <div className="text-3xl w-2/3 text-gray-dark font-bold">
-        <img src="./logo1.png" alt="logo riffaa" className='cursor-pointer'/>
+        <img src={`${window.location.origin}/logoblack.png`} alt="logo riffaa" className='cursor-pointer w-14 h-24'/>
          </div>
       {/* <span className="absolute left-0 bottom-0 w-full h-2.5 bg-green bg-opacity-80 transform scale-y-100  transition-all duration-300"></span> */}
 
@@ -68,7 +68,7 @@ const Header: React.FC = () => {
         </li>
         {user &&(
           <li className="relative group">
-          <Link href="#about">
+          <Link href="/dashboard">
           لوحة التحكم
             <span className="absolute left-0 bottom-0 w-full h-0 bg-green bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
           </Link>
@@ -84,7 +84,7 @@ const Header: React.FC = () => {
         </li>
         <li className="relative group">
           <Link href="#services">
-          خدماتنا
+          رؤيتنا
             <span className="absolute left-0 bottom-0 w-full h-0 bg-green bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
           </Link>
         </li>
@@ -170,7 +170,7 @@ const Header: React.FC = () => {
             </button>
           </div>
           <div className='relative items-center w-1/3 mx-auto text-center group'>
-            <div className="text-3xl text-gray-dark font-bold">منبت</div>
+            <div className="text-3xl text-gray-dark font-bold">رفعة</div>
             <span className="absolute left-0 bottom-0 w-full h-2.5 bg-green bg-opacity-80 transform scale-y-100  transition-all duration-300"></span>
 
           </div>
@@ -193,7 +193,7 @@ const Header: React.FC = () => {
             </li>
             <li className="relative group " onClick={()=>setIsMenuOpen(false)}>
               <Link href="#services">
-              خدماتنا
+              رؤيتنا
                 <span className="absolute left-0 bottom-0 w-full h-0 bg-green bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
               </Link>
             </li>

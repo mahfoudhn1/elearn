@@ -14,6 +14,7 @@ import {
   LogOut,
   User,
   Menu,
+  Presentation,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
@@ -42,7 +43,7 @@ const Sidebar: React.FC = () => {
       <button
         type="button"
         onClick={toggleSidebar}
-        className="sm:hidden fixed bottom-4 right-4 z-50 p-2 text-gray-500 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200"
+        className="sm:hidden fixed bottom-4 right-4 z-50 p-2 text-gray-700 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200"
       >
         <Menu className="w-6 h-6" />
       </button>
@@ -59,7 +60,7 @@ const Sidebar: React.FC = () => {
             {/* Sidebar Expansion Button */}
             <div className="flex flex-row justify-between">
               <Link href={'/dashboard'} >
-                <img src="./logoblack.png" alt="logo riffaa" className={`${isExpanded ? 'block' : 'hidden'} h-24 w-16 ml-8 -translate-x-10 `}/>
+                <img src={`${window.location.origin}/logoblack.png`}  alt="logo riffaa" className={`${isExpanded ? 'block' : 'hidden'} w-14 h-24 ml-8 -translate-x-10 `}/>
               
               </Link>
 
@@ -79,7 +80,7 @@ const Sidebar: React.FC = () => {
                   href={'/dashboard'}
                   className="flex items-center p-2 text-gray-900 rounded-lg group"
                 >
-                  <LayoutDashboard className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75" />
+                  <LayoutDashboard className="flex-shrink-0 w-5 h-5 text-gray-700 transition duration-75" />
                   <span className={`flex-1 me-3 whitespace-nowrap ${isExpanded ? 'block' : 'hidden'}`}>
                     لوحة التحكم
                   </span>
@@ -92,7 +93,7 @@ const Sidebar: React.FC = () => {
                   href={'/groups'}
                   className="flex items-center p-2 text-gray-900 rounded-lg group"
                 >
-                  <Users className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75" />
+                  <Users className="flex-shrink-0 w-5 h-5 text-gray-700 transition duration-75" />
                   <span className={`flex-1 me-3 whitespace-nowrap ${isExpanded ? 'block' : 'hidden'}`}>
                     المجموعات
                   </span>
@@ -105,7 +106,7 @@ const Sidebar: React.FC = () => {
                   href={'/notes'}
                   className="flex items-center p-2 text-gray-900 rounded-lg group"
                 >
-                  <FileText className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75" />
+                  <FileText className="flex-shrink-0 w-5 h-5 text-gray-700 transition duration-75" />
                   <span className={`flex-1 me-3 whitespace-nowrap ${isExpanded ? 'block' : 'hidden'}`}>
                     الملاحظات
                   </span>
@@ -118,7 +119,7 @@ const Sidebar: React.FC = () => {
                   href={'/flashcards'}
                   className="flex items-center p-2 text-gray-900 rounded-lg group"
                 >
-                  <BookOpen className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75" />
+                  <BookOpen className="flex-shrink-0 w-5 h-5 text-gray-700 transition duration-75" />
                   <span className={`flex-1 me-3 whitespace-nowrap ${isExpanded ? 'block' : 'hidden'}`}>
                     البطاقات التعليمية
                   </span>
@@ -131,20 +132,43 @@ const Sidebar: React.FC = () => {
                   href={'/notifications'}
                   className="flex items-center p-2 text-gray-900 rounded-lg group"
                 >
-                  <Bell className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75" />
+                  <Bell className="flex-shrink-0 w-5 h-5 text-gray-700 transition duration-75" />
                   <span className={`flex-1 me-3 whitespace-nowrap ${isExpanded ? 'block' : 'hidden'}`}>
                     التنبيهات
                   </span>
                 </Link>
               </li>
-
+              {/* private session */}
+              <li className="transition-colors duration-75 hover:bg-green hover:text-white">
+                  <Link
+                  href={'/privet-sessions/'}
+                  className="flex items-center p-2 text-gray-900 rounded-lg group"
+                >
+                  <Presentation className="flex-shrink-0 w-5 h-5 text-gray-700 transition duration-75" />
+                  <span className={`flex-1 me-3 whitespace-nowrap ${isExpanded ? 'block' : 'hidden'}`}>
+                    حصص خاصة
+                  </span>
+                </Link>
+              </li>
+              {/* callender  */}
+              <li className="transition-colors duration-75 hover:bg-green hover:text-white">
+                  <Link
+                  href={'/dashboard/callendar/'}
+                  className="flex items-center p-2 text-gray-900 rounded-lg group"
+                >
+                  <Calendar className="flex-shrink-0 w-5 h-5 text-gray-700 transition duration-75" />
+                  <span className={`flex-1 me-3 whitespace-nowrap ${isExpanded ? 'block' : 'hidden'}`}>
+                    التوقيت
+                  </span>
+                </Link>
+              </li>
               {/* Teachers */}
               <li className="transition-colors duration-75 hover:bg-green hover:text-white">
                 <Link
                   href={'/teachers'}
                   className="flex items-center p-2 text-gray-900 rounded-lg group"
                 >
-                  <ClipboardList className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75" />
+                  <ClipboardList className="flex-shrink-0 w-5 h-5 text-gray-700 transition duration-75" />
                   <span className={`flex-1 me-3 whitespace-nowrap ${isExpanded ? 'block' : 'hidden'}`}>
                     المعلمون
                   </span>
@@ -157,7 +181,7 @@ const Sidebar: React.FC = () => {
                   href={'/whiteboard'}
                   className="flex items-center p-2 text-gray-900 rounded-lg group"
                 >
-                  <Calendar className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75" />
+                  <Calendar className="flex-shrink-0 w-5 h-5 text-gray-700 transition duration-75" />
                   <span className={`flex-1 me-3 whitespace-nowrap ${isExpanded ? 'block' : 'hidden'}`}>
                     السبورة البيضاء
                   </span>
@@ -170,7 +194,7 @@ const Sidebar: React.FC = () => {
                   href={'/profile'}
                   className="flex items-center p-2 text-gray-900 rounded-lg group"
                 >
-                  <User className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75" />
+                  <User className="flex-shrink-0 w-5 h-5 text-gray-700 transition duration-75" />
                   <span className={`flex-1 me-3 whitespace-nowrap ${isExpanded ? 'block' : 'hidden'}`}>
                     تحديث الملف الشخصي
                   </span>
@@ -183,7 +207,7 @@ const Sidebar: React.FC = () => {
                   href={'/logout'}
                   className="flex items-center p-2 text-gray-900 rounded-lg group"
                 >
-                  <LogOut className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75" />
+                  <LogOut className="flex-shrink-0 w-5 h-5 text-gray-700 transition duration-75" />
                   <span className={`flex-1 me-3 whitespace-nowrap ${isExpanded ? 'block' : 'hidden'}`}>
                     تسجيل الخروج
                   </span>

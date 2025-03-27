@@ -53,6 +53,7 @@
     "react-router-dom": "^7.1.1",
     "react-tailwindcss-datepicker": "^1.7.0",
     "react-time-picker": "^7.0.0",
+    "react-turnstile": "^1.1.4",
     "redux-persist": "^6.0.0",
     "server-only": "^0.0.1",
     "swiper": "^11.1.9",

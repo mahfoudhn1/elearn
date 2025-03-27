@@ -26,15 +26,47 @@ class UserViewSet(viewsets.ModelViewSet):
         return self.request.user
 
     def create(self, request, *args, **kwargs):
-        # Handle user creation
+        # Check for existing email or username before serialization
+        email = request.data.get('email')
+        username = request.data.get('username')
+        
+        if email and User.objects.filter(email=email).exists():
+            return Response(
+                {"detail": "A user with this email already exists."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if username and User.objects.filter(username=username).exists():
+            return Response(
+                {"detail": "A user with this username already exists."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        
+        try:
+            user = serializer.save()
+        except IntegrityError as e:
+            if 'unique constraint' in str(e).lower():
+                if 'email' in str(e):
+                    return Response(
+                        {"detail": "A user with this email already exists."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                elif 'username' in str(e):
+                    return Response(
+                        {"detail": "A user with this username already exists."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            raise
 
+        # Create user folder
         user_folder = os.path.join(settings.MEDIA_ROOT, f'user_{user.id}')
         if not os.path.exists(user_folder):
             os.makedirs(user_folder)
                     
+        # Handle role-specific profile creation
         role = request.data.get('role')
         if role == 'teacher':
             Teacher.objects.get_or_create(user=user)
@@ -44,27 +76,42 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
-        # Handle user updates
-        self.object = self.get_object()
-        old_role = self.object.role
-        new_role = request.data.get('role', self.object.role)
+        # Check for existing email or username before serialization
+        email = request.data.get('email')
+        username = request.data.get('username')
+        user = self.get_object()
+        
+        if email and User.objects.filter(email=email).exclude(id=user.id).exists():
+            return Response(
+                {"detail": "A user with this email already exists."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if username and User.objects.filter(username=username).exclude(id=user.id).exists():
+            return Response(
+                {"detail": "A user with this username already exists."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Rest of your update logic
+        old_role = user.role
+        new_role = request.data.get('role', user.role)
 
         # Validate the new role
         if new_role not in ['teacher', 'student']:
             raise ValidationError({"detail": "Invalid role provided. Role must be 'teacher' or 'student'."})
 
         # Update the user
-        serializer = self.get_serializer(self.object, data=request.data, partial=True)
+        serializer = self.get_serializer(user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
         # If the role changed, create the corresponding profile
         if old_role != new_role:
             if new_role == 'teacher':
-                Teacher.objects.get_or_create(user=self.object)
-
+                Teacher.objects.get_or_create(user=user)
             elif new_role == 'student':
-                Student.objects.get_or_create(user=self.object)
+                Student.objects.get_or_create(user=user)
 
         return Response(serializer.data)
 

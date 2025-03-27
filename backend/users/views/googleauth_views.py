@@ -12,7 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 import logging
-
+from users.models import User
 from users.serializers import UserSerializer
 
 
@@ -90,7 +90,7 @@ class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
             last_name = names[1] if len(names) > 1 else ''
             username = user_email.split('@')[0]
             
-            User = get_user_model()
+           
             user, created = User.objects.get_or_create(
                 email=user_email,
                 defaults={

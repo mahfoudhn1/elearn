@@ -17,7 +17,7 @@ export const register = createAsyncThunk(
         dispatch(registerSuccess({ message }));
         return { success: true }; 
       } catch (error) {
-        dispatch(registerFailure({ message: 'Registration failed' }));
+        dispatch(registerFailure({ message: 'اسم المستخدم مستعمل من قبل' }));
         console.error('Registration failed', error);
         return { success: false }; 
       }
@@ -40,7 +40,7 @@ export const register = createAsyncThunk(
   
   export const login = createAsyncThunk(
     'auth/login',
-    async (userData: { username: string; password: string }, { dispatch }) => {
+    async (userData: { username: string; password: string, captcha:string }, { dispatch }) => {
       try {
         const response = await axiosClientInstance.post('/auth/', userData);
         const {  user } = response.data;

@@ -1,16 +1,23 @@
 from datetime import timedelta
 from django.utils import timezone
 from django.http import HttpResponse, HttpResponseRedirect
+from django.core.mail import send_mail
+from django.conf import settings
+from django.urls import reverse
 import logging
 import json
+import os
 from tokenize import TokenError
 from rest_framework import viewsets, status
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from users.views.emailverificationview import send_verification_email
+from users.utils import verify_captcha
 from users.serializers import LoginSerializer, RegisterSerializer, UserSerializer
 from users.models import User
+from django.db import IntegrityError
 
 
 logger = logging.getLogger(__name__)
@@ -23,12 +30,11 @@ def get_tokens_for_user(user):
         'access': str(refresh.access_token),
     }
 
+
 class MyTokenObtainPairView(TokenObtainPairView):
-    # Optionally customize the behavior
     pass
 
 class MyTokenRefreshView(TokenRefreshView):
-
     permission_classes = [AllowAny]  
 
     def post(self, request):
@@ -38,15 +44,11 @@ class MyTokenRefreshView(TokenRefreshView):
             return Response({'error': 'Refresh token not provided'}, status=400)
         
         try:
-            # Decode the old refresh token
             old_token = RefreshToken(old_refresh_token)
-            
-            # Extract user id from the token payload
             user_id = old_token.payload.get('user_id')
             if not user_id:
                 return Response({'error': 'Token contained no recognizable user identification'}, status=400)
             
-            # Get the user from the database
             try:
                 user = User.objects.get(id=user_id)
             except User.DoesNotExist:
@@ -77,30 +79,36 @@ class AuthViewSet(viewsets.GenericViewSet):
     permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
+        captcha_token = request.data.get("captcha")
+        if not verify_captcha(captcha_token):
+            return Response({"error": "Invalid CAPTCHA"}, status=status.HTTP_400_BAD_REQUEST)
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
 
-        # Generate tokens
+        if not user.email_verified:
+            return Response(
+                {"error": "Email not verified. Please check your email for verification link."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         tokens = get_tokens_for_user(user)
-        # Create the response
         response = HttpResponse()
         
-        # Set cookies
         response.set_cookie(
             'access_token',
             tokens['access'],
             httponly=True,
-            secure= False,  # Use secure cookies if HTTPS is enabled
+            secure=False,
         )
         response.set_cookie(
             'refresh_token',
             tokens['refresh'],
             httponly=True,
-            secure= False,
+            secure=False,
         )
         
-        # Optionally include user data in the response body
         response_data = {
             'user': UserSerializer(user).data,
             'message': 'Authentication successful'
@@ -114,26 +122,69 @@ class RegisterView(viewsets.ModelViewSet):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]  
 
-    def post(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
+        captcha_token = request.data.get("captcha")
+        if not verify_captcha(captcha_token):
+            return Response({"error": "Invalid CAPTCHA"}, status=status.HTTP_400_BAD_REQUEST)
+
+        email = request.data.get('email')
+        username = request.data.get('username')
+        
+        if email and User.objects.filter(email=email).exists():
+            return Response(
+                {"detail": "A user with this email already exists."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if username and User.objects.filter(username=username).exists():
+            return Response(
+                {"detail": "A user with this username already exists."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
+        serializer.is_valid(raise_exception=True)
+        
+        try:
             user = serializer.save()
-            user_folder = os.path.join(settings.MEDIA_ROOT, f'user_{user.id}')
-            if not os.path.exists(user_folder):
-                os.makedirs(user_folder)
-            return Response({
-                "user": serializer.data,
-                "message": "User created successfully."
-            }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-   
+            user.email_verified = False
+            user.save()
+            
+            # Get frontend verification URL from request or settings
+            frontend_verify_url = request.data.get(
+                'frontend_verify_url',
+                settings.DEFAULT_FRONTEND_VERIFY_URL
+            )
+            
+            send_verification_email(user, frontend_verify_url)
+            
+        except IntegrityError as e:
+            if 'unique constraint' in str(e).lower():
+                if 'email' in str(e):
+                    return Response(
+                        {"detail": "A user with this email already exists."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                elif 'username' in str(e):
+                    return Response(
+                        {"detail": "A user with this username already exists."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            raise
+        
+        user_folder = os.path.join(settings.MEDIA_ROOT, f'user_{user.id}')
+        if not os.path.exists(user_folder):
+            os.makedirs(user_folder)
+                    
+        return Response({
+            "user": serializer.data,
+            "message": "User created successfully. Please check your email for verification."
+        }, status=status.HTTP_201_CREATED)
 
 class LogoutViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
     def create(self, request):
-        # Perform logout logic here
         response.delete_cookie('access_token')
         response.delete_cookie('refresh_token')
         response = Response({'message': 'Logged out successfully'})

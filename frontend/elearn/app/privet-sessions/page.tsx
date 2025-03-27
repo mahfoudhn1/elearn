@@ -34,7 +34,7 @@ const PrivateSessionsPage = () => {
         console.log(response.data);
         setSessions(response.data);
       } catch (err) {
-        setError('فشل في جلب الجلسات الخاصة');
+        setError('فشل في جلب الحصص الخاصة');
       } finally {
         setLoading(false);
       }
@@ -73,7 +73,7 @@ const PrivateSessionsPage = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <h1 className="text-3xl font-semibold mb-8 text-gray-800 text-center">
-        الجلسات الخاصة
+        الحصص الخاصة
       </h1>
 
       <div className="overflow-x-auto rounded-xl shadow-lg bg-white">
