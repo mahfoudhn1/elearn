@@ -11,7 +11,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const publicPages = ["/", "/login", "/register"];
+  const publicPages = ["/", "/login", "/register",'/verify-email'];
 
   useEffect(() => {
     if (!user && !publicPages.includes(pathname)) {

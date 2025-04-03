@@ -5,24 +5,32 @@ import { AppDispatch } from './store';
 import axiosClientInstance from '../app/lib/axiosInstance';
 
 export const register = createAsyncThunk(
-    '/register',
-    async (userData: FormData, { dispatch }) => {
-      try {
-        const response = await axiosClientInstance.post('/register/', userData,{
-          headers: {
-            'Content-Type': 'multipart/form-data', 
-          },
-        });
-        const { message } = response.data;
-        dispatch(registerSuccess({ message }));
-        return { success: true }; 
-      } catch (error) {
-        dispatch(registerFailure({ message: 'اسم المستخدم مستعمل من قبل' }));
-        console.error('Registration failed', error);
-        return { success: false }; 
+  '/register',
+  async (userData: FormData, { dispatch }) => {
+    try {
+      const response = await axiosClientInstance.post('/register/', userData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      const { message } = response.data;
+      dispatch(registerSuccess({ message }));
+      return { success: true };
+    } catch (error: any) {
+      let errorMessage = 'حدث خطأ أثناء التسجيل'; // Default error message
+
+      if (error.response && error.response.data && error.response.data.detail) {
+        errorMessage = error.response.data.detail;
       }
+
+      dispatch(registerFailure({ message: errorMessage }));
+      console.error('Registration failed', errorMessage);
+      return { success: false, errorMessage };
     }
-  );
+  }
+);
+
   const updateUserRole = createAsyncThunk(
     'auth/updateRole',
     async (role: string, { rejectWithValue }) => {

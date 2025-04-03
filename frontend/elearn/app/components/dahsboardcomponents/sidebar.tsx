@@ -24,7 +24,7 @@ const Sidebar: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false); // Track sidebar expansion
   const pathname = usePathname(); 
   
-  const dashboardPaths = ['/login', '/register','/', '/continuereg'];
+  const dashboardPaths = ['/login', '/register','/', '/continuereg','/verify-email'];
   const isDashboard = dashboardPaths.some(path => pathname === path || pathname.startsWith(`${path}/`));
   
   const toggleSidebar = () => {

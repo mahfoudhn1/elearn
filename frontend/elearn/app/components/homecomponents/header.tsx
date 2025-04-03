@@ -25,7 +25,7 @@ const Header: React.FC = () => {
 
   const pathname = usePathname(); 
   
-  const dashboardPaths = ['/login', '/register','/', '/continuereg'];
+  const dashboardPaths = ['/login', '/register','/', '/continuereg', '/verify-email'];
   const isDashboard = dashboardPaths.some(path => pathname === path || pathname.startsWith(`${path}/`));
   
   const isHomePage = pathname === '/' 

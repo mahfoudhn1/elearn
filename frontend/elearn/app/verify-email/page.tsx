@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import axiosClientInstance from '../lib/axiosInstance';
 import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 export default function VerifyEmailPage() {
   const params = useSearchParams();
@@ -12,6 +13,7 @@ export default function VerifyEmailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  const router = useRouter()
   useEffect(() => {
     if (!token) {
       setMessage('No verification token provided');
@@ -21,10 +23,11 @@ export default function VerifyEmailPage() {
 
     const verifyEmail = async () => {
       try {
-        const response = await axiosClientInstance.post('/auth/verify-email/', {
+        const response = await axiosClientInstance.post('/verify-email/', {
           token
         });
         setIsSuccess(true);
+        router.push('/login')
         setMessage(response.data.message);
       } catch (error:any) {
         setMessage(error.response?.data?.error || 'Email verification failed');
@@ -52,9 +55,9 @@ export default function VerifyEmailPage() {
         {isSuccess && (
           <div className="text-center">
             <Link href="/login">
-              <a className="text-sm text-blue-600 hover:text-blue-500">
+              <h1 className="text-sm text-blue-600 hover:text-blue-500">
                 Proceed to login
-              </a>
+              </h1>
             </Link>
           </div>
         )}

@@ -13,12 +13,12 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from users.views.emailverificationview import send_verification_email
 from users.utils import verify_captcha
 from users.serializers import LoginSerializer, RegisterSerializer, UserSerializer
 from users.models import User
 from django.db import IntegrityError
-
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib.auth.tokens import default_token_generator
 
 logger = logging.getLogger(__name__)
 
@@ -123,9 +123,9 @@ class RegisterView(viewsets.ModelViewSet):
     permission_classes = [AllowAny]  
 
     def create(self, request, *args, **kwargs):
-        captcha_token = request.data.get("captcha")
-        if not verify_captcha(captcha_token):
-            return Response({"error": "Invalid CAPTCHA"}, status=status.HTTP_400_BAD_REQUEST)
+        # captcha_token = request.data.get("captcha")
+        # if not verify_captcha(captcha_token):
+        #     return Response({"error": "Invalid CAPTCHA"}, status=status.HTTP_400_BAD_REQUEST)
 
         email = request.data.get('email')
         username = request.data.get('username')
@@ -150,13 +150,7 @@ class RegisterView(viewsets.ModelViewSet):
             user.email_verified = False
             user.save()
             
-            # Get frontend verification URL from request or settings
-            frontend_verify_url = request.data.get(
-                'frontend_verify_url',
-                settings.DEFAULT_FRONTEND_VERIFY_URL
-            )
-            
-            send_verification_email(user, frontend_verify_url)
+            self.send_verification_email(user)
             
         except IntegrityError as e:
             if 'unique constraint' in str(e).lower():
@@ -180,6 +174,22 @@ class RegisterView(viewsets.ModelViewSet):
             "user": serializer.data,
             "message": "User created successfully. Please check your email for verification."
         }, status=status.HTTP_201_CREATED)
+    def send_verification_email(self, user):
+     
+        refresh = RefreshToken.for_user(user)
+        token = str(refresh.access_token)
+
+        verification_url = f"{settings.DEFAULT_FRONTEND_VERIFY_URL}/verify-email?token={token}"
+        
+        subject = 'Please Verify Your Email Address'
+        message = f"Hello {user.username},\n\nPlease verify your email by clicking the following link:\n{verification_url}\n\nIf you did not request this, please ignore this email."
+
+        from_email = settings.DEFAULT_FROM_EMAIL
+
+        try:
+            send_mail(subject, message, from_email, [user.email], fail_silently=False)
+        except Exception as e:
+            print(f"Error sending email: {e}")
 
 class LogoutViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]

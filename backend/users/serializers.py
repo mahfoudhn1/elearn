@@ -103,38 +103,52 @@ class RegisterSerializer(serializers.ModelSerializer):
             'email': {'validators': []},  # We'll handle validation manually
             'username': {'validators': []}
         }
+
     def validate_email(self, value):
+        # Check for duplicate email during updates or creations
         if self.instance and User.objects.filter(email=value).exclude(id=self.instance.id).exists():
             raise serializers.ValidationError("A user with this email already exists.")
         elif not self.instance and User.objects.filter(email=value).exists():
             raise serializers.ValidationError("A user with this email already exists.")
         return value
+
     def validate_username(self, value):
-            if self.instance:  # For updates
-                if User.objects.filter(username=value).exclude(id=self.instance.id).exists():
-                    raise serializers.ValidationError("A user with this username already exists.")
-            else:  # For creates
-                if User.objects.filter(username=value).exists():
-                    raise serializers.ValidationError("A user with this username already exists.")
-            return value
+        # Check for duplicate username during updates or creations
+        if self.instance:  # For updates
+            if User.objects.filter(username=value).exclude(id=self.instance.id).exists():
+                raise serializers.ValidationError("A user with this username already exists.")
+        else:  # For creates
+            if User.objects.filter(username=value).exists():
+                raise serializers.ValidationError("A user with this username already exists.")
+        return value
+
     def validate(self, data):
+        # Ensure the passwords match
         if data['password'] != data['password2']:
             raise serializers.ValidationError({"password": "Passwords must match."})
         return data
     
     def create(self, validated_data):
-        role = validated_data.get('role', None)  # Get role if provided, otherwise None
+        # Extract the role from validated data (None if not provided)
+        role = validated_data.get('role', None)
+        
+        # Handle avatar_file if it exists, otherwise set to None
+        avatar_file = validated_data.get('avatar_file', None)
 
+        # Create the user
         user = get_user_model().objects.create_user(
             username=validated_data['username'],
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
             email=validated_data['email'],
             password=validated_data['password'],
-            avatar_file=validated_data['avatar_file'],
-            role=role  # Can be None
+            avatar_file=avatar_file,
+            role=role  # Role can be None if not provided
         )
+
+        # Return the created user object
         return user
+
     
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
@@ -153,17 +167,20 @@ class LoginSerializer(serializers.Serializer):
         username = data.get('username')
         password = data.get('password')
 
-        if username and password:
-            user = authenticate(username=username, password=password)
-            
-            if user:
-                data['user'] = user
-            else:
-                raise serializers.ValidationError("Invalid credentials")
-        else:
+        if not username or not password:
             raise serializers.ValidationError("Both username and password are required")
 
+        user = authenticate(username=username, password=password)
+
+        if user is None:
+            raise serializers.ValidationError("Invalid credentials")
+
+        if not user.email_verified:  
+            raise serializers.ValidationError("Your email is not verified. Please verify your email.")
+
+        data['user'] = user 
         return data
+
     
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
