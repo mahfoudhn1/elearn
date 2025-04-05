@@ -148,3 +148,18 @@
     teacher_notes?: string;
     is_paied: boolean;
   }
+  export interface RoomData {
+    room: string;
+    token: string;
+    domain: string;
+    displayName?: string;
+  }
+  
+  export interface ChatMessage {
+    id: string;
+    sender: string;
+    message: string;
+    timestamp: Date;
+    isLocal: boolean;
+  }
+  

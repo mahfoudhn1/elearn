@@ -83,6 +83,6 @@ class GroupSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['students'] = StudentSerializer(instance.students.all(), many=True).data
-        representation['field_of_study_nest'] = instance.field_of_study.name
+        representation['field_of_study_nest'] = getattr(instance.field_of_study, 'name', None)
         representation['school_level'] = instance.school_level.name  # Return the name instead of the ID
         return representation

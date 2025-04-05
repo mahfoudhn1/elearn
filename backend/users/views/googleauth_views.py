@@ -105,6 +105,7 @@ class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
                 user.first_name = first_name
                 user.last_name = last_name
                 user.avatar_file = profile_picture
+                user.email_verified= True
                 user.save()
 
             tokens = get_tokens_for_user(user)

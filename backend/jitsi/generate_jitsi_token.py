@@ -1,50 +1,28 @@
-
-# from datetime import datetime, timedelta
 import jwt
-# from django.conf import settings
-# from pathlib import Path
 import time
-
-def load_private_key(key_path=None, key_string=None):
-    """
-    Load private key from file or string
-    """
-    if key_string:
-        return key_string
-    if key_path:
-        with open(key_path, 'r') as key_file:
-            return key_file.read()
-    raise ValueError("Either key_path or key_string must be provided")
+from django.conf import settings
 
 def generate_jitsi_token(user, room_name):
-    # Jitsi secret key (configured in your Jitsi setup)
-    secret = "mahfoud1996"
-    
-    # Jitsi app ID (configured in your Jitsi setup)
-    app_id = "mahfoud_hn"
-    
-    # Token payload
+    # Your Jitsi configuration
+    secret = settings.JITSI_APP_SECRET  # Use a strong secret in production!
+    app_id = settings.JITSI_APP_ID
+    jitsi_domain = settings.JITSI_APP_DOMAIN
+
     payload = {
+        "aud": "jitsi",
+        "iss": app_id,
+        "sub": jitsi_domain,
+        "room": room_name,  # Can be specific room or '*'
+        "exp": int(time.time()) + 10800,  # Expires in 3 hour
         "context": {
             "user": {
-                "id": user.id,
-                "name": user.username,
-                "email": user.email,
-            },
-            "group": room_name,
+                "id": str(user.id),
+                "name": user.get_full_name() or user.username,
+                "email": user.email or "",
+            }
         },
-        "aud": app_id,
-        "iss": app_id,
-        "sub": "localhost",  # Replace with your Jitsi domain
-        "room": room_name,
-        "exp": int(time.time()) + 3600,  # Token expiration time (1 hour)
-        "moderator": hasattr(user, 'teacher'),  # Grant moderator rights to teachers
+        "moderator": hasattr(user, 'teacher'),
     }
-    
-    # Generate JWT token
+
     token = jwt.encode(payload, secret, algorithm='HS256')
     return token
-
-
-
-

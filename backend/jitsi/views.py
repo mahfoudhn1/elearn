@@ -81,6 +81,7 @@ class MeetingViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['GET'])
     def start_meeting(self, request, pk=None):
+        print("excuted")
         try:
             meeting = Meeting.objects.get(id=pk)
         except Meeting.DoesNotExist:
@@ -102,7 +103,7 @@ class MeetingViewSet(viewsets.ModelViewSet):
 
         jwt_token = generate_jitsi_token(user, meeting.room_name)
 
-        jitsi_domain = "https://localhost:8444"  
+        jitsi_domain = "https://meet.riffaa.com"  
         join_url = f"{jitsi_domain}/{meeting.room_name}?jwt={jwt_token}"
 
         return Response({
@@ -120,7 +121,6 @@ class MeetingViewSet(viewsets.ModelViewSet):
         meeting = self.get_object()
         user = request.user
 
-        # Check if user is allowed to join
         if not (
             (hasattr(user, 'teacher') and meeting.teacher == user.teacher) or
             (hasattr(user, 'student') and user.student in meeting.students.all())
@@ -136,8 +136,7 @@ class MeetingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Generate JWT token
-        jwt_token = generate_jwt_token(user, meeting.room_name)
+        jwt_token = generate_jitsi_token(user, meeting.room_name)
 
         return Response({
             "message": "Joined meeting successfully.",

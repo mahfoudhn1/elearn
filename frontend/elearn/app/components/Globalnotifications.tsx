@@ -6,7 +6,7 @@ import useWebSocket from "../hooks/useWebsocket";
 const GlobalNotifications = () => {
     const [notifications, setNotifications] = useState<{ id: number; message: string }[]>([]);
 
-    useWebSocket("ws://localhost:8000/ws/notifications/", (message:any) => {
+    useWebSocket(`ws://${process.env.BASE_API_URL}/ws/notifications/`, (message:any) => {
         const newNotification = { id: Date.now(), message: message.message };
         setNotifications((prev) => [...prev, newNotification]);
     });

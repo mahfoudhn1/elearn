@@ -46,7 +46,7 @@ const Profile: React.FC<TeacherProps> = ({ params }) => {
   useEffect(() => {
     const fetchTeacher = async () => {
       try {
-        const response = await axiosClientInstance.get<Teacher>(`http://localhost:8000/api/teachers/${params.id}/`);
+        const response = await axiosClientInstance.get<Teacher>(`/teachers/${params.id}/`);
         setTeacher(response.data);
         
         // Fetch groups after teacher data is set

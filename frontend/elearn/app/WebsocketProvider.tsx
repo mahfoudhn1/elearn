@@ -17,7 +17,7 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
 
     useEffect(() => {
-        const ws = new WebSocket("ws://localhost:8000/ws/notifications/");
+        const ws = new WebSocket(`ws://${process.env.BASE_API_URL}/ws/notifications/`);
 
         ws.onopen = () => console.log("✅ WebSocket connected");
 
