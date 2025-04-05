@@ -16,11 +16,11 @@ function Mission() {
       <div className="flex flex-col md:flex-row rounded-lg bg-gray-light mx-10 p-8 md:p-12">
         {/* Title and Text Section */}
         <div className="md:w-1/2 mb-8 border-l md:mb-0">
-          <h1 className="text-4xl font-bold mb-4 text-gray-dark">هدفنا في 
+          <h1 className="text-4xl font-bold mb-4 text-gray-dark">رؤيتنا لدى
             <span className='text-green'> رفعة</span>
           </h1>
           <p className="text-lg text-black">
-          نحن ملتزمون بتوفير أفضل الموارد التعليمية لمساعدة الطلبة على تحقيق إمكاناتهم الكاملة. تتمثل مهمتنا في إنشاء منصة تعزز التعلم والنمو والتطوير من خلال حلول مبتكرة وسهلة الوصول.
+          نطمح  لان نكون منصة تعليمية رائدة تجعل التعلم متاحا و سهلا للجميع كما نسعى اتبني احدث التقنيات لضمان تجربة تعلم مبتكرة
           </p>
         </div>
         

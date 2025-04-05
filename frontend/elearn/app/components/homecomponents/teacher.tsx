@@ -8,27 +8,26 @@ const TeacherSection = () => {
       <div className="md:w-1/2 text-center md:text-right md:pr-8">
         <h2 className="text-3xl font-bold mb-6 mr-4">اذا كنت أستاذا يمكنك الانضمام الينا</h2>
         <p className="text-lg mb-6">
-          انظم الى منصتنا الان و كن جزءا من مجتمع من المدرسين، و احصل على تجربة مرنة في جدولة أوقات العمل و الوصول الى عدد كبير من الطلبة.
-        </p>
+        استاذنا الفاضل انضم الينا و كن كن جزءا من اسرتنا التعليمية و احصل على هذه المزايا        </p>
         <ul className="space-y-4 mb-6">
           <li className="flex items-center space-x-2">
             <FontAwesomeIcon icon={faClock} className="text-green ml-4" />
-            <span>يمكنك تحديد أوقات الدروس التي تناسبك وتناسب طلابك، مما يوفر لك مرونة في تنظيم وقتك.</span>
+            <span>العمل وفق جدولك الخاص.</span>
           </li>
           <li className="flex items-center space-x-2">
             <FontAwesomeIcon icon={faLaptop} className="text-orange  ml-4" />
-            <span>يمكنك العمل من منزلك أو من أي مكان تختاره، مما يوفر لك الراحة والحرية.</span>
+            <span>العمل من منزلك او اي مكان تريده.</span>
           </li>
           <li className="flex items-center space-x-2">
             <FontAwesomeIcon icon={faTools} className="text-yellow  ml-4" />
-            <span>تتيح لك أدوات التعليم عبر الإنترنت استخدام تقنيات حديثة وطرق تدريس مبتكرة لجعل التعليم اكثر كفاءة</span>
+            <span>نوفر لك تقنيات حديثة و طرق تدريس مبتكرة لجعل التعليم اكثر جودة و كفاءة</span>
           </li>
           <li className="flex items-center space-x-2">
             <FontAwesomeIcon icon={faPeopleArrows} className="text-blue  ml-4" />
-            <span>تتيح لك التعليم عبر الإنترنت الوصول إلى طلاب من جميع الولايات، مما يزيد من فرصك في التأثير.</span>
+            <span>الوصول الى اكبر عدد من الطلاب من جميع الاماكن مما يزيد في فرصك للتدريس.</span>
           </li>
         </ul>
-        <a href="#join-us" className="inline-block float-left px-6 py-3 bg-gray-dark text-white font-semibold rounded-lg hover:bg-green transition-colors duration-300">
+        <a href="/login" className="inline-block float-left px-6 py-3 bg-gray-dark text-white font-semibold rounded-lg hover:bg-green transition-colors duration-300">
           انضم الينا
         </a>
       </div>

@@ -12,7 +12,7 @@ import { usePathname } from 'next/navigation';
 function Navbar() {
   const pathname = usePathname(); 
   
-  const dashboardPaths = ['/login', '/register','/', '/continuereg','/verify-email'];
+  const dashboardPaths = ['/login', '/register','/', '/continuereg','/verify-email', '/privacy-policy'];
   const isDashboard = dashboardPaths.some(path => pathname === path || pathname.startsWith(`${path}/`));
   
     const dispatch = useDispatch<AppDispatch>()

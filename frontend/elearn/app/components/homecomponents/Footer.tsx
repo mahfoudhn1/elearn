@@ -52,6 +52,14 @@ function Footer() {
                   
                 </Link>
               </li>
+              <li className="relative group">
+                <Link href="/privacy-policy">
+                  
+                    اتصل بنا
+                    <span className="absolute left-0 bottom-0 w-full h-0 bg-green bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
+                  
+                </Link>
+              </li>
             </ul>
           </nav>
         </div>
