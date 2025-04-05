@@ -1,5 +1,11 @@
 import React from "react";
 import { FiMail, FiShield, FiUser, FiLock } from "react-icons/fi";
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'سياسة الخصوصية - رفعة',
+  description: 'سياسة الخصوصية لمنصة رفعة التعليمية',
+};
 
 const PrivacyPolicyAr = () => {
   return (
