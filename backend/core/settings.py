@@ -203,6 +203,15 @@ if IS_PRODUCTION:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 
+WS_URL = os.getenv('WS_URL', 'ws://localhost:8000')  # Default for development
+WS_PREFIX = os.getenv('WS_PREFIX', 'ws://')
+
+if os.getenv('DJANGO_ENV') == 'production':
+    WS_URL = 'wss://riffaa.com/api'
+    WS_PREFIX = 'wss://'
+
+
+
 CORS_ALLOWED_METHODS = [
     'GET',
     'POST',

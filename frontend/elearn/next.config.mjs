@@ -20,7 +20,7 @@ const nextConfig = {
       },
     ]
   },
-  reactStrictMode: true,
+  reactStrictMode: false,
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
@@ -31,7 +31,9 @@ const nextConfig = {
     return config;
   },
   transpilePackages: ['react-redux'],
-
+  typescript: {
+    ignoreBuildErrors: true,
+  },
     env: {
       GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,

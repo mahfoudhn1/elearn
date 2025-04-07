@@ -5,8 +5,15 @@ import useWebSocket from "../hooks/useWebsocket";
 
 const GlobalNotifications = () => {
     const [notifications, setNotifications] = useState<{ id: number; message: string }[]>([]);
-
-    useWebSocket(`ws://${process.env.BASE_API_URL}/ws/notifications/`, (message:any) => {
+    const getWebSocketUrl = () => {
+        if (process.env.NEXT_PUBLIC_WS_URL) {
+          return process.env.NEXT_PUBLIC_WS_URL;
+        }
+        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        return `${protocol}${window.location.host}/riffaa/ws/notifications/`;
+      };
+    
+    useWebSocket(getWebSocketUrl(), (message:any) => {
         const newNotification = { id: Date.now(), message: message.message };
         setNotifications((prev) => [...prev, newNotification]);
     });

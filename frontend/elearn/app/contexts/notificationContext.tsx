@@ -1,35 +1,76 @@
 "use client"
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-const WebSocketContext = createContext<WebSocket | null>(null);
+interface WebSocketContextType {
+  ws: WebSocket | null;
+  isConnected: boolean;
+}
+
+const WebSocketContext = createContext<WebSocketContextType>({
+  ws: null,
+  isConnected: false,
+});
 
 export const WebSocketProvider = ({ children }: { children: React.ReactNode }) => {
-    const [ws, setWs] = useState<WebSocket | null>(null);
+  const [ws, setWs] = useState<WebSocket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
-    useEffect(() => {
-        const socket = new WebSocket(`ws://${process.env.BASE_API_URL}/ws/notifications/`);
+  const connectWebSocket = () => {
+    // Determine protocol (ws/wss) based on environment
+    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const baseUrl = process.env.NEXT_PUBLIC_WS_URL || `${protocol}${window.location.host}`;
+    
+    const socket = new WebSocket(`${baseUrl}/riffaa/ws/notifications/`);
 
-        socket.onopen = () => console.log("🔗 WebSocket connected!");
-        socket.onclose = () => console.log("❌ WebSocket disconnected!");
-        socket.onerror = (error) => console.error("WebSocket error:", error);
+    socket.onopen = () => {
+      console.log("🔗 WebSocket connected!");
+      setIsConnected(true);
+      setRetryCount(0); // Reset retry counter on successful connection
+    };
 
-        socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
+    socket.onclose = () => {
+      console.log("❌ WebSocket disconnected!");
+      setIsConnected(false);
+      // Exponential backoff for reconnection
+      const delay = Math.min(1000 * Math.pow(2, retryCount), 30000); // Max 30s delay
+      setTimeout(() => {
+        setRetryCount(prev => prev + 1);
+        connectWebSocket();
+      }, delay);
+    };
 
-            
-            window.dispatchEvent(new CustomEvent("NEW_NOTIFICATION", { detail: data }));
-        };
+    socket.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
 
-        setWs(socket);
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        window.dispatchEvent(new CustomEvent("NEW_NOTIFICATION", { detail: data }));
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
+      }
+    };
 
-        return () => socket.close();
-    }, []);
+    setWs(socket);
+  };
 
-    return (
-        <WebSocketContext.Provider value={ws}>
-            {children}
-        </WebSocketContext.Provider>
-    );
+  useEffect(() => {
+    connectWebSocket();
+
+    return () => {
+      if (ws) {
+        ws.close();
+      }
+    };
+  }, []); // Empty dependency array ensures this runs once on mount
+
+  return (
+    <WebSocketContext.Provider value={{ ws, isConnected }}>
+      {children}
+    </WebSocketContext.Provider>
+  );
 };
 
 export const useWebSocket = () => useContext(WebSocketContext);
