@@ -54,7 +54,7 @@ const GroupsPerLevel = ({ groupsCategories, allGrades }: GroupsPerLevelProps) =>
 
     }
   }
-  const groupedByGrade = allGrades.reduce<Record<number, GradeGroup>>((acc, grade) => {
+  const groupedByGrade = allGrades.reduce<Record<any, any>>((acc, grade) => {
     const gradeGroups = groupsCategories?.filter(group => group.grade === grade.id);
     acc[grade.id] = {
       gradeName: grade.name,

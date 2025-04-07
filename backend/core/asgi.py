@@ -14,7 +14,7 @@ from channels.security.websocket import AllowedHostsOriginValidator
 from notifications.middleware import JWTAuthMiddleware  # Import custom middleware
 from . import routing
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'your_project.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),

@@ -2,7 +2,7 @@ import axios from 'axios';
 import { cookies } from 'next/headers';
 
 const axiosSSRInstance = axios.create({
-  baseURL: `${process.env.BASE_API_URL}/api`, // Your backend API URL
+  baseURL: 'http://localhost:8000/api', // Your backend API URL
   withCredentials: true,
 });
 

@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from subscription.models import Subscription
 from jitsi.serializers import MeetingSerializer
 from jitsi.views import MeetingViewSet
 from jitsi.models import Meeting
@@ -96,15 +97,26 @@ class ScheduleViewSet(viewsets.ModelViewSet):
             return Response({"detail": "Start time must be before end time."}, 
                             status=status.HTTP_400_BAD_REQUEST)
 
+        students = group.students.all()
+
+        active_subs = Subscription.objects.filter(
+            teacher = teacher,
+            student__in = students,
+            is_active=True,
+        ).values_list('student_id', flat=True)
+        subscribed_students = students.filter(id__in=active_subs)
         meeting = Meeting.objects.create(
-            teacher=teacher,
-            group=group,
-            room_name=f"Room_{teacher.id}_{uuid.uuid4().hex[:6]}",
-            start_time=start_time,
-            end_time=end_time,
-            is_active=True 
-        )
-        meeting.students.set(group.students.all()) 
+                teacher=teacher,
+                group=group,
+                room_name=f"Room_{teacher.id}_{uuid.uuid4().hex[:6]}",
+                start_time=start_time,
+                end_time=end_time,
+                is_active=True 
+            )
+        
+        if subscribed_students.exists():
+            meeting.students.set(subscribed_students)
+
         serializer = self.get_serializer(data={
             "user": user.id,
             "group": group_id,

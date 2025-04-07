@@ -175,8 +175,8 @@ class LoginSerializer(serializers.Serializer):
         if user is None:
             raise serializers.ValidationError("Invalid credentials")
 
-        if not user.email_verified:  
-            raise serializers.ValidationError("Your email is not verified. Please verify your email.")
+        # if not user.email_verified:  
+        #     raise serializers.ValidationError("Your email is not verified. Please verify your email.")
 
         data['user'] = user 
         return data

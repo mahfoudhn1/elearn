@@ -30,7 +30,7 @@ const nextConfig = {
     }
     return config;
   },
-  transpilePackages: ['@zoom/meetingsdk'],
+  transpilePackages: ['react-redux'],
 
     env: {
       GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,

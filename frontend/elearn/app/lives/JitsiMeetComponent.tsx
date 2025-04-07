@@ -6,30 +6,18 @@ import { RoomData } from '../types/student';
 import axiosClientInstance from '../lib/axiosInstance';
 import { RootState } from '../../store/store';
 
-const JitsiMeetOptimized: React.FC<{ roomId: any }> = ({ roomId }) => {
+const JitsiMeetOptimized: React.FC<{ meetingData: any }> = ({ meetingData }) => {
   const user = useSelector((state: RootState) => state.auth.user);
   const displayName = user?.first_name || 'Participant';
   const email = user?.email || '';
 
-  const [meetingData, setMeetingData] = useState<RoomData | null>(null);
   const [api, setApi] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const fetchMeetingData = async () => {
-      try {
-        const response = await axiosClientInstance.get<RoomData>(`/live/${roomId}/start_meeting/`);
-        setMeetingData(response.data);
-      } catch (err) {
-        setError('Failed to load meeting data. Please try again later.');
-        console.error('Error fetching meeting data:', err);
-      }
-    };
-    fetchMeetingData();
-  }, [roomId]);
+
 
   useEffect(() => {
     if (!meetingData || !jitsiContainerRef.current) return;

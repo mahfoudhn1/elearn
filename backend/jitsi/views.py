@@ -81,7 +81,7 @@ class MeetingViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['GET'])
     def start_meeting(self, request, pk=None):
-        print("excuted")
+
         try:
             meeting = Meeting.objects.get(id=pk)
         except Meeting.DoesNotExist:
@@ -118,18 +118,27 @@ class MeetingViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def join_meeting(self, request, pk=None):
-        meeting = self.get_object()
+        try:
+            meeting = Meeting.objects.get(id=pk)
+        except Meeting.DoesNotExist:
+            return Response(
+                {"error": "Meeting with the specified ID does not exist."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
         user = request.user
 
-        if not (
-            (hasattr(user, 'teacher') and meeting.teacher == user.teacher) or
-            (hasattr(user, 'student') and user.student in meeting.students.all())
-        ):
+        # Permission check
+        is_teacher = hasattr(user, 'teacher') and meeting.teacher == user.teacher
+        is_student = hasattr(user, 'student') and user.student in meeting.students.all()
+
+        if not (is_teacher or is_student):
             return Response(
                 {"error": "You don't have permission to join this meeting."},
                 status=status.HTTP_403_FORBIDDEN
             )
 
+        # Check if meeting is active
         if not meeting.is_active:
             return Response(
                 {"error": "Meeting is not active."},
@@ -137,14 +146,13 @@ class MeetingViewSet(viewsets.ModelViewSet):
             )
 
         jwt_token = generate_jitsi_token(user, meeting.room_name)
-
+        jitsi_domain = "https://meet.riffaa.com" 
         return Response({
-            "message": "Joined meeting successfully.",
+            "message": "Meeting started successfully.",
             "meeting": MeetingSerializer(meeting).data,
             "token": jwt_token,
             "room": meeting.room_name,
-            "domain": "8x8.vc",
-            "join_url": f"https://8x8.vc/{meeting.room_name}?jwt={jwt_token}"
+            "domain": jitsi_domain,
         })
 
     @action(detail=True, methods=['post'])

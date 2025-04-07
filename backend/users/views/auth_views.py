@@ -87,11 +87,11 @@ class AuthViewSet(viewsets.GenericViewSet):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
 
-        if not user.email_verified:
-            return Response(
-                {"error": "Email not verified. Please check your email for verification link."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        # if not user.email_verified:
+        #     return Response(
+        #         {"error": "Email not verified. Please check your email for verification link."},
+        #         status=status.HTTP_403_FORBIDDEN
+        #     )
 
         tokens = get_tokens_for_user(user)
         response = HttpResponse()
