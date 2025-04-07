@@ -51,7 +51,7 @@ const Loginpage = () => {
 
 const handleGoogleSuccess = () => {
   const state = "random"
-  return router.push(`https://accounts.google.com/o/oauth2/auth?client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent('http://localhost:3000/api/auth/google/callback')}&response_type=code&scope=profile email&state=${state}`)
+  return router.push(`https://accounts.google.com/o/oauth2/auth?client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent('https://riffaa.com/nextapi//api/auth/google/callback')}&response_type=code&scope=profile email&state=${state}`)
 };
 
 

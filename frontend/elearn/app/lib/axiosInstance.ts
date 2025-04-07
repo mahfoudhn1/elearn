@@ -1,8 +1,9 @@
 import axios from 'axios';
 
+// Create axios instance with environment-aware configuration
 const axiosClientInstance = axios.create({
-  baseURL: 'http://localhost:8000/api/',
-  withCredentials: true, 
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  withCredentials: true,
 });
 
 axiosClientInstance.interceptors.response.use(
@@ -27,26 +28,32 @@ axiosClientInstance.interceptors.response.use(
 
       try {
         const response = await axiosClientInstance.post(
-          `http://localhost:8000/api/token/refresh/`,
-
+          'token/refresh/',
+          { refreshToken },
           {
-            withCredentials: true, 
+            withCredentials: true,
           }
         );
 
         const { access_token, refresh_token } = response.data;
+        const isProduction = process.env.NODE_ENV === 'production';
 
         if (access_token) {
-          document.cookie = `access_token=${access_token}; path=/; max-age=${15 * 60}; secure=false; samesite=lax`;
+          document.cookie = `access_token=${access_token}; path=/; max-age=${15 * 60}; ${
+            isProduction ? 'secure;' : 'secure=false;'
+          } samesite=lax`;
           originalRequest.headers['Authorization'] = `Bearer ${access_token}`;
         }
 
         if (refresh_token) {
-          document.cookie = `refresh_token=${refresh_token}; path=/; max-age=${7 * 24 * 60 * 60}; secure=false; samesite=lax`;
+          document.cookie = `refresh_token=${refresh_token}; path=/; max-age=${7 * 24 * 60 * 60}; ${
+            isProduction ? 'secure;' : 'secure=false;'
+          } samesite=lax`;
         }
 
         return axiosClientInstance(originalRequest);
       } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
         return Promise.reject(refreshError);
       }
     }

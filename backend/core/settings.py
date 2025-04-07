@@ -15,21 +15,37 @@ from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv('.env') 
+if os.getenv('DJANGO_ENV') == 'production':
+    load_dotenv('.env')
+else:
+    load_dotenv('.env')  
+
+DJANGO_ENV = os.getenv('DJANGO_ENV', 'development')
+IS_PRODUCTION = DJANGO_ENV == 'production'
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+DEBUG = not IS_PRODUCTION
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+if IS_PRODUCTION:
+    ALLOWED_HOSTS = ['yourdomain.com', 'api.yourdomain.com']
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-=gsu5b+3=#-pl-ertrv=-os^kmm$k_k+(++u*06#0myqc4%rcc'
+# ========================
+# Static & Media Files
+# ========================
+STATIC_URL = '/api/static/' if IS_PRODUCTION else '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+MEDIA_URL = '/api/media/' if IS_PRODUCTION else '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 
-ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -173,13 +189,20 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
 
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:3000',  # Add your frontend URL
-    # 'https://your-frontend-domain.com',  # For production
-]
-CORS_ALLOW_ALL_ORIGINS = True
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost:3000').split(',')
+CORS_ALLOW_ALL_ORIGINS = not IS_PRODUCTION  
 
 CORS_ALLOW_CREDENTIALS = True
+
+if IS_PRODUCTION:
+    CORS_ALLOWED_ORIGINS = [
+        'https://riffaa.com',
+        'https://www.riffaa.com',
+    ]
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
 CORS_ALLOWED_METHODS = [
     'GET',
     'POST',
@@ -196,10 +219,6 @@ CORS_ALLOWED_HEADERS = [
 ]
 
 
-STATIC_URL = 'static/'
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
@@ -216,20 +235,22 @@ ZOOM_REDIRECT_URI= os.getenv('ZOOM_REDIRECT_URI')
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  # Access token validity
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # Refresh token validity
-    'ROTATE_REFRESH_TOKENS': True,  # Optional: Rotate refresh tokens
-    'BLACKLIST_AFTER_ROTATION': True,  # Optional: Blacklist old refresh tokens
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
-    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
-    'AUTH_COOKIE': 'access_token',  # Cookie name for the JWT
-    'AUTH_COOKIE_SECURE': False,  # Set to True in production
-    'AUTH_COOKIE_HTTP_ONLY': True,  # True to prevent JavaScript access
+    'AUTH_COOKIE': 'access_token',
+    'AUTH_COOKIE_SECURE': IS_PRODUCTION,  # True in production
+    'AUTH_COOKIE_HTTP_ONLY': True,
 }
 
 
+
 # Email settings
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' if IS_PRODUCTION else \
+                'django.core.mail.backends.console.EmailBackend'
+
 EMAIL_HOST = os.getenv('EMAIL_HOST')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS') == 'True'
