@@ -99,6 +99,7 @@ class MeetingViewSet(viewsets.ModelViewSet):
             )
 
         meeting.start_time = timezone.now()
+        meeting.is_active = True
         meeting.save() 
 
         jwt_token = generate_jitsi_token(user, meeting.room_name)

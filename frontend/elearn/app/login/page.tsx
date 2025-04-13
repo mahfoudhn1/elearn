@@ -18,6 +18,7 @@ const Loginpage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [captchaToken, setCaptchaToken] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [err, setErr] = useState<string>()
   const router = useRouter()
@@ -30,28 +31,39 @@ const Loginpage = () => {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     if (!captchaToken) {
       alert("Please complete the CAPTCHA.");
       return;
     }
-
-    const resultAction = await dispatch(login({ username, password, captcha:captchaToken }));
-
+  
+    setLoading(true); 
+  
+    const resultAction = await dispatch(login({ username, password, captcha: captchaToken }));
+  
+    setLoading(false); 
+  
     if (login.fulfilled.match(resultAction)) {
       if (resultAction.payload?.success) {
-        
-        router.push('/dashboard');
+        const redirectTo = localStorage.getItem('redirectAfterLogin');
+        if (redirectTo) {
+          localStorage.removeItem('redirectAfterLogin');
+          router.push(redirectTo);
+        } else {
+          router.push('/dashboard');
+        }
       } else {
-        setErr("اسم المستخدم او كلمة المرور غير صحيحة")
+        setErr("اسم المستخدم او كلمة المرور غير صحيحة");
       }
     }
-};
+  };
+  
+  
 
 
 const handleGoogleSuccess = () => {
   const state = "random"
-  return router.push(`https://accounts.google.com/o/oauth2/auth?client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent('https://riffaa.com/nextapi//api/auth/google/callback')}&response_type=code&scope=profile email&state=${state}`)
+  return router.push(`https://accounts.google.com/o/oauth2/auth?client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent('https://riffaa.com/nextapi/api/auth/google/callback')}&response_type=code&scope=profile email&state=${state}`)
 };
 
 
@@ -91,11 +103,12 @@ const handleGoogleSuccess = () => {
           </div>
           <button
             type="submit"
-            className="w-full py-2 bg-gray-dark text-white font-semibold rounded-lg shadow-md hover:bg-green focus:outline-none focus:ring-2 focus:ring-gray-dark"
+            className="w-full py-2 bg-gray-dark text-white font-semibold rounded-lg shadow-md hover:bg-green focus:outline-none focus:ring-2 focus:ring-gray-dark disabled:opacity-50"
+            disabled={loading}
           >
-            سجل الدخول
-
+            {loading ? "جاري الدخول..." : "سجل الدخول"}
           </button>
+
             <Turnstile
               className='my-6'
               sitekey="0x4AAAAAABCXUolhlT329THY"

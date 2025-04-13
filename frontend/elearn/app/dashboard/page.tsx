@@ -3,8 +3,9 @@ import React, { useEffect, useState } from 'react'
 
 import Cards from './components/cards'
 import TeachersTable from './components/tables'
-import DayViewCalendar from './components/Daycalender'
-import Howitworks from '../components/dahsboardcomponents/Howitworks'
+const DayViewCalendar = dynamic(() => import('./components/Daycalender'), {
+  ssr: false,
+});
 import axiosClientInstance from '../lib/axiosInstance'
 import { payement, Subscription } from '../types/student'
 import { useSelector } from 'react-redux'
@@ -12,6 +13,9 @@ import { RootState } from '../../store/store'
 import StudentTable from './components/studentTable'
 import { fetchTeacherPayments } from '../api/fetchpayement'
 import { fetchStudentSubscriptions, fetchTeacherSubscriptions } from '../api/fetchSubscriptions'
+import dynamic from 'next/dynamic'
+import TeacherCards from './components/Howitworks';
+import StudentCards from './components/HowitworksStudent';
 
 
 
@@ -50,7 +54,6 @@ function Dashboard() {
   return (
     <div className='flex flex-row w-full h-full'>
         <div className='relative' >
-
         </div>
         <div className=' w-full bg-gray-300 flex flex-col'>
             <div className="head relative">
@@ -58,8 +61,8 @@ function Dashboard() {
             </div>
             <div className="body relative w-full md:p-10 p-2 ">
             {payment && subcriptions && <Cards payment={payment} subscriptionCount={subcriptions.length}/>}
-              <Howitworks/>
-              <div className='flex md:flex-row flex-col w-full'>
+            {user?.role == 'teacher'? <TeacherCards/> : <StudentCards/> }
+            <div className='flex md:flex-row flex-col w-full'>
                 <div className='md:w-3/4 w-full'>
                 {user?.role == "teacher"?
                   <TeachersTable subscriptions={subcriptions}/>

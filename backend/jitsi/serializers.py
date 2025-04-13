@@ -4,4 +4,4 @@ from .models import Meeting
 class MeetingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Meeting
-        fields = ['id', 'teacher','privetsession', 'room_name', 'start_time', 'end_time']
+        fields = ['id', 'teacher','privetsession', 'is_active','room_name', 'start_time', 'end_time']

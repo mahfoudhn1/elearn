@@ -1,210 +1,189 @@
 "use client"
 import React, { useState, useEffect } from "react";
-import TimePicker from "react-time-picker";
-import axios from "axios";
-import "react-time-picker/dist/TimePicker.css";
+import { TimePicker } from 'react-ios-time-picker';
 import axiosClientInstance from "../../lib/axiosInstance";
 
-interface TodoList {
+interface Todo {
   id: number;
-  time: string;
+  time: string; // "HH:mm" format
   title: string;
   description?: string;
   completed: boolean;
 }
 
-const DayViewCalendar: React.FC = () => {
-  const [Todos, setTodos] = useState<TodoList[]>([]);
-  const [newTime, setNewTime] = useState<string | null>("10:00");
-  const [newTitle, setNewTitle] = useState<string>("");
-  const [newDescription, setNewDescription] = useState<string>("");
+const DayViewCalendar = () => {
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [newTodo, setNewTodo] = useState<Omit<Todo, 'id' | 'completed'>>({
+    time: new Date().toTimeString().slice(0, 5), // Current time in "HH:mm"
+    title: "",
+    description: ""
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
-
-
-  // Fetch Todos from the backend
+  // Fetch todos
   const fetchTodos = async () => {
+    setIsLoading(true);
     try {
-      const response = await axiosClientInstance.get('/notes/todos/');
-      setTodos(response.data);
-    } catch (error) {
-      console.error("Error fetching Todos:", error);
+      const { data } = await axiosClientInstance.get('/notes/todos/');
+      setTodos(data);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Add a new Todo
+  // Add new todo
   const addTodo = async () => {
-    if (!newTime || !newTitle) return;
+    if (!newTodo.title.trim()) return;
+    
+    setIsLoading(true);
     try {
-      const Todo = {
-        time: newTime,
-        title: newTitle,
-        description: newDescription,
-        completed: false,
-      };
-      await axiosClientInstance.post('/notes/todos/', Todo);
-      fetchTodos(); // Refresh the list
-      setNewTime("10:00");
-      setNewTitle("");
-      setNewDescription("");
-    } catch (error) {
-      console.error("Error adding Todo:", error);
+      await axiosClientInstance.post('/notes/todos/', {
+        ...newTodo,
+        completed: false
+      });
+      await fetchTodos();
+      setNewTodo({
+        time: new Date().toTimeString().slice(0, 5),
+        title: "",
+        description: ""
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Toggle Todo completion
+  // Toggle completion
   const toggleComplete = async (id: number) => {
+    const todo = todos.find(t => t.id === id);
+    if (!todo) return;
+
     try {
-      const Todo = Todos.find((l) => l.id === id);
-      if (Todo) {
-        const updatedTodo = { ...Todo, completed: !Todo.completed };
-        await axiosClientInstance.put(`/notes/todos/${id}/`, updatedTodo);
-        fetchTodos(); // Refresh the list
-      }
+      await axiosClientInstance.put(`/notes/todos/${id}/`, {
+        ...todo,
+        completed: !todo.completed
+      });
+      fetchTodos();
     } catch (error) {
-      console.error("Error updating Todo:", error);
+      console.error("Error updating todo:", error);
     }
   };
 
-  // Delete a Todo
+  // Delete todo
   const deleteTodo = async (id: number) => {
     try {
       await axiosClientInstance.delete(`/notes/todos/${id}/`);
-      fetchTodos(); // Refresh the list
+      setTodos(todos.filter(todo => todo.id !== id));
     } catch (error) {
-      console.error("Error deleting Todo:", error);
+      console.error("Error deleting todo:", error);
     }
   };
 
-  // Fetch Todos on component mount
   useEffect(() => {
     fetchTodos();
   }, []);
 
   return (
-    <div className="flex items-center justify-center">
-      <div className="w-full shadow-lg">
-        <div className="md:p-8 text-center bg-white rounded-t">
-          <div className="px-4 flex items-center justify-between">
-            <h1 className="text-xl font-bold text-gray-800">دروس اليوم</h1>
-          </div>
+    <div className="max-w-md mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-6 text-center">مهام اليوم</h1>
+      
+      {/* Add Todo Form */}
+      <div className="mb-8 p-4 bg-white rounded-lg">
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">وقت</label>
+          <TimePicker
+            value={newTodo.time}
+            onChange={(time:any) => setNewTodo({...newTodo, time})}
+            clockClassName="bg-white"
+            className="w-full"
+          />
         </div>
-        <div className="md:py-8 py-5 md:px-8 px-5 bg-white rounded-b">
-          {/* Add Todo Form */}
-          <div className="mb-6">
-            <div className="mb-2">
-              <TimePicker
-                onChange={setNewTime}
-                value={newTime}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                clearIcon={null}
-                clockIcon={null}
-              />
-            </div>
-            <input
-              type="text"
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="Title (e.g., مراجعة عامة)"
-              className="w-full p-2 border border-gray-300 rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <textarea
-              value={newDescription}
-              onChange={(e) => setNewDescription(e.target.value)}
-              placeholder="Description (optional)"
-              className="w-full p-2 border border-gray-300 rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              onClick={addTodo}
-              className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition duration-300"
-            >
-              Add Todo
-            </button>
-          </div>
 
-          {/* Display Todos */}
-          <div className="px-4">
-            {Todos.map((Todo) => (
-              <div
-                key={Todo.id}
-                className={`border-b pb-4 border-gray-700 border-dashed ${
-                  Todo.completed ? "opacity-50" : ""
-                }`}
-              >
-                <p className="text-xs font-light leading-3 text-gray-500">
-                  {Todo.time}
-                </p>
-                <p
-                  className={`text-lg font-medium leading-5 text-gray-800 pt-2 ${
-                    Todo.completed ? "line-through" : ""
-                  }`}
-                >
-                  {Todo.title}
-                </p>
-                {Todo.description && (
-                  <p className="text-sm pt-2 leading-4 text-gray-500">
-                    {Todo.description}
-                  </p>
-                )}
-                <div className="flex items-center space-x-2 mt-2">
-                  <button
-                    onClick={() => toggleComplete(Todo.id)}
-                    className={`p-1 rounded-full ${
-                      Todo.completed
-                        ? "bg-green-500 hover:bg-green-600"
-                        : "bg-gray-300 hover:bg-gray-400"
-                    } transition duration-300`}
-                  >
-                    {Todo.completed ? (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 text-white"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    ) : (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 text-white"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M4 5a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zm0 5a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zm0 5a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => deleteTodo(Todo.id)}
-                    className="p-1 bg-red-500 rounded-full hover:bg-red-600 transition duration-300"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 text-white"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <input
+          type="text"
+          value={newTodo.title}
+          onChange={(e) => setNewTodo({...newTodo, title: e.target.value})}
+          placeholder="عنوان"
+          className="w-full p-2 border border-gray rounded-lg mb-2"
+        />
+
+        <button
+          onClick={addTodo}
+          disabled={isLoading}
+          className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue disabled:opacity-50"
+        >
+          {isLoading ? 'اضافة...' : 'اضافة مهمة'}
+        </button>
       </div>
+
+      {/* Todo List */}
+      {isLoading && !todos.length ? (
+        <p className="text-center py-4">Loading...</p>
+      ) : todos.length === 0 ? (
+        <p className="text-center py-4 text-gray-700">فارغة</p>
+      ) : (
+        <div className="space-y-3">
+          {todos.map(todo => (
+  <div 
+    key={todo.id} 
+    className={`p-4 rounded-xl shadow-sm border border-gray-100 transition-all duration-200 ${
+      todo.completed ? 'bg-gray-50 opacity-75' : 'bg-white hover:shadow-md'
+    }`}
+  >
+    <div className="flex items-center justify-between gap-4">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline gap-2">
+          <span className="text-xs text-gray-500 font-medium">
+            {todo.time}
+          </span>
+          <h3 
+            className={`text-lg font-semibold truncate ${
+              todo.completed 
+                ? 'text-gray-400 line-through decoration-2' 
+                : 'text-gray-800'
+            }`}
+          >
+            {todo.title}
+          </h3>
+        </div>
+        {todo.description && (
+          <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+            {todo.description}
+          </p>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => toggleComplete(todo.id)}
+          className={`p-2 rounded-full transition-colors duration-150 ${
+            todo.completed 
+              ? 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200' 
+              : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+          }`}
+        >
+          {todo.completed ? (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+            </svg>
+          )}
+        </button>
+        <button
+          onClick={() => deleteTodo(todo.id)}
+          className="p-2 text-red-500 hover:bg-red-100 rounded-full transition-colors duration-150"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+))}
+        </div>
+      )}
     </div>
   );
 };

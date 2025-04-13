@@ -36,8 +36,7 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
     const isHttps = window.location.protocol === 'https:';
     const wsProtocol = isHttps ? 'wss://' : 'ws://';
     const baseUrl = process.env.NEXT_PUBLIC_WS_URL || `${wsProtocol}${window.location.host}`;
-    const wsUrl = `${baseUrl}/riffaa/ws/notifications/`;
-
+    const wsUrl = `wss://riffaa.com//riffaa/ws/notifications/`
     setConnectionStatus('connecting');
     const ws = new WebSocket(wsUrl);
 
@@ -51,16 +50,22 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
       try {
         const data = JSON.parse(event.data);
         console.log("📩 Received:", data);
-
+    
+        // 🏓 Respond to ping
+        if (data.type === 'ping') {
+          ws.send(JSON.stringify({ type: 'pong' }));
+          return; // Don't treat ping as a normal notification
+        }
+    
         const newNotification: Notification = {
           id: Date.now(),
           message: data.message,
           timestamp: Date.now(),
           type: data.type || 'info'
         };
-
+    
         setNotifications(prev => [...prev, newNotification]);
-
+    
         // Auto-remove notification after delay
         const removeDelay = data.duration || 5000;
         setTimeout(() => {
@@ -70,6 +75,7 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
         console.error("❌ Error parsing message:", error);
       }
     };
+    
 
     ws.onclose = () => {
       console.log("🔴 WebSocket disconnected");

@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     const refreshResponse = await axios.post(
-      `${apiUrl}/api/token/refresh/`,
+      `${apiUrl}/token/refresh/`,
       { refreshToken },
       { withCredentials: true }
     );

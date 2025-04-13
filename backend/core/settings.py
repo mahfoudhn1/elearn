@@ -15,24 +15,27 @@ from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
 
-load_dotenv('.env') 
+load_dotenv() 
 if os.getenv('DJANGO_ENV') == 'production':
-    load_dotenv('.env')
+    load_dotenv()
 else:
-    load_dotenv('.env')  
+    load_dotenv()  
 
 DJANGO_ENV = os.getenv('DJANGO_ENV', 'development')
 IS_PRODUCTION = DJANGO_ENV == 'production'
 
+print(IS_PRODUCTION)
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
-DEBUG = not IS_PRODUCTION
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
-if IS_PRODUCTION:
-    ALLOWED_HOSTS = ['yourdomain.com', 'api.yourdomain.com']
+# DEBUG = not IS_PRODUCTION
+DEBUG = True
+# ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+# if IS_PRODUCTION:
+#     ALLOWED_HOSTS = ['https://riffaa.com', 'https://www.riffaa.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 # ========================
 # Static & Media Files
@@ -199,18 +202,9 @@ if IS_PRODUCTION:
         'https://riffaa.com',
         'https://www.riffaa.com',
     ]
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-
-WS_URL = os.getenv('WS_URL', 'ws://localhost:8000')  # Default for development
-WS_PREFIX = os.getenv('WS_PREFIX', 'ws://')
-
-if os.getenv('DJANGO_ENV') == 'production':
-    WS_URL = 'wss://riffaa.com/api'
-    WS_PREFIX = 'wss://'
-
-
+    # SECURE_SSL_REDIRECT = True
+    # SESSION_COOKIE_SECURE = True
+    # CSRF_COOKIE_SECURE = True
 
 CORS_ALLOWED_METHODS = [
     'GET',
@@ -244,16 +238,16 @@ ZOOM_REDIRECT_URI= os.getenv('ZOOM_REDIRECT_URI')
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  # Access token validity
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # Refresh token validity
+    'ROTATE_REFRESH_TOKENS': True,  # Optional: Rotate refresh tokens
+    'BLACKLIST_AFTER_ROTATION': True,  # Optional: Blacklist old refresh tokens
     'AUTH_HEADER_TYPES': ('Bearer',),
-    'AUTH_COOKIE': 'access_token',
-    'AUTH_COOKIE_SECURE': IS_PRODUCTION,  # True in production
-    'AUTH_COOKIE_HTTP_ONLY': True,
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'AUTH_COOKIE': 'access_token',  # Cookie name for the JWT
+    'AUTH_COOKIE_SECURE': False,  # Set to True in production
+    'AUTH_COOKIE_HTTP_ONLY': True,  # True to prevent JavaScript access
 }
-
 
 
 # Email settings
@@ -269,6 +263,12 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
 
 
 DEFAULT_FRONTEND_VERIFY_URL = os.getenv('DEFAULT_FRONTEND_VERIFY_URL') 
+ 
+
+GMAIL_CLIENT_ID = os.getenv("GMAIL_CLIENT_ID")
+GMAIL_CLIENT_SECRET = os.getenv("GMAIL_CLIENT_SECRET")
+GMAIL_REFRESH_TOKEN = os.getenv("GMAIL_REFRESH_TOKEN")
+DEFAULT_FROM_EMAIL = "mahfoudhn99@gmail.com"  # Must match token permissions
 
 #jitsi
 JITSI_APP_SECRET= os.getenv('jitsi_app_secret')

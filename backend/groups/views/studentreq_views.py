@@ -8,6 +8,7 @@ from groups.models import StudentGroupRequest, Group
 from groups.serializers import StudentGroupRequestSerializer
 from users.models import Student
 from rest_framework import serializers
+from users.models import Teacher
 
 class StudentGroupRequestViewSet(viewsets.ModelViewSet):
     queryset = StudentGroupRequest.objects.all()

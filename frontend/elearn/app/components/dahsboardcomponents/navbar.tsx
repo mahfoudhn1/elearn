@@ -60,10 +60,10 @@ function Navbar() {
       {isOpen && (
         <div className="origin-top-left absolute left-0 mt-2 w-56 rounded-md z-30 shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
           <div className="py-1">
-            <Link href="" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            <Link href="/profileupdate" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
               اعدادات الحساب
             </Link>
-            <Link href="" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            <Link href="/groups" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
               المجموعات
             </Link>
             <button

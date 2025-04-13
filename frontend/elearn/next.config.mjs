@@ -3,6 +3,9 @@
 
 
 const nextConfig = {
+  reactStrictMode: true,
+  poweredByHeader: false,
+
   async headers() {
     return [
       {
@@ -33,6 +36,9 @@ const nextConfig = {
   transpilePackages: ['react-redux'],
   typescript: {
     ignoreBuildErrors: true,
+  },
+  compiler: {
+    styledComponents: true,
   },
     env: {
       GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,

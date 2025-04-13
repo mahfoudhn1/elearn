@@ -144,9 +144,14 @@ class GroupViewSet(viewsets.ModelViewSet):
         ).exclude(student__groups__isnull=False)
 
         subscriptions = subscriptions.filter(
-            student__school_level=group.school_level,
+            student__grade__school_level=group.school_level,
             student__grade=group.grade
         )
+        if group.field_of_study:
+            subscriptions = subscriptions.filter(
+                    student__field_of_study=group.field_of_study
+                )
+
 
         students = [subscription.student for subscription in subscriptions]
 
@@ -157,8 +162,7 @@ class GroupViewSet(viewsets.ModelViewSet):
     def profile_groups(self, request):
         user = request.user
         teacher_id = request.query_params.get('teacher_id')
-        print(teacher_id)
-        print(user)
+ 
         if user.role != 'student':
             return Response({"detail": "This action is only available for students."}, status=status.HTTP_403_FORBIDDEN)
 
@@ -166,7 +170,7 @@ class GroupViewSet(viewsets.ModelViewSet):
 
         teacher = get_object_or_404(Teacher, id=teacher_id)
 
-        student_grade = student.grade  # Assuming the Student model has a ForeignKey to Grade
+        student_grade = student.grade 
 
         groups = Group.objects.filter(admin=teacher, grade=student_grade)
 

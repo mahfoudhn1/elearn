@@ -14,6 +14,7 @@ def generate_jitsi_token(user, room_name):
         "sub": jitsi_domain,
         "room": room_name,  # Can be specific room or '*'
         "exp": int(time.time()) + 10800,  # Expires in 3 hour
+        "moderator": hasattr(user, 'teacher'),  # Only teacher gets moderator true
         "context": {
             "user": {
                 "id": str(user.id),
@@ -21,7 +22,6 @@ def generate_jitsi_token(user, room_name):
                 "email": user.email or "",
             }
         },
-        "moderator": hasattr(user, 'teacher'),
     }
 
     token = jwt.encode(payload, secret, algorithm='HS256')

@@ -51,6 +51,7 @@ async function getUserRole() {
   try {
     const response = await axiosSSRInstance.get('/users/');
 
+    console.log(response.data);
     
     return response.data[0].role; 
   } catch (error) {
@@ -76,7 +77,7 @@ export default async function GroupsPage({ searchParams }: { searchParams: Searc
     const userRole = await getUserRole(); 
     console.log(userRole);
     
-    if (userRole === 'student') {
+    if (userRole == 'student') {
       const studentGroups = await getStudentGroups();
       return <StudentGroups groups={studentGroups} />;
     }

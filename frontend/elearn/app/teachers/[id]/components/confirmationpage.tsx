@@ -1,60 +1,87 @@
-import React from 'react';
+import React, { useState } from 'react';
 import axiosClientInstance from '../../../lib/axiosInstance';
 
 interface ConfirmationPageProps {
   teacherId: string;
   planId: number;
-  onConfirm: (id:any) => void;
-  onclose:()=>void
+  onConfirm: (id: any) => void;
+  onClose: () => void;
 }
 
 const ConfirmationPage: React.FC<ConfirmationPageProps> = ({
-    teacherId,
-    planId,
+  teacherId,
+  planId,
   onConfirm,
-  onclose
+  onClose,
 }) => {
-  const handleConfirmSubscription = async () => {
-    try {
-      const response = await axiosClientInstance.post('/subscriptions/subscriptions/', {
-        teacher_id: teacherId,
-        plan_id: planId,
-      });
-      if(response.data){
-        onConfirm(response.data.id);
-      
-      }
+  const [showSuccess, setShowSuccess] = useState(false);
 
-    } catch (error) {
-      console.error('Subscription failed:', error);
-    }
+  const handleConfirmSubscription = async () => {
+    setShowSuccess(true);
+    setTimeout(async () => {
+      try {
+        const response = await axiosClientInstance.post('/subscriptions/subscriptions/', {
+          teacher_id: teacherId,
+          plan_id: planId,
+        });
+        if (response.data) {
+          onConfirm(response.data.id);
+        }
+      } catch (error) {
+        console.error('Subscription failed:', error);
+      }
+      setShowSuccess(false);
+    }, 2000);
   };
 
   return (
-    
-    <div className="absolute bg-white shadow-lg rounded-lg top-1/2 left-1/2 -translate-x-1/2">
-      <div className='relative flex flex-col p-8 mx-auto my-auto'>
-      <div>
-      <h2>لقد قمت بالتسجيل لمتابعة دروس الاستاذ</h2>
-      </div>
-      <div className='flex mt-4'>
-      <button
-          className="px-4 py-2 ml-4 bg-blue-400 hover:bg-blue-500 text-white rounded "
-          onClick={handleConfirmSubscription}
-        >
-          تأكيد التسجيل 
-        </button>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full transform transition-all duration-300 scale-100 hover:scale-105">
+        <div className="flex flex-col items-center text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">
+            لقد قمت بالتسجيل لمتابعة دروس الاستاذ
+          </h2>
 
-        <button
-          className="px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white rounded"
-          onClick={onclose}
-        >
-          الغاء 
-        </button>
-      </div>
+          {/* Success Animation */}
+          {showSuccess && (
+            <div className="my-6">
+              <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center animate-bounce">
+                <svg
+                  className="w-12 h-12 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+            </div>
+          )}
 
+          <div className="flex justify-center gap-4 w-full mt-6">
+            <button
+              className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleConfirmSubscription}
+              disabled={showSuccess}
+            >
+              تأكيد التسجيل
+            </button>
+            <button
+              className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-semibold text-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={onClose}
+              
+            >
+              إلغاء
+            </button>
+          </div>
+        </div>
       </div>
-      
     </div>
   );
 };

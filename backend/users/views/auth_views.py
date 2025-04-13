@@ -13,6 +13,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from core.gmail import send_verification_email
 from users.utils import verify_captcha
 from users.serializers import LoginSerializer, RegisterSerializer, UserSerializer
 from users.models import User
@@ -38,7 +39,7 @@ class MyTokenRefreshView(TokenRefreshView):
     permission_classes = [AllowAny]  
 
     def post(self, request):
-        old_refresh_token = request.COOKIES.get('refresh_token') or request.data.get("refreshToken")
+        old_refresh_token = request.COOKIES.get('refresh_token') or request.data.get('refreshToken')
         
         if not old_refresh_token:
             return Response({'error': 'Refresh token not provided'}, status=400)
@@ -46,6 +47,7 @@ class MyTokenRefreshView(TokenRefreshView):
         try:
             old_token = RefreshToken(old_refresh_token)
             user_id = old_token.payload.get('user_id')
+
             if not user_id:
                 return Response({'error': 'Token contained no recognizable user identification'}, status=400)
             
@@ -53,20 +55,41 @@ class MyTokenRefreshView(TokenRefreshView):
                 user = User.objects.get(id=user_id)
             except User.DoesNotExist:
                 return Response({'error': 'User not found'}, status=400)
+  
+            refresh = RefreshToken(old_refresh_token)
+            user_id = refresh.payload.get('user_id')
             
             new_refresh = RefreshToken.for_user(user)
             new_access_token = str(new_refresh.access_token)
             new_refresh_token = str(new_refresh)
-            access_token_expiry = timezone.now() + timedelta(minutes=15)
-            refresh_token_expiry = timezone.now() + timedelta(days=7)
-
-            return Response({
-                'message': 'Token refreshed successfully',
+            
+            # Prepare response
+            response = Response({
                 'access_token': new_access_token,
-                'refresh_token': new_refresh_token,
-                'access_token_expiry': access_token_expiry.isoformat(),
-                'refresh_token_expiry': refresh_token_expiry.isoformat(),
+                'refresh_token': new_refresh_token
             })
+            
+            response.set_cookie(
+                'access_token',
+                new_access_token,
+                httponly=False,
+                secure=False,
+                domain='riffaa.com',  # Ensure the domain is correctly set
+                path='/',
+                samesite='Lax',
+            )
+            
+            response.set_cookie(
+                'refresh_token',
+                new_refresh_token,
+                httponly=True,
+                secure=True,
+                samesite='Lax',
+                max_age=60 * 60 * 24 * 7,  # 7 days
+                path='/',
+            )
+        
+            return response
 
         except TokenError as e:
             return Response({'error': str(e)}, status=400)
@@ -87,11 +110,11 @@ class AuthViewSet(viewsets.GenericViewSet):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
 
-        # if not user.email_verified:
-        #     return Response(
-        #         {"error": "Email not verified. Please check your email for verification link."},
-        #         status=status.HTTP_403_FORBIDDEN
-        #     )
+        if not user.email_verified:
+            return Response(
+                {"error": "Email not verified. Please check your email for verification link."},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
         tokens = get_tokens_for_user(user)
         response = HttpResponse()
@@ -99,14 +122,20 @@ class AuthViewSet(viewsets.GenericViewSet):
         response.set_cookie(
             'access_token',
             tokens['access'],
-            httponly=True,
+            httponly=False,
             secure=False,
+            domain='riffaa.com',  # Ensure the domain is correctly set
+            path='/',
+            samesite='Lax',
         )
         response.set_cookie(
             'refresh_token',
             tokens['refresh'],
-            httponly=True,
+            httponly=False,
             secure=False,
+            samesite='Lax',
+            max_age=60 * 60 * 24 * 7,  # 7 days
+            path='/',
         )
         
         response_data = {
@@ -118,15 +147,17 @@ class AuthViewSet(viewsets.GenericViewSet):
 
         return response
  
+
+
 class RegisterView(viewsets.ModelViewSet):
     serializer_class = RegisterSerializer
-    permission_classes = [AllowAny]  
+    permission_classes = [AllowAny]
+    queryset = User.objects.all()  # Required for ModelViewSet
 
     def create(self, request, *args, **kwargs):
-        # captcha_token = request.data.get("captcha")
-        # if not verify_captcha(captcha_token):
-        #     return Response({"error": "Invalid CAPTCHA"}, status=status.HTTP_400_BAD_REQUEST)
-
+        captcha_token = request.data.get("captcha")
+        if not verify_captcha(captcha_token):
+            return Response({"error": "Invalid CAPTCHA"}, status=status.HTTP_400_BAD_REQUEST)
         email = request.data.get('email')
         username = request.data.get('username')
         
@@ -147,10 +178,18 @@ class RegisterView(viewsets.ModelViewSet):
         
         try:
             user = serializer.save()
-            user.email_verified = False
-            user.save()
-            
-            self.send_verification_email(user)
+            user.email_verified = True
+            user.save()  # verification_token is already set by default=uuid.uuid4()
+            user_folder = os.path.join(settings.MEDIA_ROOT, f'user_{user.id}')
+            if not os.path.exists(user_folder):
+                os.makedirs(user_folder)
+            # send_verification_email(user.email, user.verification_token)
+                
+            return Response({
+                "user": serializer.data,
+                "message": "User created successfully. Please check your email for verification."
+            }, status=status.HTTP_201_CREATED)
+
             
         except IntegrityError as e:
             if 'unique constraint' in str(e).lower():
@@ -165,31 +204,6 @@ class RegisterView(viewsets.ModelViewSet):
                         status=status.HTTP_400_BAD_REQUEST
                     )
             raise
-        
-        user_folder = os.path.join(settings.MEDIA_ROOT, f'user_{user.id}')
-        if not os.path.exists(user_folder):
-            os.makedirs(user_folder)
-                    
-        return Response({
-            "user": serializer.data,
-            "message": "User created successfully. Please check your email for verification."
-        }, status=status.HTTP_201_CREATED)
-    def send_verification_email(self, user):
-     
-        refresh = RefreshToken.for_user(user)
-        token = str(refresh.access_token)
-
-        verification_url = f"{settings.DEFAULT_FRONTEND_VERIFY_URL}/verify-email?token={token}"
-        
-        subject = 'Please Verify Your Email Address'
-        message = f"Hello {user.username},\n\nPlease verify your email by clicking the following link:\n{verification_url}\n\nIf you did not request this, please ignore this email."
-
-        from_email = settings.DEFAULT_FROM_EMAIL
-
-        try:
-            send_mail(subject, message, from_email, [user.email], fail_silently=False)
-        except Exception as e:
-            print(f"Error sending email: {e}")
 
 class LogoutViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]

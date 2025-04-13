@@ -39,8 +39,9 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSubmit }) => {
         const gradesResponse = await axiosClientInstance.get<Grade[]>("/grades/");
         setGrades(gradesResponse.data);
 
-        const fieldsResponse = await axiosClientInstance.get<field_of_study[]>("/fieldofstudy/");
-        
+        const fieldsResponse = await axiosClientInstance.get<field_of_study[]>(
+          "/fieldofstudy/"
+        );
         setFieldsOfStudy(fieldsResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -63,6 +64,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSubmit }) => {
     }
   }, [formData.grade?.school_level, grades]);
 
+  // Filter fields of study based on grade
   useEffect(() => {
     if (formData.grade?.school_level === "ثانوي" && formData.grade?.id) {
       const selectedGrade = filteredGrades.find(
@@ -93,7 +95,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSubmit }) => {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-  
+
     if (name === "school_level") {
       const filtered = grades.filter((grade) => grade.school_level === value);
       setFilteredGrades(filtered);
@@ -118,7 +120,6 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSubmit }) => {
       setFormData({ ...formData, [name]: value });
     }
   };
-  
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,21 +133,37 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSubmit }) => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="text-center text-gray-600">جارٍ التحميل...</div>;
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      className="max-w-lg mx-auto p-6 bg-white rounded-2xl shadow-lg space-y-6"
+      dir="rtl"
+    >
+      <h2 className="text-2xl font-semibold text-gray-800 text-center">
+        تعديل بيانات الطالب
+      </h2>
+
       {/* School Level */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700">School Level</label>
+      <div className="space-y-2">
+        <label
+          htmlFor="school_level"
+          className="block text-sm font-medium text-gray-600"
+        >
+          الطور التعليمي
+        </label>
         <select
+          id="school_level"
           name="school_level"
           value={formData.grade?.school_level || ""}
           onChange={handleChange}
-          className="mt-1 py-2 block w-full rounded-md border-gray-300 shadow-sm"
+          className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors outline-none text-right"
         >
-          <option value="" disabled>اختيار الطور</option>
+          <option value="" disabled>
+            اختيار الطور
+          </option>
           <option value="ابتدائي">ابتدائي</option>
           <option value="متوسط">متوسط</option>
           <option value="ثانوي">ثانوي</option>
@@ -155,15 +172,23 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSubmit }) => {
 
       {/* Grade */}
       {formData.grade?.school_level && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Grade</label>
+        <div className="space-y-2">
+          <label
+            htmlFor="grade"
+            className="block text-sm font-medium text-gray-600"
+          >
+            السنة الدراسية
+          </label>
           <select
+            id="grade"
             name="grade"
             value={formData.grade?.id || ""}
             onChange={handleChange}
-            className="mt-1 py-2 block w-full rounded-md border-gray-300 shadow-sm"
+            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors outline-none text-right"
           >
-            <option value="" disabled>اختيار السنة</option>
+            <option value="" disabled>
+              اختيار السنة
+            </option>
             {filteredGrades.map((grade) => (
               <option key={grade.id} value={grade.id}>
                 {grade.name}
@@ -175,15 +200,23 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSubmit }) => {
 
       {/* Field of Study */}
       {formData.grade?.school_level === "ثانوي" && availableFields.length > 0 && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Field of Study</label>
+        <div className="space-y-2">
+          <label
+            htmlFor="field_of_study"
+            className="block text-sm font-medium text-gray-600"
+          >
+            التخصص
+          </label>
           <select
+            id="field_of_study"
             name="field_of_study"
             value={formData.field_of_study?.id || ""}
             onChange={handleChange}
-            className="mt-1 py-2 block w-full rounded-md border-gray-300 shadow-sm"
+            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors outline-none text-right"
           >
-            <option value="" disabled>اختيار التخصص</option>
+            <option value="" disabled>
+              اختيار التخصص
+            </option>
             {availableFields.map((field) => (
               <option key={field.id} value={field.id}>
                 {field.name}
@@ -194,35 +227,49 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSubmit }) => {
       )}
 
       {/* Phone Number */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+      <div className="space-y-2">
+        <label
+          htmlFor="phone_number"
+          className="block text-sm font-medium text-gray-600"
+        >
+          رقم الهاتف
+        </label>
         <input
+          id="phone_number"
           type="text"
           name="phone_number"
           value={formData.phone_number || ""}
           onChange={handleChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+          className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors outline-none text-right"
+          placeholder="أدخل رقم الهاتف"
         />
       </div>
 
       {/* Wilaya */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Wilaya</label>
+      <div className="space-y-2">
+        <label
+          htmlFor="wilaya"
+          className="block text-sm font-medium text-gray-600"
+        >
+          الولاية
+        </label>
         <input
+          id="wilaya"
           type="text"
           name="wilaya"
           value={formData.wilaya || ""}
           onChange={handleChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+          className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors outline-none text-right"
+          placeholder="أدخل اسم الولاية"
         />
       </div>
 
       {/* Submit Button */}
       <button
         type="submit"
-        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+        className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 font-medium"
       >
-        Save Changes
+        حفظ التغييرات
       </button>
     </form>
   );

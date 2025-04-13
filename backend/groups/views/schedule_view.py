@@ -111,7 +111,7 @@ class ScheduleViewSet(viewsets.ModelViewSet):
                 room_name=f"Room_{teacher.id}_{uuid.uuid4().hex[:6]}",
                 start_time=start_time,
                 end_time=end_time,
-                is_active=True 
+                is_active=False 
             )
         
         if subscribed_students.exists():

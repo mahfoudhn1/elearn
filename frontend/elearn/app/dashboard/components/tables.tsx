@@ -7,11 +7,29 @@ interface TachersTablesProps {
 
 function TeachersTable({ subscriptions }: TachersTablesProps) {
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 20;
 
   const filteredSubscriptions = subscriptions.filter((sub) => {
     const firstName = sub?.student?.user?.first_name;
     return firstName?.toLowerCase().includes(searchQuery.toLowerCase());
   });
+
+  // Calculate pagination
+  const totalItems = filteredSubscriptions.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentSubscriptions = filteredSubscriptions.slice(startIndex, endIndex);
+
+  // Pagination handlers
+  const goToPreviousPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
 
   return (
     <div className="w-full mx-auto p-4">
@@ -52,9 +70,8 @@ function TeachersTable({ subscriptions }: TachersTablesProps) {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-light">
-                {filteredSubscriptions.map((sub) => (
+                {currentSubscriptions.map((sub) => (
                   <tr key={sub.id} className="hover:bg-gray-light transition-colors">
-                    {/* Student Name and Avatar */}
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         <div className="flex-shrink-0">
@@ -67,7 +84,6 @@ function TeachersTable({ subscriptions }: TachersTablesProps) {
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-dark">
                             {sub.student.user.first_name} {sub.student.user.last_name}
-
                           </div>
                           <div className="text-sm text-gray-500">
                             {sub.student.grade.school_level || 'غير محدد'}
@@ -75,13 +91,9 @@ function TeachersTable({ subscriptions }: TachersTablesProps) {
                         </div>
                       </div>
                     </td>
-
-                    {/* Subject */}
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900">{sub.student.field_of_study.name}</div>
                     </td>
-
-                    {/* Subscription Status */}
                     <td className="px-6 py-4 text-center">
                       <span
                         className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
@@ -93,15 +105,11 @@ function TeachersTable({ subscriptions }: TachersTablesProps) {
                         {sub.is_active ? 'جارية' : 'متوقفة'}
                       </span>
                     </td>
-
-                    {/* Start Date */}
                     <td className="px-6 py-4 text-center">
                       <div className="text-sm text-gray-900">
                         {new Date(sub.start_date).toLocaleDateString()}
                       </div>
                     </td>
-
-                    {/* Actions */}
                     <td className="px-6 py-4 text-right">
                       <div className="flex space-x-4">
                         <button className="text-blue-600 hover:text-blue-900">
@@ -120,6 +128,42 @@ function TeachersTable({ subscriptions }: TachersTablesProps) {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          {totalItems > itemsPerPage && (
+            <div className="flex justify-between items-center mt-4 px-6 py-3 border-t border-gray-light">
+              <div className="text-sm text-gray-700">
+                عرض {startIndex + 1} إلى {Math.min(endIndex, totalItems)} من أصل {totalItems} تلميذ
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={goToPreviousPage}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                    currentPage === 1
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-500 text-white hover:bg-blue-600'
+                  }`}
+                >
+                  السابق
+                </button>
+                <span className="px-4 py-2 text-sm text-gray-700">
+                  صفحة {currentPage} من {totalPages}
+                </span>
+                <button
+                  onClick={goToNextPage}
+                  disabled={currentPage === totalPages}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                    currentPage === totalPages
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-500 text-white hover:bg-blue-600'
+                  }`}
+                >
+                  التالي
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

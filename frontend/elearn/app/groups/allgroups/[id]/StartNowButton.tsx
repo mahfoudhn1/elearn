@@ -59,12 +59,12 @@ export default function StartNowButton({ schedules }: { schedules: any[] }) {
     <div className="bottom-4 right-4 animate-pulse">
 
     <button
-      className="bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-2 transition-all"
+      className="bg-red-500 hover:bg-red-800 text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-2 transition-all"
     >
       {user?.role !== "student" ? (
-        <span className="w-3 h-3 bg-white rounded-full">ابدأ البث</span>
+        <span className=" text-white rounded-full">ابدأ البث</span>
       ) : (
-        <span className="w-3 h-3 bg-blue-500 rounded-full">ادخل البث</span> // Example of different output
+        <span className=" text-white rounded-full">ادخل البث</span> 
       )}
     </button>
         </div>

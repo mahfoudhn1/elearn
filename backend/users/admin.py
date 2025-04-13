@@ -6,8 +6,8 @@ from .models import Teacher ,Student
 
 class UserAdmin(BaseUserAdmin):
     model = CustomUser
-    list_display = ('username', 'email', 'is_staff', 'is_active')
-    list_filter = ('is_staff', 'is_active')
+    list_display = ('username', 'email','email_verified','role', 'is_staff', 'is_active')
+    list_filter = ('is_staff', 'is_active', 'email_verified', 'role')
     search_fields = ('username', 'email')
     ordering = ('username',)
     

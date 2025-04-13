@@ -32,7 +32,7 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
         return Subscription.objects.none()
 
     def retrieve(self, request, *args, **kwargs):
-        # Ensure the user can only retrieve their own subscriptions
+
         subscription = self.get_object()
         user = request.user
 

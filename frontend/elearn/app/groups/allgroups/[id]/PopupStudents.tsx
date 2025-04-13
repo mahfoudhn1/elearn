@@ -17,7 +17,7 @@ const PopupStudents: React.FC<PopupStudentsProps> = ({ onClose }) => {
   const [addedStudentId, setAddedStudentId] = useState<number | null>(null); // Track which student was added
 
   const params = useParams();
-  const group_id = Number(params.groupId);
+  const group_id = Number(params.id);
 
   useEffect(() => {
     const fetchStudents = async () => {

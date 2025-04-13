@@ -188,31 +188,7 @@ const Sidebar: React.FC = () => {
                 </Link>
               </li>
 
-              {/* Profile Update */}
-              <li className="transition-colors duration-75 hover:bg-green hover:text-white">
-                <Link
-                  href={'/profile'}
-                  className="flex items-center p-2 text-gray-900 rounded-lg group"
-                >
-                  <User className="flex-shrink-0 w-5 h-5 text-gray-700 transition duration-75" />
-                  <span className={`flex-1 me-3 whitespace-nowrap ${isExpanded ? 'block' : 'hidden'}`}>
-                    تحديث الملف الشخصي
-                  </span>
-                </Link>
-              </li>
-
-              {/* Logout */}
-              <li className="transition-colors duration-75 hover:bg-green hover:text-white">
-                <Link
-                  href={'/logout'}
-                  className="flex items-center p-2 text-gray-900 rounded-lg group"
-                >
-                  <LogOut className="flex-shrink-0 w-5 h-5 text-gray-700 transition duration-75" />
-                  <span className={`flex-1 me-3 whitespace-nowrap ${isExpanded ? 'block' : 'hidden'}`}>
-                    تسجيل الخروج
-                  </span>
-                </Link>
-              </li>
+        
             </ul>
           </div>
         </aside>

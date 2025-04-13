@@ -82,7 +82,7 @@ def update_teacher_payment_and_notify_student(sender, instance, created, raw, **
 
         # Notify the student when subscription is renewed
         student = instance.student
-        message = f"تم تجديد اشتراكك مع المعلم {teacher.full_name} بنجاح!"
+        message = f"تم تجديد اشتراكك مع المعلم {teacher.user.last_name} بنجاح!"
         Notification.objects.create(
             recipient=student.user,
             notification_type='subscription_renewed',

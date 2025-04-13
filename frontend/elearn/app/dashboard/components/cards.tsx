@@ -17,7 +17,7 @@ interface CardsProps {
 
 function Cards({ payment, subscriptionCount }:CardsProps) {
   if (!payment || payment.length === 0) {
-    return <p>No payment data available</p>;
+    return <p></p>;
   }
 
   const { current_balance, total_earned } = payment[0];

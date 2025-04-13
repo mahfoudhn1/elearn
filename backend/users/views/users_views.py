@@ -9,7 +9,7 @@ from users.models import FieldOfStudy, Grade, User, Teacher, Student
 from users.serializers import UserSerializer, TeacherSerializer, StudentSerializer
 from ..filters import TeacherFilter
 from django_filters.rest_framework import DjangoFilterBackend
-
+from django.db import transaction
 from rest_framework.decorators import action
 
 
@@ -18,19 +18,20 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Ensure users can only access their own data
         return get_user_model().objects.filter(id=self.request.user.id)
 
     def get_object(self):
-        # Always return the currently authenticated user
+
         return self.request.user
 
- 
     def update(self, request, *args, **kwargs):
-        # Check for existing email or username before serialization
-        email = request.data.get('email')
-        username = request.data.get('username')
         user = self.get_object()
+        data = request.data.copy()
+        new_role = data.get('role', user.role)
+        old_role = user.role
+
+        email = data.get('email')
+        username = data.get('username')
         
         if email and User.objects.filter(email=email).exclude(id=user.id).exists():
             return Response(
@@ -44,25 +45,31 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Rest of your update logic
-        old_role = user.role
-        new_role = request.data.get('role', user.role)
-
-        # Validate the new role
+        # Validate role
         if new_role not in ['teacher', 'student']:
-            raise ValidationError({"detail": "Invalid role provided. Role must be 'teacher' or 'student'."})
+            return Response(
+                {"detail": "Invalid role. Must be 'teacher' or 'student'."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        # Update the user
-        serializer = self.get_serializer(user, data=request.data, partial=True)
+        # Update user
+        serializer = self.get_serializer(user, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
-        # If the role changed, create the corresponding profile
+        # Handle profile changes if role changed
         if old_role != new_role:
-            if new_role == 'teacher':
-                Teacher.objects.get_or_create(user=user)
-            elif new_role == 'student':
-                Student.objects.get_or_create(user=user)
+            with transaction.atomic():
+                # Remove old profile type
+                if old_role == 'teacher' and hasattr(user, 'teacher'):
+                    user.teacher.delete()
+                elif old_role == 'student' and hasattr(user, 'student'):
+                    user.student.delete()
+
+                if new_role == 'teacher' and not hasattr(user, 'teacher'):
+                    Teacher.objects.create(user=user)
+                elif new_role == 'student' and not hasattr(user, 'student'):
+                    Student.objects.create(user=user)
 
         return Response(serializer.data)
 
@@ -107,7 +114,6 @@ class TeacherViewSet(viewsets.ModelViewSet):
         else:
             # Save a new Teacher instance
             serializer.save(user=user)
-
     
     def update(self, request, *args, **kwargs):
         user = request.user

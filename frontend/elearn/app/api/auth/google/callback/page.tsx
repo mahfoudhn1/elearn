@@ -28,7 +28,7 @@ const GoogleCallback = () => {
         setStatus({ loading: true, error: null });
         
         const response = await axiosClientInstance.post(
-          `${process.env.BASE_API_URL}/api/auth/callback/google/`, 
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/callback/google/`, 
           { code },
           {
             headers: {

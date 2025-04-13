@@ -1,7 +1,10 @@
+import uuid
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from decimal import Decimal
+import random
+import string
 
 class User(AbstractUser):
     ROLE_CHOICE=(
@@ -10,6 +13,7 @@ class User(AbstractUser):
     )
     role = models.CharField(max_length=10, choices=ROLE_CHOICE, null=True, blank=True)
     email_verified = models.BooleanField(default=False)
+    verification_token = models.UUIDField(default=uuid.uuid4, unique=True, null=True, blank=True)
     avatar_url = models.URLField(blank=True, null=True)
     avatar_file = models.ImageField(upload_to='avatars/', null=True, blank=True)
 
@@ -63,6 +67,11 @@ class subjsctChoice(models.TextChoices):
     PHILOSOPHY = 'فلسفة', 'فلسفة'
     ECONOMICS = 'اقتصاد', 'اقتصاد'
 
+def generate_custom_id(username):
+    # Generate a random 6-digit number
+    random_number = ''.join(random.choices(string.digits, k=6))
+    # Combine username and random number
+    return f"{username}{random_number}"
 
 class Teacher(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="teacher")
@@ -81,7 +90,6 @@ class Teacher(models.Model):
 
     def __str__(self) -> str:
         return f"{self.user.first_name} {self.user.last_name}"
-
 
 
 class Student(models.Model):
@@ -137,3 +145,7 @@ class PaymentHistory(models.Model):
 
     def __str__(self):
         return f"{self.amount} paid to {self.teacher} on {self.payment_date.strftime('%Y-%m-%d')}"
+    
+
+
+    
