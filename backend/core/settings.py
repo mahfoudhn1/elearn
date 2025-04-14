@@ -78,6 +78,7 @@ INSTALLED_APPS = [
     'notes',
     "jitsi",
     "notifications",
+    "chat"
 ]
 
 MIDDLEWARE = [
