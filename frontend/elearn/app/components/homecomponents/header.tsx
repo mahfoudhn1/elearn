@@ -157,64 +157,87 @@ const Header: React.FC = () => {
       </button>
       {/* Mobile Menu */}
       <div className={`fixed inset-0 bg-white z-50 md:hidden transition-transform transform 
-        ${isMenuOpen ? 'translate-x-8' : 'translate-x-full'}`}>
-        <div className="hamburger flex flex-col h-full ">
-          <div className="flex justify-end p-4">
+  ${isMenuOpen ? 'translate-x-8' : 'translate-x-full'}`}>
+  <div className="hamburger flex flex-col h-full ">
+    <div className="flex justify-end p-4">
+      <button
+        className="text-gray-dark"
+        onClick={toggleMenu}
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    <div className='relative items-center w-1/3 mx-auto text-center group'>
+      <div className="text-3xl text-gray-dark font-bold">رفعة</div>
+      <span className="absolute left-0 bottom-0 w-full h-2.5 bg-green bg-opacity-80 transform scale-y-100  transition-all duration-300"></span>
+    </div>
+
+     <ul className="flex flex-col items-center space-y-4 mt-8">
+      <li className="relative group" onClick={()=>setIsMenuOpen(false)}>
+        <Link href="/">
+          الرئيسية
+          <span className="absolute left-0 bottom-0 w-full h-2 bg-green bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
+        </Link>
+      </li>
+      
+      {/* Add Dashboard link when authenticated */}
+      {authState && (
+        <li className="relative group" onClick={()=>setIsMenuOpen(false)}>
+            <Link href="/dashboard">
+              لوحة التحكم
+              <span className="absolute left-0 bottom-0 w-full h-0 bg-green bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
+            </Link>
+          </li>
+        )}
+        
+        <li className="relative group" onClick={()=>setIsMenuOpen(false)}>
+          <Link href="#about">
+            من نحن
+            <span className="absolute left-0 bottom-0 w-full h-0 bg-green bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
+          </Link>
+        </li>
+        <li className="relative group" onClick={()=>setIsMenuOpen(false)}>
+          <Link href="#services">
+            رؤيتنا
+            <span className="absolute left-0 bottom-0 w-full h-0 bg-green bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
+          </Link>
+        </li>
+        <li className="relative group" onClick={()=>setIsMenuOpen(false)}>
+          <Link href="#contact">
+            اتصل بنا
+            <span className="absolute left-0 bottom-0 w-full h-0 bg-green bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
+          </Link>
+        </li>
+        
+        {/* Conditional rendering based on authentication */}
+        {authState ? (
+          <li className="relative group w-full px-4">
             <button
-              className="text-gray-dark"
-              onClick={toggleMenu}
+              onClick={() => {
+                handlelogout();
+                setIsMenuOpen(false);
+              }}
+              className="w-full text-center py-3 text-white bg-red-500 rounded-lg flex items-center justify-center gap-2"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
+              <FontAwesomeIcon icon={faRightFromBracket} />
+              تسجيل الخروج
             </button>
-          </div>
-          <div className='relative items-center w-1/3 mx-auto text-center group'>
-            <div className="text-3xl text-gray-dark font-bold">رفعة</div>
-            <span className="absolute left-0 bottom-0 w-full h-2.5 bg-green bg-opacity-80 transform scale-y-100  transition-all duration-300"></span>
-
-          </div>
-
-          <ul className="flex flex-col items-center space-y-4 mt-8">
-            <li className="relative group "
-            onClick={()=>setIsMenuOpen(false)}
-          >
-          
-              <Link href="/">
-              الرئيسية
-                <span className="absolute left-0 bottom-0 w-full h-2 bg-green bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
-              </Link>
-            </li>
-            <li className="relative group "  onClick={()=>setIsMenuOpen(false)}>
-              <Link href="#about">
-              من نحن
-                <span className="absolute left-0 bottom-0 w-full h-0 bg-green bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
-              </Link>
-            </li>
-            <li className="relative group " onClick={()=>setIsMenuOpen(false)}>
-              <Link href="#services">
-              رؤيتنا
-                <span className="absolute left-0 bottom-0 w-full h-0 bg-green bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
-              </Link>
-            </li>
-            <li className="relative group " onClick={()=>setIsMenuOpen(false)}>
-              <Link href="#contact">
-                اتصل بنا
-                <span className="absolute left-0 bottom-0 w-full h-0 bg-green bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
-              </Link>
-            </li>
-            <li>
-            
-              <button
-                className="relative overflow-hidden px-6 py-3 text-white bg-gray-dark border-none rounded-lg focus:outline-none transition-all duration-300 hover:bg-green"
-                onClick={handleClick}
-                >
-                تسجيل الدخول
-              </button>
-            </li>
-          </ul>
-        </div>
-      </div>
+          </li>
+        ) : (
+          <li>
+            <button
+              className="relative overflow-hidden px-6 py-3 text-white bg-gray-dark border-none rounded-lg focus:outline-none transition-all duration-300 hover:bg-green"
+              onClick={handleClick}
+            >
+              تسجيل الدخول
+            </button>
+          </li>
+        )}
+      </ul>
+    </div>
+  </div>
   </header>
 :
   <div></div>

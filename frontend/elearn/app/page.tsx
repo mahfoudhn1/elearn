@@ -25,11 +25,27 @@ export default function page() {
     return (
       <div className=' md:-mr-6 overflow-hidden bg-white'> 
         <Hero />
-        <Whyus />
+
+        <div id="about">
+        <Whyus/>
+
+        </div>
+        <div>
         <TeacherSection />
+
+        </div>
+        <div id="services">
         <Mission/>
+
+        </div>
+        <div>
         <Review/>
+          </div>
+        <div id="contact">
         <FAQ/>
+
+        </div>
+
       </div>
     )
 }

@@ -6,15 +6,15 @@ import { Navigation, Pagination, Scrollbar, A11y, Autoplay } from 'swiper/module
 
 
 const clients = [
-  { id: 1, name: 'John Smith', review: 'الخدمة كانت استثنائية من البداية إلى النهاية. كان الفريق محترفًا للغاية واهتم بكل التفاصيل. أوصي بشدة بهذه الخدمة لأي شخص يبحث عن جودة عالية.', image: 'https://randomuser.me/api/portraits/men/20.jpg' },
-  { id: 2, name: 'Emily Johnson', review: 'أنا راضٍ جدًا عن النتائج. كانت العملية سلسة، والنتائج تجاوزت توقعاتي. الاهتمام بالتفاصيل ورعاية العملاء كانا مثيرين للإعجاب.', image: 'https://randomuser.me/api/portraits/women/21.jpg' },
-  { id: 3, name: 'Michael Brown', review: 'أوصي بشدة بهذه الخدمة! كان الموظفون على دراية وودودين، والنتائج كانت رائعة. كان من دواعي سروري العمل مع فريق ملتزم.', image: 'https://randomuser.me/api/portraits/men/22.jpg' },
-  { id: 4, name: 'Sophia Davis', review: 'تجربة رائعة بشكل عام! كانت الخدمة سريعة وفعالة، وكان المنتج النهائي بالضبط كما كنت أتمنى. دعم العملاء كان ممتازًا طوال العملية.', image: 'https://randomuser.me/api/portraits/women/23.jpg' },
-  { id: 5, name: 'James Wilson', review: 'سأستخدم هذه الخدمة مرة أخرى بالتأكيد. كان الفريق محترفًا وموثوقًا، وقدم نتائج عالية الجودة. كانت تجربة خالية من التوتر من البداية إلى النهاية.', image: 'https://randomuser.me/api/portraits/men/24.jpg' },
-  { id: 6, name: 'Olivia Martinez', review: 'خدمة رائعة! كنت ممتنًا لكيفية تعامل الفريق مع جميع التفاصيل. النتيجة كانت ممتازة، والتجربة كانت ممتعة للغاية.', image: 'https://randomuser.me/api/portraits/women/25.jpg' },
-  { id: 7, name: 'Daniel Lee', review: 'الخدمة كانت ممتازة! التزام الفريق بالجودة وتفانيهم في العمل كان واضحًا. سأوصي بهذه الخدمة لأي شخص يبحث عن نتائج ممتازة.', image: 'https://randomuser.me/api/portraits/men/26.jpg' },
-  { id: 8, name: 'Ava White', review: 'تجربة رائعة! الخدمة كانت مهنية للغاية، والنتائج كانت فوق توقعاتي. كنت سعيدًا بكل جانب من جوانب الخدمة.', image: 'https://randomuser.me/api/portraits/women/27.jpg' },
-  { id: 9, name: 'Ethan Harris', review: 'أوصي بشدة بهذه الخدمة لأي شخص يبحث عن جودة عالية ونتائج ممتازة. كان الفريق محترفًا، وكان كل شيء يسير بسلاسة.', image: 'https://randomuser.me/api/portraits/men/28.jpg' },
+  { id: 1, name: 'marya', review: 'أخيرا فتح الموقع لي كنت نستناه منذ مدة علابالي راح تكون تجربة رائعة و نستفاد بزاف.', image: 'https://randomuser.me/api/portraits/women/20.jpg' },
+  { id: 2, name: 'Lamia ', review: 'يبدو موقع جيد للدراسة وإيجاد اساتذة أكفاء مع سهولة وسلاسة في استخدام الموقع.', image: 'https://randomuser.me/api/portraits/women/21.jpg' },
+  { id: 3, name: 'Abdelmalek Guitarni', review: 'أوصي بشدة بهذه الخدمة! كان الموظفون على دراية وودودين، والنتائج كانت رائعة. كان من دواعي سروري العمل مع فريق ملتزم.', image: 'https://randomuser.me/api/portraits/men/22.jpg' },
+  // { id: 4, name: 'Sophia Davis', review: 'تجربة رائعة بشكل عام! كانت الخدمة سريعة وفعالة، وكان المنتج النهائي بالضبط كما كنت أتمنى. دعم العملاء كان ممتازًا طوال العملية.', image: 'https://randomuser.me/api/portraits/women/23.jpg' },
+  // { id: 5, name: 'James Wilson', review: 'سأستخدم هذه الخدمة مرة أخرى بالتأكيد. كان الفريق محترفًا وموثوقًا، وقدم نتائج عالية الجودة. كانت تجربة خالية من التوتر من البداية إلى النهاية.', image: 'https://randomuser.me/api/portraits/men/24.jpg' },
+  // { id: 6, name: 'Olivia Martinez', review: 'خدمة رائعة! كنت ممتنًا لكيفية تعامل الفريق مع جميع التفاصيل. النتيجة كانت ممتازة، والتجربة كانت ممتعة للغاية.', image: 'https://randomuser.me/api/portraits/women/25.jpg' },
+  // { id: 7, name: 'Daniel Lee', review: 'الخدمة كانت ممتازة! التزام الفريق بالجودة وتفانيهم في العمل كان واضحًا. سأوصي بهذه الخدمة لأي شخص يبحث عن نتائج ممتازة.', image: 'https://randomuser.me/api/portraits/men/26.jpg' },
+  // { id: 8, name: 'Ava White', review: 'تجربة رائعة! الخدمة كانت مهنية للغاية، والنتائج كانت فوق توقعاتي. كنت سعيدًا بكل جانب من جوانب الخدمة.', image: 'https://randomuser.me/api/portraits/women/27.jpg' },
+  // { id: 9, name: 'Ethan Harris', review: 'أوصي بشدة بهذه الخدمة لأي شخص يبحث عن جودة عالية ونتائج ممتازة. كان الفريق محترفًا، وكان كل شيء يسير بسلاسة.', image: 'https://randomuser.me/api/portraits/men/28.jpg' },
   // Add more clients as needed
 ];
 

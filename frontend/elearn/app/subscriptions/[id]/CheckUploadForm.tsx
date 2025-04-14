@@ -34,9 +34,43 @@ const CheckUploadForm = ({ subscriptionId }:any) => {
 
     return (
         <div className="space-y-4">
-            <h1>يرجى الدفع عن طريق الحوالة او تطبيق بريدي موب و رفع صورة التحويل 
-                و سيتم الاتصال بك فور التأكد من التحويل
-            </h1>
+ <div className="bg-white p-5 rounded-xl shadow-inner border border-blue-200">
+    <p className="text-gray-700 mb-4 text-right font-medium leading-relaxed">
+      يرجى الدفع عن طريق الحوالة او تطبيق بريدي موب الى الحساب
+    </p>
+    
+    <div className="space-y-3 text-right">
+      <div className="flex justify-start items-center bg-blue-50 p-3 rounded-lg">
+        <span className="text-blue-600 font-bold">CCP:</span>
+        <span className="font-mono text-gray-800 mx-2">20566459 Clé 42</span>
+      </div>
+      
+      <div className="flex justify-between items-center  p-3 rounded-lg">
+        <span className="text-blue-600 font-bold">RIP:</span>
+        <span className="font-mono text-gray-800">00799999002056645907</span>
+      </div>
+      
+            <div className="grid grid-cols-2 gap-3">
+                <div className=" p-3 rounded-lg">
+                <p className="text-blue-600 font-bold">اللقب:</p>
+                <p className="text-gray-800">هنتوري</p>
+                </div>
+                <div className=" p-3 rounded-lg">
+                <p className="text-blue-600 font-bold">الاسم:</p>
+                <p className="text-gray-800">محفوظ</p>
+                </div>
+            </div>
+            
+            <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-blue-600 font-bold">رقم الهاتف:</p>
+                <p className="font-mono text-gray-800">0665689212</p>
+            </div>
+            </div>
+            
+            <p className="mt-5 text-right text-gray-700 italic bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-400">
+            رفع صورة التحويل و سيتم الاتصال بك فور التأكد من التحويل
+            </p>
+            </div>
             <input
                 type="file"
                 onChange={handleFileChange}
