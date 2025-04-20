@@ -2,20 +2,29 @@
 import React from 'react';
 import Link from 'next/link';
 import { Facebook, Instagram, Mail } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
+const publicPages = ["/", "/login", "/register",'/verify-email', '/api/auth', '/privacy-policy', '/workwithus/teacher', '/workwithus/student'];
 function Footer() {
+  const pathname = usePathname();
+  const isPublicPage = publicPages.includes(pathname);
+  const isChat = pathname.endsWith('/chat')
+  if(isChat){
+    return null
+  }
   return (
-    <footer className="bg-gray-light text-black py-12 relative overflow-hidden">
+
+    <footer className={`bg-gray-light text-black py-12 relative overflow-hidden`}>
       {/* Decorative elements */}
       <div className="absolute -bottom-20 -right-20 w-40 h-40 rounded-full bg-green bg-opacity-10"></div>
       <div className="absolute -top-10 -left-10 w-32 h-32 rounded-full bg-green bg-opacity-10"></div>
 
-      <div className="container mx-auto px-4">
+      <div className={`container mx-auto px-4  ${!isPublicPage ? 'w-[95%] mr-[5%] md:w-full md:ml-0' : ''}`}>
         {/* Logo and Title - Centered */}
         <div className="flex flex-col items-center mb-12">
           <div className="mb-4">
             <img 
-              src={`${window.location.origin}/logoblack.png`} 
+              src="/logoblack.png" 
               alt="logo riffaa" 
               className='w-20 h-auto mx-auto transition-transform hover:scale-105 duration-300'
             />
@@ -51,7 +60,7 @@ function Footer() {
           </div>
 
           {/* Contact Info */}
-          <div className="text-center">
+          <div className="text-right">
             <h4 className="text-xl font-semibold mb-6 relative inline-block">
               تواصل معنا
               <span className="absolute bottom-0 right-0 w-full h-1 bg-green bg-opacity-50"></span>

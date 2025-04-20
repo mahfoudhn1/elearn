@@ -93,13 +93,18 @@ const TeacherFilter: React.FC = () => {
         ? teacher.teaching_level === filters.teaching_level
         : true;
       const matchesSubject = filters.teaching_subjects
-        ? teacher.teaching_subjects.includes(filters.teaching_subjects)
+        ? Array.isArray(teacher.teaching_subjects) &&
+          teacher.teaching_subjects.includes(filters.teaching_subjects)
         : true;
       const matchesWilaya = filters.wilaya
-        ? teacher.wilaya.toLowerCase().includes(filters.wilaya.toLowerCase())
+        ? typeof teacher.wilaya === "string" &&
+          teacher.wilaya.toLowerCase().includes(filters.wilaya.toLowerCase())
         : true;
       const matchesSearch = filters.search
-        ? `${teacher.user.first_name} ${teacher.user.last_name}`
+        ? teacher.user &&
+          typeof teacher.user.first_name === "string" &&
+          typeof teacher.user.last_name === "string" &&
+          `${teacher.user.first_name} ${teacher.user.last_name}`
             .toLowerCase()
             .includes(filters.search.toLowerCase())
         : true;

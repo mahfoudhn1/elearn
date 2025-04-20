@@ -49,15 +49,15 @@ const Header: React.FC = () => {
     <>
     {isDashboard ?
     <header className={`header flex justify-between items-center py-4 bg-transparent px-4 md:px-20 w-full text-black ${!isHomePage? "shadow-sm sticky" : "shadow-none" }`}>
-      {/* Logo - hidden on mobile */}
-      <div className='hidden md:block relative group w-1/4'>
-        <div className="text-3xl w-2/3 text-gray-dark font-bold">
-          <img src={`${window.location.origin}/logoblack.png`} alt="logo riffaa" className='cursor-pointer w-14 h-24'/>
+      {/* Logo - shown on both mobile and desktop but centered on mobile */}
+      <div className='md:relative group w-full md:w-1/4 flex justify-center md:justify-start'>
+        <div className="text-3xl w-14 md:w-2/3 text-gray-dark font-bold">
+          <img src="/logoblack.png" alt="logo riffaa" className='cursor-pointer w-14 h-24'/>
         </div>
       </div>
       {/* Mobile Menu Button - aligned to start (right in RTL) */}
-            <button
-        className="md:hidden flex items-center p-2 text-white bg-gray-dark"
+      <button
+        className="md:hidden flex items-center p-2 text-white bg-gray-dark absolute right-4"
         onClick={toggleMenu}
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -66,7 +66,7 @@ const Header: React.FC = () => {
       </button>
       {/* Profile button - aligned left (right in RTL) on mobile */}
       {authState ? (
-        <div className="md:hidden">
+        <div className="md:hidden absolute left-4">
           <div className="relative inline-block">
             <button
               onClick={toggleDropdown}
@@ -104,7 +104,15 @@ const Header: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="md:hidden"></div> // Empty div to maintain flex spacing
+        <div className="md:hidden absolute left-4">
+
+        <button 
+        onClick={handleClick}
+        className="flex relative overflow-hidden px-2 py-2 text-white bg-gray-dark border-none rounded-lg focus:outline-none transition-all duration-300 hover:bg-green"
+      >
+        <span className="relative text-sm z-10">تسجيل الدخول</span>
+      </button> 
+    </div>
       )}
 
       {/* Desktop Navigation */}
@@ -207,9 +215,8 @@ const Header: React.FC = () => {
               </svg>
             </button>
           </div>
-          <div className='relative items-center w-1/3 mx-auto text-center group'>
-            <div className="text-3xl text-gray-dark font-bold">رفعة</div>
-            <span className="absolute left-0 bottom-0 w-full h-2.5 bg-green bg-opacity-80 transform scale-y-100  transition-all duration-300"></span>
+          <div className="text-3xl w-full flex justify-center mx-auto text-gray-dark font-bold">
+            <img src="/logoblack.png" alt="logo riffaa" className='cursor-pointer w-14 h-24'/>
           </div>
 
           <ul className="flex flex-col items-center space-y-4 mt-8">

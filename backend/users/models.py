@@ -1,7 +1,7 @@
 import uuid
 from django.db import models
 from django.utils import timezone
-from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.contrib.auth.models import AbstractUser
 from decimal import Decimal
 import random
 import string

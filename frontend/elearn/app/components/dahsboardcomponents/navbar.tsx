@@ -1,6 +1,6 @@
 "use client"
 import Link from 'next/link';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useDispatch, UseDispatch } from 'react-redux';
 import { AppDispatch, RootState } from '../../../store/store';
 import { logout } from '../../../store/authSlice';
@@ -16,7 +16,10 @@ function Navbar() {
   const isDashboard = dashboardPaths.some(path => pathname === path || pathname.startsWith(`${path}/`));
   
     const dispatch = useDispatch<AppDispatch>()
-
+    useEffect(() => {
+      setIsOpen(false);
+      setIsOpen(false);
+    }, [pathname]);
     const [isOpen, setIsOpen] = useState(false);
     const toggleDropdown = () => {
         setIsOpen(!isOpen);
@@ -48,8 +51,8 @@ function Navbar() {
         className="flex items-center justify-center rounded-full focus:outline-none hover:ring-2 hover:ring-offset-4 hover:ring-gray-300"
       >
         <div className="w-10 h-10 overflow-hidden rounded-full">
-          {user ? (
-            <img src={user.avatar} className="w-full h-full object-cover" alt="Profile" />
+          {user?.avatar_file ? (
+            <img src={user.avatar_file} className="w-full h-full object-cover" alt="Profile" />
 
           ):
             <img src="/teacher.jpg" className="w-full h-full object-cover" alt="Profile" />
@@ -65,6 +68,9 @@ function Navbar() {
             </Link>
             <Link href="/groups" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
               المجموعات
+            </Link>
+            <Link href="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+              الرئيسية
             </Link>
             <button
               onClick={handlelogout}

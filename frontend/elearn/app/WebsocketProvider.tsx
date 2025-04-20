@@ -4,9 +4,9 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback 
 
 interface Notification {
   id: number;
-  message: string;
+  message: any;
   timestamp: number;
-  type?: 'info' | 'warning' | 'error';
+  type?: any;
 }
 
 interface WebSocketContextProps {
@@ -36,7 +36,8 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
     const isHttps = window.location.protocol === 'https:';
     const wsProtocol = isHttps ? 'wss://' : 'ws://';
     const baseUrl = process.env.NEXT_PUBLIC_WS_URL || `${wsProtocol}${window.location.host}`;
-    const wsUrl = `wss://riffaa.com//riffaa/ws/notifications/`
+    // const wsUrl = `wss://riffaa.com//riffaa/ws/notifications/`
+    const wsUrl = `ws://localhost:8000/ws/notifications/`
     setConnectionStatus('connecting');
     const ws = new WebSocket(wsUrl);
 
@@ -51,10 +52,16 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
         const data = JSON.parse(event.data);
         console.log("📩 Received:", data);
     
-        // 🏓 Respond to ping
+        // Respond to ping
         if (data.type === 'ping') {
           ws.send(JSON.stringify({ type: 'pong' }));
           return; // Don't treat ping as a normal notification
+        }
+    
+        // Validate data has message property
+        if (!data || typeof data !== 'object' || !data.message) {
+          console.error("❌ Invalid message format:", data);
+          return;
         }
     
         const newNotification: Notification = {
@@ -66,7 +73,6 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
     
         setNotifications(prev => [...prev, newNotification]);
     
-        // Auto-remove notification after delay
         const removeDelay = data.duration || 5000;
         setTimeout(() => {
           clearNotification(newNotification.id);

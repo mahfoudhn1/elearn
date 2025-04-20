@@ -4,13 +4,13 @@ import NotificationPopup from "./notificationpopup";
 import useWebSocket from "../hooks/useWebsocket";
 
 const GlobalNotifications = () => {
-    const [notifications, setNotifications] = useState<{ id: number; message: string }[]>([]);
+    const [notifications, setNotifications] = useState<{ id: number; message: any }[]>([]);
     const getWebSocketUrl = () => {
         if (process.env.NEXT_PUBLIC_WS_URL) {
           return process.env.NEXT_PUBLIC_WS_URL;
         }
         const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-        return `${protocol}${window.location.host}/riffaa/ws/notifications/`;
+        return `ws://localhost:8000/ws/notifications/`;
       };
     
     useWebSocket(getWebSocketUrl(), (message:any) => {

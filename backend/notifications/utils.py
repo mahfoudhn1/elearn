@@ -11,6 +11,7 @@ def send_notification(user_id, message):
         f"notifications_{user_id}",
         {
             "type": "send_notification",
-            "message": message,
-        }
+            "message": message
+        },
+
     )

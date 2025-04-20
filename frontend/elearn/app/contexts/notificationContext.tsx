@@ -21,7 +21,7 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
     const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
     const baseUrl = process.env.NEXT_PUBLIC_WS_URL || `${protocol}${window.location.host}`;
     
-    const socket = new WebSocket(`${baseUrl}/riffaa/ws/notifications/`);
+    const socket = new WebSocket(`${baseUrl}/ws/notifications/`);
 
     socket.onopen = () => {
       console.log("🔗 WebSocket connected!");

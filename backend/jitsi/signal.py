@@ -22,8 +22,4 @@ def notify_students_on_meeting_start(sender, instance, created, **kwargs):
             )
 
             # Send the notification in real-time
-            send_notification(student.user.id, {
-                'type': 'meeting_start',
-                'message': message,
-                'room_id': instance.room_name
-            })
+            send_notification(student.user.id, message)

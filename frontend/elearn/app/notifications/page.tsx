@@ -10,7 +10,7 @@ const NotificationPage = () => {
         // Fetch notifications when the component mounts
         const getNotifications = async () => {
             const notification = await axiosClientInstance.get('/notifications/');
-            console.log(notification.data);
+
             setNotifications(notification.data);
         };
 

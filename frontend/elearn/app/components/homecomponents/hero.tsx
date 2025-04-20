@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import styles from './Hero.module.css'; // Import the CSS module for styling
 import Link from 'next/link';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../store/store';
 
 const Hero: React.FC = () => {
 
   const [isMobile, setIsMobile] = useState(false); // 768px is a common breakpoint for tablets
   
-
+  const user = useSelector((state: RootState)=>state.auth.user)
     
     useEffect(() => {
       
@@ -120,9 +122,9 @@ const Hero: React.FC = () => {
             </div>
             
           </section>
-          <div className="absolute md:bottom-4  -bottom-8 right-1/2 transform translate-x-1/2 drop-shadow-xl overflow-hidden bg-gray-dark">
+          <div className="absolute md:bottom-4  -bottom-8 right-1/2 transform translate-x-1/4 drop-shadow-xl overflow-hidden bg-gray-dark">
               <div className="relative group cursor-pointer">
-                <Link href="/login">
+                <Link href={user? "/dashboard": "/login"}>
                   <button className="px-7 py-4 font-semibold text-lg text-white">
                     أبدء التعلم
                   </button>

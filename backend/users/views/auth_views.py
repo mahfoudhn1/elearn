@@ -74,7 +74,6 @@ class MyTokenRefreshView(TokenRefreshView):
                 new_access_token,
                 httponly=False,
                 secure=False,
-                domain='riffaa.com',  # Ensure the domain is correctly set
                 path='/',
                 samesite='Lax',
             )
@@ -82,8 +81,8 @@ class MyTokenRefreshView(TokenRefreshView):
             response.set_cookie(
                 'refresh_token',
                 new_refresh_token,
-                httponly=True,
-                secure=True,
+                httponly=False,
+                secure=False,
                 samesite='Lax',
                 max_age=60 * 60 * 24 * 7,  # 7 days
                 path='/',
@@ -124,7 +123,6 @@ class AuthViewSet(viewsets.GenericViewSet):
             tokens['access'],
             httponly=False,
             secure=False,
-            domain='riffaa.com',  # Ensure the domain is correctly set
             path='/',
             samesite='Lax',
         )

@@ -4,11 +4,12 @@ import Sidebar from "../../../components/dahsboardcomponents/sidebar";
 import StudentsRequest from "./Studentsreq";
 import StudentsList from "./StudentsList";
 import ScheduleList from "./calender/add/List";
-import { CalendarCheck, Users } from "lucide-react";
+import { CalendarCheck, ChartArea, MessageCircleMore, Users } from "lucide-react";
 import Schedulebutton from "./Schedulebutton";
 import DeleteButton from "./DeleteButton";
 import StartNowButton from "./StartNowButton";
 import axiosClientInstance from "../../../lib/axiosInstance";
+import PinnedMessages from "./PinnedMessage";
 
 interface Params {
   id: number;
@@ -90,7 +91,7 @@ function SnigleGrpoup({ params }: { params: Params }) {
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-semibold text-gray-700">
               <CalendarCheck className="inline-block mr-2" size={20} />
-              Schedules
+              التوقيت
             </h3>
             <Schedulebutton id={params.id} />
           </div>
@@ -104,6 +105,14 @@ function SnigleGrpoup({ params }: { params: Params }) {
             Students
           </h3>
           <StudentsList studentlist={students} />
+        </div>
+                {/* chat area */}
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+          <h3 className="text-xl font-semibold text-gray-700 mb-4">
+            <MessageCircleMore className="inline-block mr-2" size={20} />
+            Chat
+          </h3>
+          <PinnedMessages groupId={params.id} />
         </div>
       </div>
     </div>

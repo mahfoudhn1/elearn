@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 interface NotificationProps {
-    message: string;
+    message: any;
     onClose: () => void;
 }
 

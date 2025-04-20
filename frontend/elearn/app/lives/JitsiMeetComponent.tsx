@@ -26,12 +26,15 @@ const JitsiMeetOptimized: React.FC<{ meetingData: any }> = ({ meetingData }) => 
       const script = document.createElement('script');
       script.src = `${meetingData.domain}/external_api.js`;
       script.async = true;
+      console.log(script);
+      
       script.onload = initializeJitsi;
       document.body.appendChild(script);
     };
 
     const initializeJitsi = () => {
       const domain = new URL(meetingData.domain).hostname;
+      console.log(domain);
       
       const options = {
         roomName: meetingData.room,
@@ -67,17 +70,23 @@ const JitsiMeetOptimized: React.FC<{ meetingData: any }> = ({ meetingData }) => 
         interfaceConfigOverwrite: {
           APP_NAME: 'Riffaa Education',
           SHOW_JITSI_WATERMARK: false,
-          SHOW_POWERED_BY: false,
+          HIDE_DEEP_LINKING_LOGO: true,
+          SHOW_BRAND_WATERMARK: false,
+          SHOW_WATERMARK_FOR_GUESTS: false,
           TOOLBAR_ALWAYS_VISIBLE: true,
           MOBILE_APP_PROMO: false,
           DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
           HIDE_INVITE_MORE_HEADER: true,
           DEFAULT_BACKGROUND: '#374151',
+          DISABLE_DOMINANT_SPEAKER_INDICATOR: true
         },
-        jwt: meetingData.token
+        jwt: meetingData.token,
+        
       };
 
       const jitsiApi = new (window as any).JitsiMeetExternalAPI(domain, options);
+      console.log("jitsiApi: ", jitsiApi);
+      
       setApi(jitsiApi);
 
       // Listen for chat toggle events
