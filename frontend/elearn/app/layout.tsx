@@ -14,6 +14,7 @@ import Script from "next/script";
 import { GoogleAnalytics } from '@next/third-parties/google'
 
 
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -47,8 +48,24 @@ export default function RootLayout({
 
   return (
     <html lang="ar" dir="rtl">
-      
       <body className={inter.className}>
+          <Script
+      id="fb-pixel"
+      strategy="afterInteractive"
+      dangerouslySetInnerHTML={{
+        __html: `
+          !function(f,b,e,v,n,t,s)
+          {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+          n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+          if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+          n.queue=[];t=b.createElement(e);t.async=!0;
+          t.src=v;s=b.getElementsByTagName(e)[0];
+          s.parentNode.insertBefore(t,s)}(window, document,'script',
+          'https://connect.facebook.net/en_US/fbevents.js');
+          fbq('init', '1198102671577176');
+          fbq('track', 'PageView');
+        `,
+      }}/>
       <StoreProvider>
     <WebSocketProvider>
         <UserRoleWarper>
@@ -58,6 +75,14 @@ export default function RootLayout({
           <div className="w-full md:mr-6 overflow-hidden justify-center mx-auto flex-col">
             <Navbar/>
             {children}
+            <noscript>
+          <img
+            height="1"
+            width="1"
+            style={{ display: 'none' }}
+            src="https://www.facebook.com/tr?id=1198102671577176&ev=PageView&noscript=1"
+          />
+        </noscript>
           </div>
         </div>
           <GlobalNotifications />
@@ -68,9 +93,11 @@ export default function RootLayout({
         </StoreProvider>
         <GoogleAnalytics gaId="G-NL31TK0S0M" />
         <Script src="https://meet.jit.si/external_api.js"/>
+   
 
       </body>
 
     </html>
   );
 }
+

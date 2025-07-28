@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect, useState } from 'react'
-import { Book, University, Blocks, School, GraduationCap } from 'lucide-react'
+import { Book, University, Blocks, School, GraduationCap, Languages } from 'lucide-react'
 ;
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
@@ -31,7 +31,8 @@ function Level() {
         { name: "متوسط", icon: <School className="h-8 w-8 text-gray-800 transform transition-transform duration-200 ease-in-out hover:scale-125 group-hover:text-white" />, description: 'انشىء و تفاعل مع طلبة المتوسط و لا تنسى وضع توقيت خاص بكل مجموعة' },
         { name: "ثانوي", icon: <Book className="h-8 w-8 text-gray-800 transform transition-transform duration-200 ease-in-out hover:scale-125 group-hover:text-white" />, description: 'لدى طلبة الثانوي مجموعة من التخصصات يجب اخذها بعين الاعتبار في كل مجموعة' },
         { name: "جامعي", icon: <University className="h-8 w-8 text-gray-800 transform transition-transform duration-200 ease-in-out hover:scale-125 group-hover:text-white" />, description: 'لدى طلبة الجامعة مجموعة من التخصصات يجب اخذها بعين الاعتبار في كل مجموعة' },
-        { name: "تدرس حر", icon: <GraduationCap className="h-8 w-8 text-gray-800 transform transition-transform duration-200 ease-in-out hover:scale-125 group-hover:text-white" />, description: 'التعامل مع الطلبة الاحرار الذين يحضرون دورات أو دروس في مجال معين يكون أكثر مرونة' }
+        { name: "تدرس حر", icon: <GraduationCap className="h-8 w-8 text-gray-800 transform transition-transform duration-200 ease-in-out hover:scale-125 group-hover:text-white" />, description: 'التعامل مع الطلبة الاحرار الذين يحضرون دورات أو دروس في مجال معين يكون أكثر مرونة' },
+        { name: "لغات اجنبية", icon: <Languages className="h-8 w-8 text-gray-800 transform transition-transform duration-200 ease-in-out hover:scale-125 group-hover:text-white" />, "description": "تهدف هذه المجموعة إلى دعم الطلبة الأحرار في تعلم واكتساب اللغات الاجنبية, مع توفير المرونة اللازمة للتقدم في مساراتهم التعليمية." }
     ];
 
     function handleGroup(name: string) {

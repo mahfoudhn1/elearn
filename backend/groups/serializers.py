@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from users.serializers import StudentSerializer, TeacherSerializer
-from .models import Group, Schedule, StudentGroupRequest
+from .models import   Group, GroupCourse, Question, Quiz,   Schedule, StudentAnswer,  StudentGroupRequest
 from users.models import Teacher, Student, SchoolLevel
 from users.serializers import gradeSerializer, fieldofstudySerializer 
 from jitsi.serializers import MeetingSerializer
@@ -35,13 +35,35 @@ class ScheduleSerializer(serializers.ModelSerializer):
 
 
 class GroupSerializer(serializers.ModelSerializer):
-    school_level = serializers.CharField() 
+    school_level = serializers.CharField()
     admin = serializers.SerializerMethodField(read_only=True)
     field_of_study_nest = fieldofstudySerializer(read_only=True)
+    language = serializers.CharField(write_only=True, required=False)
+    language_level = serializers.CharField(write_only=True, required=False)
+
     class Meta:
         model = Group
-        fields = ['id',"admin", 'name','field_of_study_nest', 'students', 'school_level', 'grade', 'field_of_study', 'created_at', 'updated_at', 'status']
-        extra_kwargs = {'admin': {'read_only': True}, 'field_of_study_nest': {'read_only': True}}
+        fields = [
+            'id',
+            'admin',
+            'name',
+            'field_of_study_nest',
+            'students',
+            'school_level',
+            'grade',
+            'field_of_study',
+            'group_type',
+            'language',
+            'language_level',
+            'created_at',
+            'updated_at',
+            'status'
+        ]
+        extra_kwargs = {
+            'admin': {'read_only': True},
+            'field_of_study_nest': {'read_only': True},
+        }
+
     def create(self, validated_data):
         request = self.context['request']
 
@@ -61,7 +83,6 @@ class GroupSerializer(serializers.ModelSerializer):
         except SchoolLevel.DoesNotExist:
             raise serializers.ValidationError({"school_level": f"School level '{school_level_name}' does not exist."})
 
-        # Replace the name with the resolved SchoolLevel instance
         validated_data['school_level'] = school_level
 
         # Extract students
@@ -74,15 +95,48 @@ class GroupSerializer(serializers.ModelSerializer):
         group.students.set(students)
 
         return group
+
     def get_admin(self, obj):
         return {
-
-            "name": obj.admin.user.get_full_name(),  # Assuming `user` has `first_name` and `last_name`
+            "name": obj.admin.user.get_full_name(),
             "email": obj.admin.user.email,
         }
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['students'] = StudentSerializer(instance.students.all(), many=True).data
         representation['field_of_study_nest'] = getattr(instance.field_of_study, 'name', None)
-        representation['school_level'] = instance.school_level.name  # Return the name instead of the ID
+        representation['school_level'] = instance.school_level.name if instance.school_level else None
+        representation['language'] = instance.language.name if instance.language else None
+        representation['language_level'] = instance.language_level.name if instance.language_level else None
         return representation
+
+
+class QuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = '__all__'
+        read_only_fields = ('quiz',)
+
+class QuizSerializer(serializers.ModelSerializer):
+    questions = QuestionSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Quiz
+        fields = '__all__'
+        read_only_fields = ('teacher', 'created_at', 'updated_at')
+
+
+class StudentAnswerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentAnswer
+        fields = ['id', 'question', 'selected_answer', 'is_correct']
+        read_only_fields = ['is_correct', 'student']
+
+class GroupCourseSerializer(serializers.ModelSerializer):
+    quiz = QuizSerializer(read_only=True)
+    student_answers = StudentAnswerSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = GroupCourse
+        fields = ['id', 'title', 'description', 'group_video', 'created_at', 'quiz', 'student_answers']

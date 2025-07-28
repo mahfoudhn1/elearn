@@ -1,5 +1,5 @@
 from django.db import models
-from users.models import User
+from users.models import Grade, User
 
 class subjsctChoice(models.TextChoices):
     MATHEMATICS = 'رياضيات', 'رياضيات'
@@ -23,6 +23,7 @@ class Deck(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
     subject = models.CharField(max_length=20, choices = subjsctChoice.choices, null=True, blank=True) 
+    grade = models.ForeignKey(Grade, verbose_name=("grades"), on_delete=models.CASCADE, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     visibility = models.CharField(max_length=7, choices=VISIBILITY_CHOICES, default='private')
 

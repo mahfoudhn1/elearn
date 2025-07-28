@@ -66,7 +66,7 @@ const App: React.FC = () => {
     <div className="App">
       {isStudent && !isMeetingActive && (
         <div className="alert alert-danger">
-          The meeting is not active. Please wait until it starts.
+          هذا البث غير شغال حاليا يرجى الانتظار حتى البدأ
         </div>
       )}
 

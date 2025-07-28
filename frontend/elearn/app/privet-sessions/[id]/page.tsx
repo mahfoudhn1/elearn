@@ -1,12 +1,11 @@
 "use client"
 import React, { useState, useEffect } from "react";
 import axiosClientInstance from "../../lib/axiosInstance";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store/store";
 import CheckUploadForm from "./CheckUploadForm";
 import StartNowButton from "./livebutton";
-import { useRouter } from "next/router";
 
 const PrivateSessionDetail = () => {
   const [session, setSession] = useState<any>(null);
@@ -15,20 +14,32 @@ const PrivateSessionDetail = () => {
   const [teacherNotes, setTeacherNotes] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [room, setRoom] = useState('')
-  const params = useParams()
-  const role = useSelector((state:RootState)=>state.auth.user?.role)
-  const sessionId = params.id
+  const [room, setRoom] = useState<any>(null);
+  const params = useParams();
+  const role = useSelector((state: RootState) => state.auth.user?.role);
+  const sessionId = params.id as string;
+  const router = useRouter();
 
   useEffect(() => {
     const fetchSession = async () => {
       try {
-        const response = await axiosClientInstance.get(`/privet/session-requests/list/${sessionId}/`);
-        console.log(response.data);
+        const response = await axiosClientInstance.get(
+          `/privet/session-requests/list/${sessionId}/`
+        );
         
         setSession(response.data);
         setStatus(response.data.status);
-        setProposedDate(response.data.proposed_date || "");
+        
+        // Format the date for datetime-local input
+        if (response.data.proposed_date) {
+          const date = new Date(response.data.proposed_date);
+          // Convert to local time and format for input
+          const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+          setProposedDate(localDate.toISOString().slice(0, 16));
+        } else {
+          setProposedDate("");
+        }
+        
         setTeacherNotes(response.data.teacher_notes || "");
         setLoading(false);
       } catch (err) {
@@ -36,42 +47,49 @@ const PrivateSessionDetail = () => {
         setLoading(false);
       }
     };
-    const fetchRoom = async()=>{
-      
-      try {
-        const response = await axiosClientInstance.get(`/privet/session-requests/${sessionId}/get_jitsi_room_for_session/`);
-        setRoom(response.data)
-      } catch (err) {
-      }
-    }
-    fetchSession();
-    fetchRoom()
-  }, [sessionId]);
-  const formattedDate = session?.proposed_date
-  ? new Date(session.proposed_date).toISOString().slice(0, 16) // Trims seconds & timezone
-  : "";
 
-  const handleSubmit = async (e: any) => {
+    const fetchRoom = async () => {
+      try {
+        const response = await axiosClientInstance.get(
+          `/privet/session-requests/${sessionId}/get_jitsi_room_for_session/`
+        );
+        setRoom(response.data);
+      } catch (err) {
+        console.error("Error fetching room:", err);
+      }
+    };
+
+    fetchSession();
+    fetchRoom();
+  }, [sessionId]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axiosClientInstance.patch(`/privet/session-requests/update/${sessionId}/`, {
-        status: status,
-        proposed_date: proposedDate,
-        teacher_notes: teacherNotes,
-      });
+      const dateToSend = proposedDate 
+        ? new Date(proposedDate).toISOString() 
+        : null;
+
+      const response = await axiosClientInstance.patch(
+        `/privet/session-requests/update/${sessionId}/`,
+        {
+          status: status,
+          proposed_date: dateToSend,
+          teacher_notes: teacherNotes,
+        }
+      );
+
       setSession(response.data);
       alert("تم تحديث الحصة بنجاح!");
     } catch (err) {
       setError("فشل في تحديث الحصة");
     }
   };
-  const router = useRouter();
-  const goTolive = ()=>{
-    if(!room){
-      return
-    }
-    router.push(`/lives?roomId=${room}`)
-  }
+
+  const goToLive = () => {
+    if (!room) return;
+    router.push(`/lives?roomId=${room.id}`);
+  };
 
   if (loading) return <div className="text-center text-gray">جاري التحميل...</div>;
   if (error) return <div className="text-center text-red-500">{error}</div>;
@@ -80,16 +98,19 @@ const PrivateSessionDetail = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-light to-gray-light flex items-center justify-center p-4">
       <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8 transform transition-all hover:shadow-2xl">
         <div className="flex">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6 text-right">طلب حصة خاصة</h1>
-
+          <h1 className="text-3xl font-bold text-gray-800 mb-6 text-right">طلب حصة خاصة</h1>
         </div>
+        
         <div className="space-y-8">
           {/* Student Details */}
           <div className="bg-gray-light p-6 rounded-xl">
             <div className="flex justify-between">
               <h2 className="text-xl font-semibold text-gray-700 mb-4 text-right">تفاصيل الطالب</h2>
               {session?.is_paied && (
-                <StartNowButton proposedDate={session?.proposed_date} onLive={goTolive}/>
+                <StartNowButton 
+                  proposedDate={session?.proposed_date} 
+                  onLive={goToLive}
+                />
               )}
             </div>
             <div className="space-y-3 text-right">
@@ -122,7 +143,11 @@ const PrivateSessionDetail = () => {
               </p>
               <p className="text-gray-700">
                 <span className="font-medium">الحالة: </span>
-                {session?.status === "pending" ? "معلق" : session?.status === "accepted" ? "مقبول" : "مرفوض"}
+                {session?.status === "pending" 
+                  ? "معلق" 
+                  : session?.status === "accepted" 
+                    ? "مقبول" 
+                    : "مرفوض"}
               </p>
               <p className="text-gray-700">
                 <span className="font-medium">ملاحظات الطالب: </span>
@@ -132,54 +157,57 @@ const PrivateSessionDetail = () => {
           </div>
 
           {/* Form */}
-          {role == "teacher"? (
+          {role === "teacher" ? (
             <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 text-right">الحالة</label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="mt-2 block w-full p-3 border border-gray-light rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-right"
-              >
-                <option value="pending">معلق</option>
-                <option value="accepted">مقبول</option>
-                <option value="rejected">مرفوض</option>
-              </select>
-            </div>
-
-            {status === "accepted" && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 text-right">التاريخ المقترح</label>
-                <input
-                  type="datetime-local"
-                  value={session?.proposed_date}
-                  onChange={(e) => setProposedDate(e.target.value)}
+                <label className="block text-sm font-medium text-gray-700 text-right">الحالة</label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
                   className="mt-2 block w-full p-3 border border-gray-light rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-right"
-                  required
+                >
+                  <option value="pending">معلق</option>
+                  <option value="accepted">مقبول</option>
+                  <option value="rejected">مرفوض</option>
+                </select>
+              </div>
+
+              {status === "accepted" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 text-right">
+                    التاريخ المقترح
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={proposedDate}
+                    onChange={(e) => setProposedDate(e.target.value)}
+                    className="mt-2 block w-full p-3 border border-gray-light rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-right"
+                    required
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 text-right">
+                  ملاحظات المعلم
+                </label>
+                <textarea
+                  value={teacherNotes}
+                  onChange={(e) => setTeacherNotes(e.target.value)}
+                  className="mt-2 block w-full p-3 border border-gray-light rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-right resize-y min-h-[100px]"
                 />
               </div>
-            )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 text-right">ملاحظات المعلم</label>
-              <textarea
-                value={teacherNotes}
-                onChange={(e) => setTeacherNotes(e.target.value)}
-                className="mt-2 block w-full p-3 border border-gray-light rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-right resize-y min-h-[100px]"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3 px-6 bg-gradient-to-r from-blue-300 to-blue-500 text-white rounded-lg font-semibold hover:from-blue-500 hover:to-blue-400 transition-all duration-300"
-            >
-              تحديث الحصة
-            </button>
-          </form>
-          ):
-          <CheckUploadForm session_id={sessionId}/>
-          }
-          
+              <button
+                type="submit"
+                className="w-full py-3 px-6 bg-gradient-to-r from-blue-300 to-blue-500 text-white rounded-lg font-semibold hover:from-blue-500 hover:to-blue-400 transition-all duration-300"
+              >
+                تحديث الحصة
+              </button>
+            </form>
+          ) : (
+            <CheckUploadForm session_id={sessionId} />
+          )}
         </div>
       </div>
     </div>

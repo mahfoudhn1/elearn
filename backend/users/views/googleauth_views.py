@@ -122,15 +122,22 @@ class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
                 'access_token',
                 tokens['access'],
                 httponly=True,
-                secure= False, 
+                secure=True,
+                domain='riffaa.com',  # Ensure the domain is correctly set
+                path='/',
+                samesite='Lax',
             )
-
             response.set_cookie(
                 'refresh_token',
                 tokens['refresh'],
                 httponly=True,
-                secure= False,  # Use secure cookies if HTTPS is enabled
+                secure=True,
+                samesite='Lax',
+                max_age=60 * 60 * 24 * 7,  # 7 days
+                path='/',
             )
+
+
 
             
             response_data = {

@@ -60,11 +60,56 @@
     zoom_meeting_id: string;
     zoom_join_url: string;
 }
- 
+export interface Language {
+  id: number;
+  name: string;
+}
+
+export interface LanguageLevel {
+  id: number;
+  name: string;
+  description?: string;
+}
+
+export interface StudentLanguageProficiency {
+  id: number;
+  student: number; // Student ID
+  language: Language;
+  level: LanguageLevel;
+}
+
+export interface Question {
+  id: number;
+  language: number; // Language ID
+  level: number; // Level ID
+  text: string;
+  question_type: 'multiple_choice' | 'fill_blank' | 'matching' | 'true_false';
+  options?: string[]; // For multiple choice
+  correct_answer: string;
+  explanation?: string;
+}
+
+export interface TestSubmission {
+  language_id: number;
+  answers: {
+    question_id: number;
+    answer: string;
+  }[];
+}
+
+export interface TestResult {
+  message: string;
+  new_level: string;
+  language: string;
+}
+
   export interface Group {
     id: number;
     name: string;
     school_level: string;
+    group_type : string;
+    language: string;
+    language_level:string;
     grade: Grade;
     schedule?: Schedule[];
     students?: Student[];
@@ -162,4 +207,47 @@
     timestamp: Date;
     isLocal: boolean;
   }
+  export interface Answer {
+    id: number;
+    text: string;
+    is_correct: boolean;
+  }
   
+  // export interface Question {
+  //   id: number;
+  //   correct_answer: string;
+  //   options:string[];
+  //   order:string ;
+  //   points:string ;
+  //   question_type: string ;
+  //   quiz:string ;
+  //   text: string;
+  // }
+  
+  // export interface StudentAnswer {
+  //   id: number;
+  //   question: Question;
+  //   selected_answer: Answer;
+  //   is_correct: boolean;
+  //   answered_at: string;
+  // }
+  
+  // export interface QuizProp {
+  //   id: number;
+  //   title:string;
+  //   description:string;
+  //   created_at:string;
+  //   time_limit_minutes:string;
+  //   is_published: boolean;
+  //   questions: Question[];
+  // }
+  
+  // export interface GroupCourse {
+  //   id: number;
+  //   title: string;
+  //   description: string | null;
+  //   group_video: string | null;
+  //   created_at: string;
+  //   quiz: QuizProp | null;
+  //   student_answers: StudentAnswer[] | null | undefined;
+  // }

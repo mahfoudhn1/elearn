@@ -73,3 +73,6 @@ dist/
 
 # Windows thumbs.db
 Thumbs.db
+
+# Static files
+riffaa/

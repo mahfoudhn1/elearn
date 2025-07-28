@@ -8,8 +8,10 @@ from subscription.models import Subscription
 from groups.serializers import GroupSerializer
 from groups.models import Group
 from users.models import Teacher, Student, SchoolLevel
-from users.serializers import StudentSerializer
+from users.serializers import StudentSerializer 
 
+
+from django.shortcuts import get_object_or_404
 
 class GroupViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
@@ -17,44 +19,42 @@ class GroupViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        field_of_study_id = self.request.query_params.get('field_of_study', None)
-        school_level_name = self.request.query_params.get('school_level', None)
-        group_id = self.kwargs.get('pk', None)
+        field_of_study_id = self.request.query_params.get('field_of_study')
+        school_level_name = self.request.query_params.get('school_level')
+        language_name = self.request.query_params.get('language_name')
+        group_id = self.kwargs.get('pk')
+
         queryset = Group.objects.all()
 
+        # If a specific group ID is provided
         if group_id:
-            try:
-                return Group.objects.filter(id=group_id)
-            except Group.DoesNotExist:
-                raise NotFound("Group not found")
+            return Group.objects.filter(id=group_id)
 
-
-        if school_level_name:
-            try:
-                school_level = SchoolLevel.objects.get(name=school_level_name)
-            except SchoolLevel.DoesNotExist:
+        # School level is always required
+        school_level = get_object_or_404(SchoolLevel, name=school_level_name)
+        queryset = queryset.filter(school_level=school_level)
+        print("school_level", queryset )
+        # Filter for secondary level requiring field_of_study
+        if school_level_name == "ثانوي":
+            if not field_of_study_id:
                 return Group.objects.none()
-            
-            queryset = queryset.filter(school_level=school_level.id)
-
-            if school_level_name == "ثانوي":
-                if not field_of_study_id:
-                  
-                    return Group.objects.none()
-                queryset = queryset.filter(field_of_study=field_of_study_id)
-
-        elif field_of_study_id:
             queryset = queryset.filter(field_of_study=field_of_study_id)
 
+        # If language filtering is requested
+        if language_name:
+            queryset = queryset.filter(group_type=Group.GroupType.LANGUAGE)
+            queryset = queryset.filter(language__name__icontains=language_name)
+            print("language_name", queryset )
+        # Role-based filtering
         if user.role == 'teacher':
-            try:
-                teacher = user.teacher
-                queryset = queryset.filter(admin=teacher)
-            except Teacher.DoesNotExist:
-                return Group.objects.none()
-        if user.role == 'student':
-            return queryset.filter(students=user.student)
+            queryset = queryset.filter(admin__user=user)
+            print("teacher", queryset )
+        elif user.role == 'student':
+            queryset = queryset.filter(students=user.student)
+
         return queryset
+
+
     
     @action(detail=False, methods=['get'])
     def student_groups(self, request):
@@ -137,7 +137,7 @@ class GroupViewSet(viewsets.ModelViewSet):
         except Teacher.DoesNotExist:
             return Response({'error': 'The authenticated user is not a teacher'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Get students subscribed to this teacher and not in any group
+        
         subscriptions = Subscription.objects.filter(
             teacher=teacher,
             is_active=True

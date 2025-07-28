@@ -58,7 +58,11 @@ class MeetingViewSet(viewsets.ModelViewSet):
 
         teacher = user.teacher
         group_id = data.get('group_id')
-        group = get_object_or_404(Group, id=group_id)
+        group = None
+
+        if group_id:
+            group = get_object_or_404(Group, id=group_id)
+
 
         room_name = f"Room_{teacher.id}_{uuid.uuid4().hex[:6]}"
 
@@ -68,10 +72,11 @@ class MeetingViewSet(viewsets.ModelViewSet):
             group=group,
             start_time=data.get('start_time'),
             end_time=data.get('end_time'),
-            is_active=True  # Meeting is active when created
+            is_active=True 
         )
 
-        meeting.students.set(group.students.all())
+        if group:
+            meeting.students.set(group.students.all())
 
         return Response({
             "message": "Meeting created successfully.",
@@ -187,13 +192,19 @@ class MeetingViewSet(viewsets.ModelViewSet):
 @permission_classes([IsAuthenticated])
 def refresh_jitsi_token(request, meeting_id):
     try:
-        meeting = Meeting.objects.get(meeting_id=meeting_id)
-        
-        # Check if user has access to the meeting
-        if request.user.role != 'teacher':  # Use role field instead of hasattr
-            if not request.user.groups.filter(id=meeting.group.id).exists():
+        meeting = Meeting.objects.get(id=meeting_id)
+
+        user = request.user
+        # Check if user has access
+        if hasattr(user, 'teacher'):
+            if meeting.teacher != user.teacher:
                 return JsonResponse({'error': 'Access denied'}, status=403)
-        
+        elif hasattr(user, 'student'):
+            if not meeting.students.filter(id=user.student.id).exists():
+                return JsonResponse({'error': 'Access denied'}, status=403)
+        else:
+            return JsonResponse({'error': 'Unauthorized role'}, status=403)
+
         # Generate new token
         token = generate_jitsi_token(
             room_name=meeting.room_name,
@@ -201,15 +212,11 @@ def refresh_jitsi_token(request, meeting_id):
             meeting=meeting,
             expires_in=7200
         )
-        
+
         return JsonResponse({
             'token': token,
             'expires_at': (timezone.now() + timedelta(seconds=7200)).isoformat()
         })
-        
+
     except Meeting.DoesNotExist:
         return JsonResponse({'error': 'Meeting not found'}, status=404)
-
-
-
-

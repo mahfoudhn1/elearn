@@ -78,6 +78,7 @@ INSTALLED_APPS = [
     'notes',
     "jitsi",
     "notifications",
+    'languagesteaching', 
     "chat"
 ]
 
@@ -281,6 +282,7 @@ GMAIL_CLIENT_SECRET = os.getenv("GMAIL_CLIENT_SECRET")
 GMAIL_REFRESH_TOKEN = os.getenv("GMAIL_REFRESH_TOKEN")
 DEFAULT_FROM_EMAIL = "mahfoudhn99@gmail.com"  # Must match token permissions
 
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 #jitsi
 JITSI_APP_SECRET= os.getenv('jitsi_app_secret')
 JITSI_APP_ID = os.getenv('jisti_app_id')

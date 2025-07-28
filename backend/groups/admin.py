@@ -6,3 +6,8 @@ from .models import *
 admin.site.register(Group)
 
 admin.site.register(StudentGroupRequest)
+admin.site.register(GroupCourse)
+admin.site.register(Quiz)
+admin.site.register(Question)
+
+admin.site.register(StudentAnswer)

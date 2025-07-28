@@ -33,6 +33,7 @@ const TEACHING_LEVELS = {
   MIDDLE: ["MIDDLE", "متوسط"],
   SECONDARY: ["SECONDARY", "ثانوي"],
   HIGHER: ["HIGHER", "تعليم حر"],
+  LANGUAGES: ["LANGUAGES", "لغات اجنبية"],
 };
 
 const fetchTeachers = async (page: number, pageSize: number): Promise<{ teachers: Teacher[], total: number }> => {

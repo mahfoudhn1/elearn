@@ -68,10 +68,12 @@ class subjsctChoice(models.TextChoices):
     ECONOMICS = 'اقتصاد', 'اقتصاد'
 
 def generate_custom_id(username):
-    # Generate a random 6-digit number
     random_number = ''.join(random.choices(string.digits, k=6))
-    # Combine username and random number
+
     return f"{username}{random_number}"
+
+
+
 
 class Teacher(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="teacher")
@@ -100,10 +102,11 @@ class Student(models.Model):
     wilaya = models.CharField(max_length=20, null=True, blank=True)
     grade = models.ForeignKey(Grade, on_delete=models.CASCADE, default=1)
     field_of_study = models.ForeignKey(FieldOfStudy, on_delete=models.CASCADE, default=1)
-    
+    # language_level = models.ForeignKey()
     def __str__(self) -> str:
         return f"{self.user.first_name} {self.user.last_name}"
-    
+
+
 
 class Payment(models.Model):
     teacher = models.OneToOneField(Teacher, on_delete=models.CASCADE, related_name='payment')

@@ -176,12 +176,12 @@ class RegisterView(viewsets.ModelViewSet):
         
         try:
             user = serializer.save()
-            user.email_verified = True
+            user.email_verified = False
             user.save()  # verification_token is already set by default=uuid.uuid4()
             user_folder = os.path.join(settings.MEDIA_ROOT, f'user_{user.id}')
             if not os.path.exists(user_folder):
                 os.makedirs(user_folder)
-            # send_verification_email(user.email, user.verification_token)
+            send_verification_email(user.email, user.verification_token)
                 
             return Response({
                 "user": serializer.data,
