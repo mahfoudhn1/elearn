@@ -1,6 +1,6 @@
 "use client"
 import Link from 'next/link';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useDispatch, UseDispatch } from 'react-redux';
 import { AppDispatch, RootState } from '../../../store/store';
 import { logout } from '../../../store/authSlice';
@@ -12,11 +12,15 @@ import { usePathname } from 'next/navigation';
 function Navbar() {
   const pathname = usePathname(); 
   
-  const dashboardPaths = ['/login', '/register','/', '/continuereg','/verify-email'];
+  const dashboardPaths = ['/login', '/register','/', '/continuereg','/student-form',  '/student-form/4eme',
+    '/student-form/terminal' ,'/verify-email', '/privacy-policy'];
   const isDashboard = dashboardPaths.some(path => pathname === path || pathname.startsWith(`${path}/`));
   
     const dispatch = useDispatch<AppDispatch>()
-
+    useEffect(() => {
+      setIsOpen(false);
+      setIsOpen(false);
+    }, [pathname]);
     const [isOpen, setIsOpen] = useState(false);
     const toggleDropdown = () => {
         setIsOpen(!isOpen);
@@ -48,8 +52,12 @@ function Navbar() {
         className="flex items-center justify-center rounded-full focus:outline-none hover:ring-2 hover:ring-offset-4 hover:ring-gray-300"
       >
         <div className="w-10 h-10 overflow-hidden rounded-full">
-          {user ? (
-            <img src={user.avatar} className="w-full h-full object-cover" alt="Profile" />
+          {user?.avatar_file ? (
+            <img 
+              src={user?.avatar_file?.startsWith('/api/media/https%3A/lh3')
+                ? decodeURIComponent(user.avatar_file.replace('/api/media/', '')).replace(/^https:\//, 'https://')
+                : user?.avatar_file}
+          className="w-full h-full object-cover" alt="Profile" />
 
           ):
             <img src="/teacher.jpg" className="w-full h-full object-cover" alt="Profile" />
@@ -60,11 +68,14 @@ function Navbar() {
       {isOpen && (
         <div className="origin-top-left absolute left-0 mt-2 w-56 rounded-md z-30 shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
           <div className="py-1">
-            <Link href="" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            <Link href="/profileupdate" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
               اعدادات الحساب
             </Link>
-            <Link href="" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            <Link href="/groups" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
               المجموعات
+            </Link>
+            <Link href="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+              الرئيسية
             </Link>
             <button
               onClick={handlelogout}

@@ -2,6 +2,7 @@ from django.db import models
 
 from users.models import User
 
+from core.models import UUIDModel
 STATUS_CHOICES = [
     ('pending', 'Pending'),
     ('accepted', 'Accepted'),
@@ -9,7 +10,7 @@ STATUS_CHOICES = [
     ('deleted', 'Deleted'),  # Added a new status for when the student deletes the session
 ]
 
-class PrivateSessionRequest(models.Model):
+class PrivateSessionRequest(UUIDModel):
     student = models.ForeignKey('users.Student', on_delete=models.CASCADE)
     teacher = models.ForeignKey('users.Teacher', on_delete=models.CASCADE)
     requested_at = models.DateTimeField(auto_now_add=True)
@@ -21,7 +22,7 @@ class PrivateSessionRequest(models.Model):
     def __str__(self):
         return f"Session Request from {self.student.user.username} to {self.teacher.user.username}"
 
-class PrivateSession(models.Model):
+class PrivateSession(UUIDModel):
     session_request = models.OneToOneField(PrivateSessionRequest, on_delete=models.CASCADE, related_name='session')
     session_date = models.DateTimeField()  # Final date and time for the session
     paid = models.BooleanField(default=False)
@@ -29,7 +30,7 @@ class PrivateSession(models.Model):
     def __str__(self):
         return f"Private Session on {self.session_date} between {self.session_request.student.user.username} and {self.session_request.teacher.user.username}"
     
-class CheckSessionPaiment(models.Model):
+class CheckSessionPaiment(UUIDModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='check_session_paiment')
     PrivateSession = models.ForeignKey(PrivateSessionRequest, on_delete=models.CASCADE, related_name='check_session_paiment')
     check_image = models.ImageField(upload_to='checks/')

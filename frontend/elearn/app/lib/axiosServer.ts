@@ -1,41 +1,55 @@
+// lib/axiosServer.ts
 import axios from 'axios';
 import { cookies } from 'next/headers';
 
-const axiosSSRInstance = axios.create({
-  baseURL: 'http://localhost:8000/api', // Your backend API URL
-  withCredentials: true,
-});
+export function createAxiosSSRInstance() {
+  const cookieStore = cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
+  const refreshToken = cookieStore.get('refresh_token')?.value;
 
+  const instance = axios.create({
+    baseURL: process.env.NEXT_PUBLIC_API_URL,
+    withCredentials: true,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
+  });
 
+  instance.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      const originalRequest = error.config;
 
-axiosSSRInstance.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    
-    const refreshToken = cookies().get('refresh_token')?.value
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const response = await axiosSSRInstance.post('http://localhost:3000/api/auth/refresh',{refreshToken}, {withCredentials:true})
-        const {access_token, refresh_token} = response.data
-        
-        if(access_token){
-          originalRequest.headers['Authorization'] = `Bearer ${access_token}`;
-          return axiosSSRInstance(originalRequest);
-
+        if (!refreshToken) {
+          console.error('No refresh token available');
+          return Promise.reject(error);
         }
-        // Retry the original request
-      } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError);
-        // Handle refresh failure (e.g., redirect to login)
-        return Promise.reject(refreshError);
-      }
-    }
 
-    return Promise.reject(error);
-  }
-);
-export default axiosSSRInstance;
+        try {
+          const refreshResponse = await axios.post(
+            'https://riffaa.com/nextapi/api/auth/refresh',
+            { refreshToken },
+            { withCredentials: true }
+          );
+
+          const { access_token: newAccessToken } = refreshResponse.data;
+          if (newAccessToken) {
+            originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+            return instance(originalRequest);
+          }
+        } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError);
+          return Promise.reject(refreshError);
+        }
+      }
+
+      return Promise.reject(error);
+    }
+  );
+
+  return instance;
+}

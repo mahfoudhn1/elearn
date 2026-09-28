@@ -13,11 +13,10 @@ const PopupStudents: React.FC<PopupStudentsProps> = ({ onClose }) => {
   const [students, setStudents] = useState<Student[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
-  const [isAdded, setIsAdded] = useState<boolean>(false);
-  const [addedStudentId, setAddedStudentId] = useState<number | null>(null); // Track which student was added
+  const [addedStudentIds, setAddedStudentIds] = useState<string[]>([]);
 
   const params = useParams();
-  const group_id = Number(params.groupId);
+  const group_id = String(params.id);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -44,18 +43,13 @@ const PopupStudents: React.FC<PopupStudentsProps> = ({ onClose }) => {
     setFilteredStudents(filtered);
   };
 
-  const handleAdd = async (student_id: number, group_id: number) => {
+  const handleAdd = async (student_id: string, group_id: string) => {
     try {
       const res = await axiosClientInstance.post(`groups/${group_id}/add_student_to_group/`, {
         student_id,
       });
       if (res) {
-        setIsAdded(true);
-        setAddedStudentId(student_id); // Track the added student
-        setTimeout(() => {
-          setIsAdded(false); // Reset the added state after a short delay
-          setAddedStudentId(null);
-        }, 2000); // Reset after 2 seconds
+        setAddedStudentIds((prev) => [...prev, student_id]);
       }
     } catch (error) {
       console.error('Error adding student:', error);
@@ -110,14 +104,14 @@ const PopupStudents: React.FC<PopupStudentsProps> = ({ onClose }) => {
                       <p className="text-sm text-gray-500">{student.wilaya}</p>
                     </div>
                   </div>
-                  {addedStudentId === student.id ? (
-                    <div className="text-sm text-green-600 flex items-center">
+                  {addedStudentIds.includes(student.id) ? (
+                    <div className="text-sm text-orange-600 flex items-center">
                       <FontAwesomeIcon icon={faCheck} className="mr-1" />
                       تمت الإضافة
                     </div>
                   ) : (
                     <button
-                      className="text-sm text-white bg-sky-400 rounded-lg px-3 py-1 hover:bg-blue-500 transition-colors"
+                      className="text-sm text-white bg-orange-600 rounded-lg px-3 py-1 hover:bg-orange transition-colors"
                       onClick={() => handleAdd(student.id, group_id)}
                     >
                       إضافة

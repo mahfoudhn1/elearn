@@ -8,19 +8,19 @@ import PopupStudents from "./PopupStudents";
 import { Student, Subscription } from "../../../types/student";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../../store/store";
+import { Plus } from "lucide-react";
 
 interface StudentsListProps {
   studentlist: Student[];
+  refreshData: () => void;
 }
-
-function StudentsList({ studentlist }: StudentsListProps) {
+function StudentsList({ studentlist, refreshData }: StudentsListProps) {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [isPopupVisible, setPopupVisible] = useState(false);
   const params = useParams();
   const user = useSelector((state: RootState) => state.auth.user);
   const router = useRouter();
 
-  // Fetch subscriptions for students
   useEffect(() => {
     if (user?.role === "teacher" && studentlist.length > 0) {
       const fetchSubscriptions = async () => {
@@ -45,16 +45,17 @@ function StudentsList({ studentlist }: StudentsListProps) {
     }
   }, [studentlist, user]);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     const confirmDelete = window.confirm("هل أنت متأكد أنك تريد حذف هذا الطالب؟");
     if (!confirmDelete) return;
   
-    const group_id = Number(params.id);
+    const group_id = String(params.id);
     try {
       await axiosClientInstance.delete(`groups/${group_id}/remove_student/`, {
         data: { student_id: id },
       });
       alert("تم حذف الطالب بنجاح");
+      refreshData();
       router.refresh(); // Refresh the page to reflect changes
     } catch (error) {
       console.error("Error deleting student:", error);
@@ -80,39 +81,38 @@ function StudentsList({ studentlist }: StudentsListProps) {
 
       {/* Table Header */}
       <div className="flex items-center justify-between pb-6">
-        <h2 className="text-2xl font-semibold text-gray-800">أعضاء المجموعة</h2>
         {user?.role !== "student" && (
+          <div className="flex justify-end mb-4">
           <button
-            className="flex items-center gap-2 rounded-md bg-blue-400 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-400 transition-colors"
-            onClick={handleOpenPopup}
+            className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors"
+            onClick={() => setPopupVisible(true)}
           >
-            <FontAwesomeIcon icon={faPlus} />
-            اضافة أعضاء
+            <Plus className="-ml-1 mr-2 h-5 w-5" />
+            <span>اضافة طالب</span>
           </button>
+        </div>
         )}
       </div>
 
       {/* Students Table */}
       <div className="overflow-x-auto rounded-lg border border-gray-light shadow-sm">
         <table className="min-w-full divide-y divide-gray-light">
-          <thead className="bg-sky-400">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">
-                ID
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">
+  
+              <th className="whitespace-nowrap px-4 py-2 text-left font-medium text-grey-900">
                 الاسم الكامل
               </th>
               {user?.role !== "student" && (
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">
+                <th className="whitespace-nowrap px-4 py-2 text-left font-medium text-grey-900">
                   الاشتراك
                 </th>
               )}
-              <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">
+              <th className="whitespace-nowrap px-4 py-2 text-left font-medium text-grey-900">
                 الولاية
               </th>
               {user?.role !== "student" && (
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">
+                <th className="whitespace-nowrap px-4 py-2 text-left font-medium text-grey-900">
                   الإجراءات
                 </th>
               )}
@@ -121,18 +121,17 @@ function StudentsList({ studentlist }: StudentsListProps) {
           <tbody className="bg-white divide-y divide-gray-300">
             {studentlist?.map((student) => (
               <tr key={student.id} className="hover:bg-gray-light transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                  {student.id}
-                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <img
                       className="h-10 w-10 mx-2 rounded-full"
-                      src={`${student.user.avatar_file}`}
+                      src={`${student.user.avatar?.startsWith('/api/media/https%3A/lh3')
+                        ? decodeURIComponent(student.user.avatar.replace('/api/media/', '')).replace(/^https:\//, 'https://')
+                        : student.user.avatar_file}`}
                       alt={`${student.user.first_name} ${student.user.last_name}`}
                     />
                     <div className="mr-4">
-                      <div className="text-sm font-medium text-gray-dark">
+                      <div className="text-sm font-medium text-grey-900">
                         {student.user.first_name} {student.user.last_name}
                       </div>
                     </div>
@@ -141,7 +140,7 @@ function StudentsList({ studentlist }: StudentsListProps) {
                 {user?.role !== "student" && (
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {subscriptions.find((s) => s.student.id === student.id)?.is_active ? (
-                      <span className="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">
+                      <span className="px-2 py-1 text-xs font-semibold bg-green text-white rounded-full">
                         نشط
                       </span>
                     ) : (

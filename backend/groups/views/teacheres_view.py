@@ -6,7 +6,8 @@ from groups.models import StudentGroupRequest
 from groups.serializers import StudentGroupRequestSerializer
 
 
-class TeacherGroupRequestViewSet(viewsets.ModelViewSet):
+from core.views import UUIDLookupMixin
+class TeacherGroupRequestViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
     serializer_class = StudentGroupRequestSerializer
     permission_classes = [IsAuthenticated]
 
@@ -14,7 +15,7 @@ class TeacherGroupRequestViewSet(viewsets.ModelViewSet):
         request_group_id = self.request.query_params.get('group_id')
 
         if request_group_id:
-            return StudentGroupRequest.objects.filter(group__id=request_group_id)
+            return StudentGroupRequest.objects.filter(group__uuid=request_group_id)
 
         return StudentGroupRequest.objects.none()
 

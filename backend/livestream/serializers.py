@@ -2,8 +2,9 @@ from rest_framework import serializers
 from .models import ZoomMeeting
 from users.models import Teacher
 
-class ZoomMeetingSerializer(serializers.ModelSerializer):
-    teacher = serializers.PrimaryKeyRelatedField(queryset=Teacher.objects.all())
+from core.serializers import UUIDModelSerializer, UUIDRelatedField
+class ZoomMeetingSerializer(UUIDModelSerializer):
+    teacher = UUIDRelatedField(queryset=Teacher.objects.all())
 
     class Meta:
         model = ZoomMeeting

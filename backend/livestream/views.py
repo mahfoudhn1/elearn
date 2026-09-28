@@ -20,6 +20,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 
+from core.views import UUIDLookupMixin
 class OAuthViewSet(viewsets.ViewSet):
     
     @action(detail=False, methods=['get'])
@@ -81,7 +82,7 @@ class OAuthViewSet(viewsets.ViewSet):
         else:
             return None
 
-class ZoomMeetingViewSet(viewsets.ModelViewSet):
+class ZoomMeetingViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
     serializer_class = ZoomMeetingSerializer
     permission_classes = [IsAuthenticated]
 
@@ -165,7 +166,7 @@ class ZoomSignatureView(APIView):
         api_secret = settings.ZOOM_SDK_SECRET  # Store in your environment
 
         if role == "0":  # If the user is an attendee
-            teacher = get_object_or_404(Teacher, id=teacher_id)
+            teacher = get_object_or_404(Teacher, uuid=teacher_id)
             student = get_object_or_404(Student, user=user)
             schedule = get_object_or_404(Schedule, zoom_meeting_id=meeting_id)
 
@@ -279,4 +280,3 @@ class ZoomSignatureView(APIView):
 #         sdk_jwt = jwt.encode(payload, settings.ZOOM_CLIENT_SECRET, algorithm="HS256")
 
 #         return Response({"signature": sdk_jwt})
-

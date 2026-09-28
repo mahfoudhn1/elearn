@@ -3,7 +3,8 @@ from users.models import  Teacher, Student, User
 from django.utils import timezone
 
 
-class SubscriptionPlan(models.Model):
+from core.models import UUIDModel
+class SubscriptionPlan(UUIDModel):
     name = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     duration_days = models.IntegerField()
@@ -12,7 +13,7 @@ class SubscriptionPlan(models.Model):
     def __str__(self):
         return f"{self.name} - {self.price} DZD for {self.duration_days} days"
 
-class Subscription(models.Model):
+class Subscription(UUIDModel):
     
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
@@ -26,7 +27,44 @@ class Subscription(models.Model):
         """Check if the subscription is active and not expired."""
         if not self.is_active or not self.end_date:
             return False
-        return self.end_date >= timezone.now().date()
+        end_date = self.end_date.date() if hasattr(self.end_date, "date") else self.end_date
+        return end_date >= timezone.now().date()
+
+    def has_access_history(self):
+        """Return whether this subscription has ever granted course access."""
+        if self.is_active_subscription():
+            return True
+        return any(
+            entry.get("status") in {"Activated", "Renewed"}
+            for entry in (self.subs_history or [])
+            if isinstance(entry, dict)
+        )
+
+    def content_cutoff(self):
+        """Return the last access moment, or ``None`` for active access."""
+        if self.is_active_subscription():
+            return None
+
+        cancelled_dates = [
+            entry.get("date")
+            for entry in (self.subs_history or [])
+            if isinstance(entry, dict) and entry.get("status") == "Cancelled"
+        ]
+        if cancelled_dates:
+            return timezone.datetime.fromisoformat(max(cancelled_dates)).replace(
+                hour=23, minute=59, second=59, microsecond=999999,
+                tzinfo=timezone.get_current_timezone(),
+            )
+
+        if self.end_date:
+            cutoff = self.end_date
+            if not hasattr(cutoff, "time"):
+                cutoff = timezone.datetime.combine(cutoff, timezone.datetime.max.time())
+            if timezone.is_naive(cutoff):
+                cutoff = timezone.make_aware(cutoff)
+            return cutoff
+
+        return None
 
     def renew(self):
         self.start_date = timezone.now().date()
@@ -71,7 +109,7 @@ class Subscription(models.Model):
     
 
 
-class CheckUpload(models.Model):
+class CheckUpload(UUIDModel):
     student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='check_uploads')
     subscription = models.ForeignKey('Subscription', on_delete=models.CASCADE, related_name='check_uploads')
     check_image = models.ImageField(upload_to='checks/')
@@ -80,3 +118,26 @@ class CheckUpload(models.Model):
 
     def __str__(self):
         return f"Check uploaded by {self.student.username} for subscription {self.subscription.id}"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -9,11 +9,12 @@ from .serializers import CheckSessionPaimentSerializer, PrivateSessionRequestSer
 from users.models import Student, Teacher
 from rest_framework.views import APIView
 from rest_framework.decorators import action
+from core.views import UUIDLookupMixin
 # Student creates a session request
 from rest_framework import status
 from rest_framework.response import Response
 
-class CreateSessionRequestView(viewsets.ModelViewSet):
+class CreateSessionRequestView(UUIDLookupMixin, viewsets.ModelViewSet):
     queryset = PrivateSessionRequest.objects.all()
     serializer_class = PrivateSessionRequestSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -21,7 +22,7 @@ class CreateSessionRequestView(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         student = Student.objects.get(user=request.user)
         
-        request.data['student_id'] = student.id
+        request.data['student_id'] = student.uuid
         
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -59,7 +60,7 @@ class UpdateSessionRequestView(generics.UpdateAPIView):
 
 
 # List all session requests for a teacher
-class PrivateSessionListView(viewsets.ModelViewSet):
+class PrivateSessionListView(UUIDLookupMixin, viewsets.ModelViewSet):
     serializer_class = PrivateSessionRequestSerializer
     permission_classes = [permissions.IsAuthenticated]
 

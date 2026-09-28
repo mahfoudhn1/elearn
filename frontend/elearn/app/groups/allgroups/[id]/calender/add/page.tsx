@@ -10,7 +10,7 @@ import { RootState } from '../../../../../../store/store';
 
 interface ScheduleFormData {
     day_of_week?: string;
-    group_id: number;
+    group_id: string;
     schedule_type: string;
     start_time: string;
     end_time: string;
@@ -21,7 +21,7 @@ interface ScheduleFormData {
 const SchedulePage = () => {
     const today = new Date();
     const params = useParams<{ id: string }>();
-    const groupId = Number(params.id);
+    const groupId = String(params.id);
     const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     const newDayOfWeek = daysOfWeek[today.getDay()];
     const [schedules, setSchedules] = useState<Schedule[]>([]);
@@ -136,7 +136,7 @@ const SchedulePage = () => {
     const handleEndTimeChange = (time: string) => {
       setEndTime(time);
     };
-    const deleteSchedule = async (scheduleId: number) => {
+    const deleteSchedule = async (scheduleId: string) => {
         try {
             await axiosClientInstance.delete(`/groups/schedules/${scheduleId}/`);
             setSchedules((prevSchedules) => prevSchedules.filter(schedule => schedule.id !== scheduleId));

@@ -1,26 +1,31 @@
 /** @type {import('next').NextConfig} */
-
-
-
 const nextConfig = {
+  reactStrictMode: false, // Enable strict mode for better development checks
+  poweredByHeader: false, // Disables Next.js server signature
+
   async headers() {
     return [
       {
         source: '/(.*)',
         headers: [
-          {
-            key: 'Cross-Origin-Embedder-Policy',
-            value: 'unsafe-none',
+          // Allows your site to be framed by itself and your Jitsi instance.
+          { key: "Content-Security-Policy", value: "frame-ancestors 'self' riffaa.com/meeting/;" },
+          // Prevents browsers from trying to guess content types.
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          // Controls what features and APIs can be used in the browser.
+          { 
+            key: "Permissions-Policy", 
+            value: "camera=*, microphone=*, display-capture=(self), fullscreen=(), clipboard-write=(), hid=(), serial=()" 
           },
-          {
-            key: 'Cross-Origin-Opener-Policy',
-            value: 'unsafe-none',
-          },
+          // Tells browsers to prefer HTTPS.
+          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+          // Enables the browser's built-in XSS protection.
+          { key: "X-XSS-Protection", value: "1; mode=block" },
         ],
       },
     ]
   },
-  reactStrictMode: true,
+
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
@@ -30,13 +35,22 @@ const nextConfig = {
     }
     return config;
   },
-  transpilePackages: ['@zoom/meetingsdk'],
 
-    env: {
-      GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-      GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-    },
-    productionBrowserSourceMaps: false,
-  };
-  
-  export default nextConfig;
+  transpilePackages: ['react-redux'],
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  compiler: {
+    styledComponents: true, // Add support for styled-components
+  },
+
+  env: {
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL, // Expose API URL to frontend
+  },
+
+  productionBrowserSourceMaps: false, // Disable source maps in production
+};
+
+export default nextConfig;

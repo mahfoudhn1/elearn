@@ -73,3 +73,19 @@ dist/
 
 # Windows thumbs.db
 Thumbs.db
+
+# SSH keys & certificates
+ssh.crt
+ssh.crt.pub
+*.pem
+*.key
+
+# Local data dumps & runtime files
+dump.rdb
+*.rdb
+nohup.out
+backend/$
+
+# Local data with user PII
+backend/mydata.json
+backend/studentforms_clean.json

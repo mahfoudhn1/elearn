@@ -6,11 +6,14 @@ from .models import Teacher ,Student
 
 class UserAdmin(BaseUserAdmin):
     model = CustomUser
-    list_display = ('username', 'email', 'is_staff', 'is_active')
-    list_filter = ('is_staff', 'is_active')
+    list_display = ('username', 'email','email_verified', 'is_staff', 'is_active', 'role')
+    list_filter = ('is_staff', 'is_active','email_verified','role')
     search_fields = ('username', 'email')
     ordering = ('username',)
-    
+    fieldsets = BaseUserAdmin.fieldsets + (
+        ('Verification', {'fields': ('email_verified',)}),
+        ('Role Info', {'fields': ('role',)}),
+    )
 
 admin.site.register(CustomUser, UserAdmin)
 admin.site.register(Teacher)

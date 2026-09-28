@@ -29,10 +29,10 @@ import { Schedule } from "../../types/student";
 
         
     return (
-      <div className=" flex bg-white">
+      <div className=" flex bg-white w-full ">
         <div>
         </div>
-        <div className='flex flex-col p-4'>
+        <div className='flex flex-col p-4 md:w-[95%] w-full mx-auto'>
           <Calendar selectedDate={selectedDate} onDateSelect={setSelectedDate} schedules={schedules} />
           <ScheduleProfile selectedDate={selectedDate} schedules={schedules} />
   

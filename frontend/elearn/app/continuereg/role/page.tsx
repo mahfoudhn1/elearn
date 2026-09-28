@@ -59,7 +59,7 @@ function ChooseRole() {
         </div>
         <button
           onClick={handleRoleSelection}
-          className="w-full mt-8 bg-gradient-to-r from-gray-dark to-gray-700 text-white py-3 rounded-lg font-semibold hover:from-gray-700 hover:to-gray-dark transition-all duration-300"
+          className="w-full mt-8 bg-gradient-to-r from-grey-900 to-gray-700 text-white py-3 rounded-lg font-semibold hover:from-gray-700 hover:to-grey-900 transition-all duration-300"
         >
           متابعة التسجيل
         </button>

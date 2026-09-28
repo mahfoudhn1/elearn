@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect, useState } from 'react'
-import { Book, University, Blocks, School, GraduationCap } from 'lucide-react'
+import { Book, University, Blocks, School, GraduationCap, Languages } from 'lucide-react'
 ;
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
@@ -31,13 +31,18 @@ function Level() {
         { name: "متوسط", icon: <School className="h-8 w-8 text-gray-800 transform transition-transform duration-200 ease-in-out hover:scale-125 group-hover:text-white" />, description: 'انشىء و تفاعل مع طلبة المتوسط و لا تنسى وضع توقيت خاص بكل مجموعة' },
         { name: "ثانوي", icon: <Book className="h-8 w-8 text-gray-800 transform transition-transform duration-200 ease-in-out hover:scale-125 group-hover:text-white" />, description: 'لدى طلبة الثانوي مجموعة من التخصصات يجب اخذها بعين الاعتبار في كل مجموعة' },
         { name: "جامعي", icon: <University className="h-8 w-8 text-gray-800 transform transition-transform duration-200 ease-in-out hover:scale-125 group-hover:text-white" />, description: 'لدى طلبة الجامعة مجموعة من التخصصات يجب اخذها بعين الاعتبار في كل مجموعة' },
-        { name: "تدرس حر", icon: <GraduationCap className="h-8 w-8 text-gray-800 transform transition-transform duration-200 ease-in-out hover:scale-125 group-hover:text-white" />, description: 'التعامل مع الطلبة الاحرار الذين يحضرون دورات أو دروس في مجال معين يكون أكثر مرونة' }
+        { name: "تدرس حر", icon: <GraduationCap className="h-8 w-8 text-gray-800 transform transition-transform duration-200 ease-in-out hover:scale-125 group-hover:text-white" />, description: 'التعامل مع الطلبة الاحرار الذين يحضرون دورات أو دروس في مجال معين يكون أكثر مرونة' },
+        { name: "لغات اجنبية", icon: <Languages className="h-8 w-8 text-gray-800 transform transition-transform duration-200 ease-in-out hover:scale-125 group-hover:text-white" />, "description": "تهدف هذه المجموعة إلى دعم الطلبة الأحرار في تعلم واكتساب اللغات الاجنبية, مع توفير المرونة اللازمة للتقدم في مساراتهم التعليمية." }
     ];
 
     function handleGroup(name: string) {
         if (name === "ثانوي") {
             router.push('/groups/secondary');
-        } else {
+        }
+        else if (name === "لغات اجنبية") {
+            router.push('/groups/languages');
+        }
+        else {
             router.push(`/groups/allgroups?school_Level=${encodeURIComponent(name)}`);
         }
     }
@@ -45,7 +50,7 @@ function Level() {
     return (
         <div className="min-h-screen bg-gray-light p-6 flex">
 
-            <div className='m-auto p-8 h-screen'>
+            <div className='m-auto p-8 '>
                 <h1 className='text-xl text-center font-semibold text-gray-700 p-4'>يرجي اختيار الطور الدراسي</h1>
                 <div className="max-w-5xl mt-2 mx-auto">
                     <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 not-prose">

@@ -9,67 +9,75 @@ from users.models import FieldOfStudy, Grade, User, Teacher, Student
 from users.serializers import UserSerializer, TeacherSerializer, StudentSerializer
 from ..filters import TeacherFilter
 from django_filters.rest_framework import DjangoFilterBackend
-
+from django.db import transaction
 from rest_framework.decorators import action
 
 
-class UserViewSet(viewsets.ModelViewSet):
+from core.views import UUIDLookupMixin
+class UserViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Ensure users can only access their own data
         return get_user_model().objects.filter(id=self.request.user.id)
 
     def get_object(self):
-        # Always return the currently authenticated user
+
         return self.request.user
 
     def update(self, request, *args, **kwargs):
         user = self.get_object()
+        data = request.data.copy()
+        new_role = data.get('role', user.role)
+        old_role = user.role
 
-        # Check for existing email or username before serialization
-        email = request.data.get('email')
-        username = request.data.get('username')
-
+        email = data.get('email')
+        username = data.get('username')
+        
         if email and User.objects.filter(email=email).exclude(id=user.id).exists():
             return Response(
                 {"detail": "A user with this email already exists."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
+        
         if username and User.objects.filter(username=username).exclude(id=user.id).exists():
             return Response(
                 {"detail": "A user with this username already exists."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Rest of your update logic
-        serializer = self.get_serializer(user, data=request.data, partial=True)
+        # Validate role
+        if new_role not in ['teacher', 'student']:
+            return Response(
+                {"detail": "Invalid role. Must be 'teacher' or 'student'."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Update user
+        serializer = self.get_serializer(user, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
-        # Update role if changed
-        role = request.data.get('role', user.role)
-        if role and role != user.role:
-            if role not in ['teacher', 'student']:
-                return Response({"detail": "Invalid role provided."}, status=status.HTTP_400_BAD_REQUEST)
+        # Handle profile changes if role changed
+        if old_role != new_role:
+            with transaction.atomic():
+                # Remove old profile type
+                if old_role == 'teacher' and hasattr(user, 'teacher'):
+                    user.teacher.delete()
+                elif old_role == 'student' and hasattr(user, 'student'):
+                    user.student.delete()
 
-            # Handle role change logic
-            if role == 'teacher':
-                Teacher.objects.get_or_create(user=user)
-            elif role == 'student':
-                Student.objects.get_or_create(user=user)
+                if new_role == 'teacher' and not hasattr(user, 'teacher'):
+                    Teacher.objects.create(user=user)
+                elif new_role == 'student' and not hasattr(user, 'student'):
+                    Student.objects.create(user=user)
 
         return Response(serializer.data)
 
-
-
-
-
-class TeacherProfileView(viewsets.ModelViewSet):
+class TeacherProfileView(UUIDLookupMixin, viewsets.ModelViewSet):
 
     permission_classes = [IsAuthenticated]
+    lookup_field = "uuid"
 
     def list(self, request, *args, **kwargs):
         user = request.user
@@ -81,7 +89,7 @@ class TeacherProfileView(viewsets.ModelViewSet):
         return Response(serializer.data)
     def update(self, request, *args, **kwargs):
         user = request.user
-        teacher = Teacher.objects.get(pk=kwargs['pk'])
+        teacher = Teacher.objects.get(uuid=kwargs['pk'])
         
         if teacher.user != user:
             raise PermissionDenied(detail="You do not have permission to edit this profile.")
@@ -92,7 +100,7 @@ class TeacherProfileView(viewsets.ModelViewSet):
         return Response(serializer.data)
     
 
-class TeacherViewSet(viewsets.ModelViewSet):
+class TeacherViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
     queryset = Teacher.objects.all()
     serializer_class = TeacherSerializer
     filter_backends = [DjangoFilterBackend]
@@ -108,7 +116,6 @@ class TeacherViewSet(viewsets.ModelViewSet):
         else:
             # Save a new Teacher instance
             serializer.save(user=user)
-
     
     def update(self, request, *args, **kwargs):
         user = request.user
@@ -141,7 +148,7 @@ class TeacherViewSet(viewsets.ModelViewSet):
             return Response(
                 {"error": "Teacher profile not found"}, status=status.HTTP_404_NOT_FOUND
             )
-class StudentViewSet(viewsets.ModelViewSet):
+class StudentViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
     permission_classes = [IsAuthenticated]

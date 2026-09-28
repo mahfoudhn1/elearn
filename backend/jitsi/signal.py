@@ -1,29 +1,50 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from notifications.models import Notification
-from .models import Meeting
 from notifications.utils import send_notification
+from .models import Meeting
+
 
 @receiver(post_save, sender=Meeting)
-def notify_students_on_meeting_start(sender, instance, created, **kwargs):
-    # Check if the meeting is being started (start_time is being set)
-    if not created and instance.start_time and instance._state.adding is False:
-        # Get the group and students
-        group = instance.group
-        message = f"A meeting has started for your group: {group.name}. Join now!"
+def notify_students_on_meeting_status(sender, instance, created, **kwargs):
+    group = instance.group
+    privet_session = getattr(instance, "privetsession", None)
 
-        for student in group.students.all():
-            # Create a notification for each student
-            Notification.objects.create(
-                recipient=student.user,  # Use the user associated with the student
-                notification_type='meeting_start',
+    # Who to notify
+    if group:
+        students = group.students.all()
+    elif privet_session:
+        students = [privet_session.student]
+    else:
+        return
+
+    # 1️⃣ Notify when meeting starts
+    if not created and instance.start_time and instance.is_active:
+        message = (
+            f"لقد بدأ البث المباشر في المجموعة {group.name}. ادخل الان!"
+            if group else "لقد بدأ بث الحصة الخاصة، انضم الآن!"
+        )
+
+        for student in students:
+            send_notification(
+                recipient=student.user,
+                sender=getattr(instance, "host", None),
+                notification_type="meeting_start",
                 message=message,
-                room_id=instance.room_name  # Store the room name for reference
+                room_id=str(instance.uuid),
             )
 
-            # Send the notification in real-time
-            send_notification(student.user.id, {
-                'type': 'meeting_start',
-                'message': message,
-                'room_id': instance.room_name
-            })
+    # 2️⃣ Notify when meeting ends
+    if not instance.is_active and instance.end_time:
+        message = (
+            f"انتهى البث المباشر في المجموعة {group.name}."
+            if group else "انتهى بث الحصة الخاصة."
+        )
+
+        for student in students:
+            send_notification(
+                recipient=student.user,
+                sender=getattr(instance, "host", None),
+                notification_type="meeting_end",
+                message=message,
+                room_id=str(instance.uuid),
+            )

@@ -60,7 +60,7 @@ const StartLearning = ({
     }
   }, [flashcards]);
 
-  const handleFlip = (id: number) => {
+  const handleFlip = (id: string) => {
     setCards(cards.map(card =>
       card.id === id ? { ...card, isFlipped: !card.isFlipped } : card
     ));
@@ -130,7 +130,7 @@ const StartLearning = ({
           <div className="flex justify-between text-white mb-2">
             <span>{progress.current} / {progress.total} Cards</span>
             <div className="flex gap-4">
-              <span className="text-green-300">✓ {progress.correct}</span>
+              <span className="text-orange-600">✓ {progress.correct}</span>
               <span className="text-red-300">✗ {progress.incorrect}</span>
             </div>
           </div>
@@ -199,7 +199,7 @@ const StartLearning = ({
               onClick={() => handleSwipe('left')}
               className="bg-white p-4 rounded-full shadow-lg hover:bg-gray-100 transition-colors"
             >
-              <Check className="w-6 h-6 text-green-500" />
+              <Check className="w-6 h-6 text-orange-600" />
             </button>
           </div>
         )}

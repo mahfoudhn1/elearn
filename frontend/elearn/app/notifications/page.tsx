@@ -17,7 +17,7 @@ const NotificationPage = () => {
         getNotifications();
     }, []);
 
-    const markNotificationAsRead = async (notificationId: number) => {
+    const markNotificationAsRead = async (notificationId: string) => {
         try {
             const response = await axiosClientInstance.put(`/notifications/${notificationId}/`, {
                 read: true, // Update the `read` field to `true`
@@ -30,7 +30,7 @@ const NotificationPage = () => {
         }
     };
 
-    const handleMarkAsRead = async (notificationId: number) => {
+    const handleMarkAsRead = async (notificationId: string) => {
         try {
             const updatedNotification = await markNotificationAsRead(notificationId);
 
@@ -91,8 +91,8 @@ const NotificationPage = () => {
                                                 </span>
                                             )}
                                             {notification.notification_type === 'scheduled' && (
-                                                <span className="h-10 w-10 flex items-center justify-center bg-green-200 rounded-full">
-                                                    <svg className="h-6 w-6 text-green-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <span className="h-10 w-10 flex items-center justify-center bg-orange-600 rounded-full">
+                                                    <svg className="h-6 w-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                     </svg>
                                                 </span>
@@ -100,7 +100,7 @@ const NotificationPage = () => {
                                         </div>
                                         {/* Notification Content */}
                                         <div className="flex-1">
-                                            <p className="text-sm font-medium text-gray-dark">{notification.message}</p>
+                                            <p className="text-sm font-medium text-grey-900">{notification.message}</p>
                                             <p className="text-sm text-gray-700">
                                                 {new Date(notification.created_at).toLocaleString()}
                                             </p>

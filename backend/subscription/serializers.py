@@ -6,15 +6,16 @@ from datetime import datetime, timedelta
 
 
 
-class SubscriptionPlanSerializer(serializers.ModelSerializer):
+from core.serializers import UUIDModelSerializer, UUIDRelatedField
+class SubscriptionPlanSerializer(UUIDModelSerializer):
     class Meta:
         model = SubscriptionPlan
         fields = ['id', 'name', 'price', 'duration_days', 'description']
 
 
-class SubscriptionSerialize(serializers.ModelSerializer):
+class SubscriptionSerialize(UUIDModelSerializer):
     # For writing: Accept a teacher ID
-    teacher_id = serializers.PrimaryKeyRelatedField(
+    teacher_id = UUIDRelatedField(
         queryset=Teacher.objects.all(),
         source='teacher',  # Map to the `teacher` field in the model
         write_only=True    # Only used for input, not output
@@ -26,7 +27,7 @@ class SubscriptionSerialize(serializers.ModelSerializer):
     # Student remains read-only
     student = StudentSerializer(read_only=True)
     
-    plan_id = serializers.PrimaryKeyRelatedField(
+    plan_id = UUIDRelatedField(
         queryset=SubscriptionPlan.objects.all(),
         source='plan', 
         write_only=True  
@@ -70,7 +71,7 @@ class SubscriptionSerialize(serializers.ModelSerializer):
 
 
 
-class CheckUploadSerializer(serializers.ModelSerializer):
+class CheckUploadSerializer(UUIDModelSerializer):
     class Meta:
         model = CheckUpload
         fields = ['id', 'student', 'subscription', 'check_image', 'is_verified', 'uploaded_at']

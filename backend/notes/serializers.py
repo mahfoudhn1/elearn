@@ -2,7 +2,8 @@ from rest_framework import serializers
 from .models import Note, TodoList
 
 
-class NoteSerializer(serializers.ModelSerializer):
+from core.serializers import UUIDModelSerializer, UUIDRelatedField
+class NoteSerializer(UUIDModelSerializer):
     class Meta:
         model = Note
         fields = ["id", "user", "title", "subject", "content", "created_at"]
@@ -11,7 +12,7 @@ class NoteSerializer(serializers.ModelSerializer):
         if isinstance(value, list):  # If content is in an array format, handle it properly
             return ''.join(value)  # Example: join the content list into a string
         return value
-class TodoSerializer(serializers.ModelSerializer):
+class TodoSerializer(UUIDModelSerializer):
     class Meta:
         model = TodoList
         fields = "__all__"

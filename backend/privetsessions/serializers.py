@@ -4,13 +4,14 @@ from users.serializers import StudentSerializer, TeacherSerializer, UserSerializ
 from users.models import Student, Teacher
 from .models import CheckSessionPaiment, PrivateSessionRequest, PrivateSession
 
-class PrivateSessionRequestSerializer(serializers.ModelSerializer):
-    teacher_id = serializers.PrimaryKeyRelatedField(
+from core.serializers import UUIDModelSerializer, UUIDRelatedField
+class PrivateSessionRequestSerializer(UUIDModelSerializer):
+    teacher_id = UUIDRelatedField(
         queryset=Teacher.objects.all(),
         source='teacher',  # Map to the `teacher` field in the model
         write_only=True    # Only used for input, not output
     )
-    student_id = serializers.PrimaryKeyRelatedField(
+    student_id = UUIDRelatedField(
         queryset=Student.objects.all(),
         source='student',  # Map to the `teacher` field in the model
         write_only=True    # Only used for input, not output
@@ -26,7 +27,7 @@ class PrivateSessionRequestSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'requested_at', 'is_paied'] 
 
 
-class PrivateSessionSerializer(serializers.ModelSerializer):
+class PrivateSessionSerializer(UUIDModelSerializer):
     class Meta:
         model = PrivateSession
         fields = ['id', 'session_request', 'session_date', 'paid']
@@ -42,7 +43,7 @@ class PrivateSessionSerializer(serializers.ModelSerializer):
         return value
     
 
-class CheckSessionPaimentSerializer(serializers.ModelSerializer):
+class CheckSessionPaimentSerializer(UUIDModelSerializer):
     user = UserSerializer()
     class Meta:
         model = CheckSessionPaiment

@@ -8,6 +8,7 @@ import Mission from './components/homecomponents/Mission'
 import Review from './components/homecomponents/Review'
 import TeacherSection from './components/homecomponents/teacher'
 import FAQ from './components/homecomponents/FAQ'
+import LanguageLearningSection from './components/homecomponents/languageTeaching'
 
 
 export default function page() {
@@ -25,11 +26,31 @@ export default function page() {
     return (
       <div className=' md:-mr-6 overflow-hidden bg-white'> 
         <Hero />
-        <Whyus />
+
+        <div id="about">
+        <Whyus/>
+
+        </div>
+        <div>
         <TeacherSection />
+
+        </div>
+        <div>
+        <LanguageLearningSection />
+        </div>
+        <div id="services">
         <Mission/>
+
+        </div>
+        <div>
         <Review/>
+          </div>
+        <div id="contact">
         <FAQ/>
+
+        </div>
+
       </div>
     )
 }
+

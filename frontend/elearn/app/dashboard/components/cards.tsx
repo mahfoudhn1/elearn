@@ -17,7 +17,7 @@ interface CardsProps {
 
 function Cards({ payment, subscriptionCount }:CardsProps) {
   if (!payment || payment.length === 0) {
-    return <p>No payment data available</p>;
+    return <p></p>;
   }
 
   const { current_balance, total_earned } = payment[0];
@@ -45,7 +45,7 @@ return (
           </div>
         </div>
         <div className="px-3 text-right basis-1/3">
-        <div className="inline-block w-12 h-12 text-center rounded-lg bg-gradient-to-tl from-purple to-gray-dark">
+        <div className="inline-block w-12 h-12 text-center rounded-lg bg-gradient-to-tl from-purple to-grey-900">
         <i className="ni leading-none ni-money-coins text-lg relative top-3.5 text-white">
           <FontAwesomeIcon icon={faMoneyBill1Wave} />
         </i>
@@ -73,7 +73,7 @@ return (
           </div>
         </div>
         <div className="px-3 text-right basis-1/3">
-        <div className="inline-block w-12 h-12 text-center rounded-lg bg-gradient-to-tl from-purple to-gray-dark">
+        <div className="inline-block w-12 h-12 text-center rounded-lg bg-gradient-to-tl from-purple to-grey-900">
         <i className="ni leading-none ni-money-coins text-lg relative top-3.5 text-white">
           <FontAwesomeIcon icon={faPeopleGroup} />
         </i>
@@ -99,7 +99,7 @@ return (
           </div>
         </div>
         <div className="px-3 text-right basis-1/3">
-        <div className="inline-block w-12 h-12 text-center rounded-lg bg-gradient-to-tl from-purple to-gray-dark">
+        <div className="inline-block w-12 h-12 text-center rounded-lg bg-gradient-to-tl from-purple to-grey-900">
         <i className="ni leading-none ni-money-coins text-lg relative top-3.5 text-white">
           <FontAwesomeIcon icon={faClock} />
         </i>

@@ -1,192 +1,186 @@
-'use client'
-import React, { useEffect, useRef, useState } from 'react'
-import { Deck, Flashcard } from '../../types/student'
-import axiosClientInstance from '../../lib/axiosInstance'
-import { useParams } from 'next/navigation'
-import { Edit2, Play, Plus } from 'lucide-react'
-import AddFlashCard from './addFlashCard'
-import StartLearning from './StartLearning'
+'use client';
+import React, { useEffect, useState } from 'react';
+import { Deck, Flashcard } from '../../types/student';
+import axiosClientInstance from '../../lib/axiosInstance';
+import { useParams } from 'next/navigation';
+import { Edit2, Play, Plus, MoreVertical, Trash2 } from 'lucide-react';
+import AddFlashCard from './addFlashCard';
+import StartLearning from './StartLearning';
 
+function SingleDeck() {
+  const [deck, setDeck] = useState<Deck>();
+  const [visibleMenuId, setVisibleMenuId] = useState<string | null>(null);
+  const [isModelOpen, setIsModelOpen] = useState(false);
+  const [editCard, setEditCard] = useState<Flashcard | null>(null);
+  const [isStarted, setIsStarted] = useState(false);
 
+  const params = useParams();
 
-function singleDeck() {
-    const [deck, setDeck] = useState<Deck>()
-    const [visibleMenuId, setVisibleMenuId] = useState(null);
-    const [isModelOpen, setIsModelOpen] = useState(false)
-    const [editCard, setEditCard] = useState<Flashcard | null>(null); // Holds the card to edit, if any
-    const [isStared, setIsStarted] = useState(false)
-
-    const handleMenuToggle = (cardId:any) => {
-      setVisibleMenuId(visibleMenuId === cardId ? null : cardId);
-    };
-    
-    const params = useParams()
-
-    useEffect(()=>{
-        const fetchSingleDeck = async(params:any)=>{
-            try{
-                const response = await axiosClientInstance.get(`/flashcards/decks/${params.id}/`)
-                if(response.data){
-                  setDeck(response.data)                  
-                }
-            }catch(error){
-                console.log(error);
-                
-            }
-        }
-        fetchSingleDeck(params)
-    },[])
-
-    
-    const handleCreateFlashCard = async (newFlashcard:{front:string; back:string}) => {
+  useEffect(() => {
+    const fetchSingleDeck = async () => {
       try {
-        if (editCard) {
-          const response = await axiosClientInstance.put(`/flashcards/${editCard.id}/`, {
-            ...newFlashcard,
-            deck: params.id,
-          });
-          setDeck((prevDeck: any) => ({
-            ...prevDeck,
-            flashcards: prevDeck.flashcards.map((card: any) =>
-              card.id === editCard.id ? response.data : card
-            ),
-          }));
-    
-        }else{
-          const response = await axiosClientInstance.post('/flashcards/', {
-            ...newFlashcard,
-            deck: params.id,
-          });
-          const createdFlashcard = response.data;
-          setDeck((prevDeck:any) => {
-            if (!prevDeck) {
-              return { flashcards: [createdFlashcard] };
-            }
-            return {
-              ...prevDeck,
-              flashcards: [...(prevDeck.flashcards || []), createdFlashcard],
-            };
-          });
-
+        const response = await axiosClientInstance.get(
+          `/flashcards/decks/${params.id}/`
+        );
+        if (response.data) {
+          setDeck(response.data);
         }
-  
-        setIsModelOpen(false);
-        setEditCard(null);
       } catch (error) {
-        console.error("Error creating deck:", error);
+        console.log(error);
       }
+    };
+    fetchSingleDeck();
+  }, []);
 
-    };
-    
-    const handleDelete = async (cardId:any) => {
-      await axiosClientInstance.delete(`/flashcards/${cardId}/`)
-      setDeck((prevDeck: any) => ({
-        ...prevDeck,
-        flashcards: prevDeck.flashcards.filter((card: any) => card.id !== cardId),
-      }));
-      setVisibleMenuId(null);
-    };
-    
+  const handleMenuToggle = (cardId: string) => {
+    setVisibleMenuId(visibleMenuId === cardId ? null : cardId);
+  };
+
+  const handleCreateFlashCard = async (newFlashcard: { front: string; back: string }) => {
+    try {
+      if (editCard) {
+        const response = await axiosClientInstance.put(
+          `/flashcards/${editCard.id}/`,
+          { ...newFlashcard, deck: params.id }
+        );
+        setDeck((prev: any) => ({
+          ...prev,
+          flashcards: prev.flashcards.map((card: any) =>
+            card.id === editCard.id ? response.data : card
+          ),
+        }));
+      } else {
+        const response = await axiosClientInstance.post('/flashcards/', {
+          ...newFlashcard,
+          deck: params.id,
+        });
+        setDeck((prev: any) => ({
+          ...prev,
+          flashcards: [...(prev?.flashcards || []), response.data],
+        }));
+      }
+      setIsModelOpen(false);
+      setEditCard(null);
+    } catch (error) {
+      console.error('Error creating/updating flashcard:', error);
+    }
+  };
+
+  const handleDelete = async (cardId: string) => {
+    await axiosClientInstance.delete(`/flashcards/${cardId}/`);
+    setDeck((prev: any) => ({
+      ...prev,
+      flashcards: prev.flashcards.filter((card: any) => card.id !== cardId),
+    }));
+    setVisibleMenuId(null);
+  };
+
   return (
-    <div className="min-h-screen  bg-gray-light p-6 flex">
-      <div className="w-full relative mx-4">
-        <div className="flex justify-between items-center mb-6">
-          <div className='flex flex-col'>
-            <h1 className="text-2xl text-gray-800 font-bold">{deck?.title}</h1>
-            <p className='text-base text-gray-dark' > {deck?.description} </p>
-
+    <div className="min-h-screen md:mr-6 bg-gray-100 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white/95 backdrop-blur-md rounded-2xl shadow-lg p-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{deck?.title}</h1>
+            <p className="text-gray-600 mt-1">{deck?.description}</p>
           </div>
-          <div className="flex gap-3">
-          <button
-              className="relative inline-flex items-center justify-center px-4 py-2 text-base font-bold text-gray-800 transition-all duration-200 bg-white font-pj border border-gray-800 hover:bg-gray-800 hover:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800"
+          <div className="flex gap-3 mt-4 md:mt-0">
+            <button
               onClick={() => {
-                setIsModelOpen(true); setEditCard(null);
+                setIsModelOpen(true);
+                setEditCard(null);
               }}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-800 font-medium hover:bg-gray-100 transition"
             >
+              <Plus className="w-4 h-4" />
               اضافة بطاقة
             </button>
 
-              <div className="relative inline-flex  group">
-                  <div
-                      className="absolute transitiona-all duration-1000 opacity-70 flex -inset-px bg-gradient-to-r from-[#44BCFF] via-[#FF44EC] to-[#FF675E] rounded-xl blur-lg group-hover:opacity-100 group-hover:-inset-1 group-hover:duration-200 animate-tilt">
-                  </div>
-                 
-                  <button 
-                      onClick={()=>setIsStarted(true)}
-                      title="play"
-                      className="relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-200 bg-gray-800 font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800"
-                      role="button">أبدأ المراجعة
-                  <Play className="w-4 h-4 mr-2" />
-                  
+            <button
+              onClick={() => setIsStarted(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
+            >
+              <Play className="w-4 h-4" />
+              أبدأ المراجعة
+            </button>
+          </div>
+        </div>
+
+        {/* Flashcards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {deck?.flashcards.map((card) => (
+            <div
+              key={card.id}
+              className="bg-white/95 backdrop-blur-sm rounded-xl shadow-md hover:shadow-lg transition p-5 relative"
+            >
+              <div className="flex justify-between items-start">
+                <h3 className="text-lg font-semibold text-gray-900">{card.front}</h3>
+                <div className="relative">
+                  <button
+                    onClick={() => handleMenuToggle(card.id)}
+                    className="p-1 rounded hover:bg-gray-100"
+                  >
+                    <MoreVertical className="w-5 h-5 text-gray-500" />
                   </button>
+                  {visibleMenuId === card.id && (
+                    <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                      <button
+                        onClick={() => handleDelete(card.id)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-50 w-full"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        حذف
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {deck?.flashcards.map((card) => (
-        <div
-          key={card.id}
-          className="bg-white shadow-sm hover:shadow-md cursor-pointer transition-shadow relative"
-        >
-          <div className="p-6">
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="text-lg font-semibold">{card.front}</h3>
-              <button
-                onClick={() => handleMenuToggle(card.id)}
-                className="text-gray-400 hover:text-gray-600 relative"
-              >
-                ⋮
-              </button>
-              {visibleMenuId === card.id && (
-                <div
-                className="absolute left-0 mt-6 w-32 bg-white rounded-md shadow-lg z-10"
-                onClick={(e) => e.stopPropagation()} 
-              >
+
+              <p className="text-gray-600 text-sm mt-3">{card.back}</p>
+
+              <div className="flex justify-between items-center mt-4 text-xs text-gray-400">
+                <span>
+                  {new Date(card.created_at).toLocaleDateString('ar-EG', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+                </span>
                 <button
-                  onClick={() => handleDelete(card.id)}
-                  className="block px-4 py-2 text-sm text-gray-dark text-right hover:bg-gray-300 w-full "
+                  onClick={() => {
+                    setIsModelOpen(true);
+                    setEditCard(card);
+                  }}
+                  className="p-1 rounded bg-gray-800 text-white hover:bg-gray-700"
                 >
-                  حذف
+                  <Edit2 className="w-4 h-4" />
                 </button>
-       
               </div>
-              )}
             </div>
-            <p className="text-sm text-gray-dark w-full flex justify-between">
-              {new Date(card.created_at).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-              <Edit2 className="h-8 w-8 px-2 cursor-pointer text-white text-end float-end m-2 bg-gray-800"
-              onClick={() => { setIsModelOpen(true); setEditCard(card); }}
-              />
-            </p>
-          </div>
+          ))}
         </div>
-      ))}
-    </div>
-    {isModelOpen && (
-    <AddFlashCard
-      isOpen={true}
-      onClose={() => setIsModelOpen(false)}
-      onSubmit={handleCreateFlashCard}
-      card={editCard}
-    />
-    )}
-    {isStared && (
-      
+      </div>
+
+      {/* Modals */}
+      {isModelOpen && (
+        <AddFlashCard
+          isOpen={true}
+          onClose={() => setIsModelOpen(false)}
+          onSubmit={handleCreateFlashCard}
+          card={editCard}
+        />
+      )}
+
+      {isStarted && (
         <StartLearning
           isOpen={true}
           onClose={() => setIsStarted(false)}
-          flashcards = {deck?.flashcards}
-          DeckProgress = {deck?.progress}
+          flashcards={deck?.flashcards}
+          DeckProgress={deck?.progress}
         />
-    )}
-      </div>
+      )}
     </div>
-  )
+  );
 }
 
-export default singleDeck
+export default SingleDeck;

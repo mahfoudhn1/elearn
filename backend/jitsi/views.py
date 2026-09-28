@@ -23,7 +23,8 @@ from django.utils import timezone
 from django.utils import timezone
 import uuid
 
-class MeetingViewSet(viewsets.ModelViewSet):
+from core.views import UUIDLookupMixin
+class MeetingViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
     queryset = Meeting.objects.all()
     serializer_class = MeetingSerializer
     permission_classes = [IsAuthenticated]
@@ -41,7 +42,7 @@ class MeetingViewSet(viewsets.ModelViewSet):
             queryset = Meeting.objects.filter(students=user.student)
 
         if group_id:
-            queryset = queryset.filter(group__id=group_id)
+            queryset = queryset.filter(group__uuid=group_id)
         # if scheduled_date:
         #     print(scheduled_date)
         #     queryset = queryset.filter(schedule__scheduled_date=scheduled_date)
@@ -58,9 +59,9 @@ class MeetingViewSet(viewsets.ModelViewSet):
 
         teacher = user.teacher
         group_id = data.get('group_id')
-        group = get_object_or_404(Group, id=group_id)
+        group = get_object_or_404(Group, uuid=group_id)
 
-        room_name = f"Room_{teacher.id}_{uuid.uuid4().hex[:6]}"
+        room_name = f"room_{teacher.uuid.hex[:12]}_{uuid.uuid4().hex[:6]}"
 
         meeting = Meeting.objects.create(
             teacher=teacher,
@@ -81,8 +82,9 @@ class MeetingViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['GET'])
     def start_meeting(self, request, pk=None):
+
         try:
-            meeting = Meeting.objects.get(id=pk)
+            meeting = Meeting.objects.get(uuid=pk)
         except Meeting.DoesNotExist:
             return Response(
                 {"error": "Meeting with the specified roomId does not exist."},
@@ -98,12 +100,13 @@ class MeetingViewSet(viewsets.ModelViewSet):
             )
 
         meeting.start_time = timezone.now()
+        meeting.is_active=True
         meeting.save() 
 
-        jwt_token = generate_jitsi_token(user, meeting.room_name)
+        jwt_token = generate_jitsi_token(user, meeting.room_name, expires_in=30)
 
-        jitsi_domain = "https://localhost:8444"  
-        join_url = f"{jitsi_domain}/{meeting.room_name}?jwt={jwt_token}"
+        jitsi_domain = "riffaa.com/meeting/"  
+        join_url = f"{jitsi_domain}{meeting.room_name}?jwt={jwt_token}"
 
         return Response({
             "message": "Meeting started successfully.",
@@ -117,14 +120,21 @@ class MeetingViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def join_meeting(self, request, pk=None):
-        meeting = self.get_object()
+        try:
+            meeting = Meeting.objects.get(uuid=pk)
+        except Meeting.DoesNotExist:
+            return Response(
+                {"error": "Meeting with the specified ID does not exist."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
         user = request.user
 
-        # Check if user is allowed to join
-        if not (
-            (hasattr(user, 'teacher') and meeting.teacher == user.teacher) or
-            (hasattr(user, 'student') and user.student in meeting.students.all())
-        ):
+
+        is_teacher = hasattr(user, 'teacher') and meeting.teacher == user.teacher
+        is_student = hasattr(user, 'student') and user.student in meeting.students.all()
+
+        if not (is_teacher or is_student):
             return Response(
                 {"error": "You don't have permission to join this meeting."},
                 status=status.HTTP_403_FORBIDDEN
@@ -136,16 +146,16 @@ class MeetingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Generate JWT token
-        jwt_token = generate_jwt_token(user, meeting.room_name)
+        jwt_token = generate_jitsi_token(user, meeting.room_name, expires_in=10800)
+        jitsi_domain = "riffaa.com/meeting/" 
+       
 
         return Response({
-            "message": "Joined meeting successfully.",
+            "message": "Meeting started successfully.",
             "meeting": MeetingSerializer(meeting).data,
             "token": jwt_token,
             "room": meeting.room_name,
-            "domain": "8x8.vc",
-            "join_url": f"https://8x8.vc/{meeting.room_name}?jwt={jwt_token}"
+            "domain": jitsi_domain,
         })
 
     @action(detail=True, methods=['post'])
@@ -179,18 +189,19 @@ class MeetingViewSet(viewsets.ModelViewSet):
 @permission_classes([IsAuthenticated])
 def refresh_jitsi_token(request, meeting_id):
     try:
-        meeting = Meeting.objects.get(meeting_id=meeting_id)
+        meeting = Meeting.objects.get(uuid=meeting_id)
         
         # Check if user has access to the meeting
-        if request.user.role != 'teacher':  # Use role field instead of hasattr
-            if not request.user.groups.filter(id=meeting.group.id).exists():
-                return JsonResponse({'error': 'Access denied'}, status=403)
+        is_teacher = hasattr(request.user, 'teacher') and meeting.teacher == request.user.teacher
+        is_student = hasattr(request.user, 'student') and request.user.student in meeting.students.all()
+
+        if not (is_teacher or is_student):
+            return JsonResponse({'error': 'Access denied'}, status=403)
         
         # Generate new token
         token = generate_jitsi_token(
-            room_name=meeting.room_name,
             user=request.user,
-            meeting=meeting,
+            room_name=meeting.room_name,
             expires_in=7200
         )
         
@@ -201,7 +212,6 @@ def refresh_jitsi_token(request, meeting_id):
         
     except Meeting.DoesNotExist:
         return JsonResponse({'error': 'Meeting not found'}, status=404)
-
 
 
 

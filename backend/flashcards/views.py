@@ -1,3 +1,4 @@
+from core.views import UUIDLookupMixin
 # flashcards/views.py
 
 from rest_framework import viewsets, permissions
@@ -18,7 +19,7 @@ class isOwnerOrReadOnly(permissions.BasePermission):
 
         return obj.user == request.user
     
-class DeckViewSet(viewsets.ModelViewSet):
+class DeckViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
     queryset = Deck.objects.all()
     serializer_class = DeckSerializer
     permission_classes = [IsAuthenticated, isOwnerOrReadOnly]
@@ -45,7 +46,7 @@ class DeckViewSet(viewsets.ModelViewSet):
     )
 
     
-class FlashcardViewSet(viewsets.ModelViewSet):
+class FlashcardViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
     queryset = Flashcard.objects.all()
     serializer_class = FlashcardSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -64,7 +65,7 @@ class FlashcardViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         instence_id = kwargs.get('pk') 
         try:
-            instance = Flashcard.objects.get(id=instence_id)
+            instance = Flashcard.objects.get(uuid=instence_id)
         except Flashcard.DoesNotExist:
             raise NotFound("Note not found.")
         instance.delete()
@@ -76,7 +77,7 @@ class FlashcardViewSet(viewsets.ModelViewSet):
 
         instance_id = kwargs.get('pk')  
         try:
-            instance = Flashcard.objects.get(id=instance_id, deck__user=self.request.user)
+            instance = Flashcard.objects.get(uuid=instance_id, deck__user=self.request.user)
         except Flashcard.DoesNotExist:
             raise NotFound("Flashcard not found or you don't have permission to update it.")
 
@@ -86,7 +87,7 @@ class FlashcardViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
         
-class DeckProgressViewset(viewsets.ModelViewSet):
+class DeckProgressViewset(UUIDLookupMixin, viewsets.ModelViewSet):
     queryset = Deckprogress.objects.all()
     serializer_class = DeckProgressSerializer
     permission_classes = [permissions.IsAuthenticated]

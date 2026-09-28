@@ -3,7 +3,8 @@ from django.db import models
 from users.models import User
 
 
-class Meeting(models.Model):
+from core.models import UUIDModel
+class Meeting(UUIDModel):
     teacher = models.ForeignKey("users.Teacher", on_delete=models.CASCADE)
     room_name = models.CharField(max_length=255)
     students = models.ManyToManyField("users.Student", related_name="students", blank=True)

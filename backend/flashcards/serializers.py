@@ -4,17 +4,18 @@ from users.models import User
 from .models import Flashcard, Deck, Deckprogress
 
 
-class FlashcardSerializer(serializers.ModelSerializer):
+from core.serializers import UUIDModelSerializer, UUIDRelatedField
+class FlashcardSerializer(UUIDModelSerializer):
     class Meta:
         model = Flashcard
         fields = ['id', "deck", "front", "back", "created_at"]
 
-class DeckProgressSerializer(serializers.ModelSerializer):
+class DeckProgressSerializer(UUIDModelSerializer):
     class Meta:
         model = Deckprogress
         fields = ['id', 'correct_answers', 'wrong_answers', 'total_flashcards', 'completed']
 
-class DeckSerializer(serializers.ModelSerializer):
+class DeckSerializer(UUIDModelSerializer):
 
     flashcards = FlashcardSerializer(many=True, read_only=True)
     progress = DeckProgressSerializer(many=True, read_only=True)

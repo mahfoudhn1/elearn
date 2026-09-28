@@ -17,7 +17,8 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Subscription, Student, Teacher
 from .serializers import SubscriptionSerialize, StudentSerializer
 
-class SubscriptionViewSet(viewsets.ModelViewSet):
+from core.views import UUIDLookupMixin
+class SubscriptionViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
     queryset = Subscription.objects.all()
     serializer_class = SubscriptionSerialize
     permission_classes = [IsAuthenticated]
@@ -36,7 +37,6 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
         subscription = self.get_object()
         user = request.user
 
-        # Check if the subscription belongs to the authenticated user
         if hasattr(user, 'student') and subscription.student.user != user:
             return Response({'error': 'You do not have permission to access this subscription'}, status=status.HTTP_403_FORBIDDEN)
         elif hasattr(user, 'teacher') and subscription.teacher.user != user:
@@ -44,7 +44,7 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(subscription)
         return Response(serializer.data)
-
+  
     def list(self, request, *args, **kwargs):
         # Ensure users can only list their own subscriptions
         user = request.user
@@ -75,6 +75,17 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         else:
             return Response({'error': 'Subscription is not active'}, status=status.HTTP_400_BAD_REQUEST)
+    @action(detail=False, methods=['get'], url_path='by-teacher')
+    def by_teacher(self, request):
+        teacher_id = request.query_params.get('teacher_id')
+        if not teacher_id:
+            return Response({"error": "teacher_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        subscriptions = Subscription.objects.filter(
+            teacher__uuid=teacher_id,
+        )
+        serializer = self.get_serializer(subscriptions, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def subscribed_students(self, request):
@@ -101,7 +112,7 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
         if not student_ids:
             return Response({'error': 'No student IDs provided'}, status=status.HTTP_400_BAD_REQUEST)
 
-        subscriptions = Subscription.objects.filter(teacher=teacher, student__id__in=student_ids)
+        subscriptions = Subscription.objects.filter(teacher=teacher, student__uuid__in=student_ids)
         serializer = SubscriptionSerialize(subscriptions, many=True)
         return Response(serializer.data)
 
@@ -117,7 +128,7 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
         serializer = SubscriptionSerialize(subscriptions, many=True, context={'request': request})
         return Response(serializer.data)
 
-class subscriptionPlanView(viewsets.ModelViewSet):
+class subscriptionPlanView(UUIDLookupMixin, viewsets.ModelViewSet):
     queryset = SubscriptionPlan.objects.all()
     serializer_class = SubscriptionPlanSerializer
     permission_classes = [IsAuthenticated]
@@ -136,9 +147,10 @@ class UploadCheckView(APIView):
 
         try:
             # Create the CheckUpload instance
+            subscription = Subscription.objects.get(uuid=subscription_id)
             check_upload = CheckUpload.objects.create(
                 student=request.user,
-                subscription_id=subscription_id,
+                subscription=subscription,
                 check_image=check_image,
             )
             serializer = CheckUploadSerializer(check_upload)

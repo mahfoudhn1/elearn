@@ -4,13 +4,14 @@ from users.models import FieldOfStudy, Grade, SchoolLevel
 from users.serializers import fieldofstudySerializer, gradeSerializer
 
 
-class FieldOfStudysView(viewsets.ModelViewSet):
+from core.views import UUIDLookupMixin
+class FieldOfStudysView(UUIDLookupMixin, viewsets.ModelViewSet):
     queryset = FieldOfStudy.objects.all()
     serializer_class = fieldofstudySerializer
     permission_classes = [IsAuthenticated]
     
 
-class GradeViewSet(viewsets.ModelViewSet):
+class GradeViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
     queryset = Grade.objects.all()
     serializer_class = gradeSerializer  
 

@@ -1,6 +1,7 @@
 from django.db import models
 from users.models import User
 
+from core.models import UUIDModel
 class subjsctChoice(models.TextChoices):
     MATHEMATICS = 'رياضيات', 'رياضيات'
     PHYSICS = 'فيزياء', 'فيزياء'
@@ -14,7 +15,7 @@ class subjsctChoice(models.TextChoices):
     PHILOSOPHY = 'فلسفة', 'فلسفة'
     ECONOMICS = 'اقتصاد', 'اقتصاد'
 
-class Deck(models.Model):
+class Deck(UUIDModel):
     VISIBILITY_CHOICES = [
         ('public', 'Public'),
         ('private', 'Private'),
@@ -26,13 +27,13 @@ class Deck(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     visibility = models.CharField(max_length=7, choices=VISIBILITY_CHOICES, default='private')
 
-class Flashcard(models.Model):
+class Flashcard(UUIDModel):
     deck = models.ForeignKey(Deck, on_delete=models.CASCADE, related_name='flashcards')
     front = models.TextField()
     back = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
-class Deckprogress(models.Model):
+class Deckprogress(UUIDModel):
     deck = models.ForeignKey(Deck, on_delete=models.CASCADE, related_name="progress")
     user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="deck_progress")
     correct_answers = models.IntegerField(default=0)

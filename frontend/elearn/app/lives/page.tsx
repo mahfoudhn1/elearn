@@ -1,94 +1,93 @@
-"use client";
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import axiosClientInstance from "../lib/axiosInstance";
-import NoteTakingApp from "./notes";
+"use client"
+import React, { useEffect, useState, useCallback } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
+import { useSearchParams, useRouter } from 'next/navigation';
+import axiosClientInstance from '../lib/axiosInstance';
+import dynamic from 'next/dynamic';
 
-// Declare JitsiMeetExternalAPI type globally
-declare global {
-  interface Window {
-    JitsiMeetExternalAPI: any;
-  }
-}
+const JitsiMeetOptimized = dynamic(() => import('./JitsiMeetComponent'), {
+  ssr: false,
+});
+const NoteTakingApp = dynamic(() => import('./notes'), {
+  ssr: false,
+});
 
-const StartLive = () => {
-  const [roomData, setRoomData] = useState<{
-    room: string;
-    token: string;
-    domain: string;
-  } | null>(null);
-  const [error, setError] = useState<string | null>(null);
+const App: React.FC = () => {
+  const router = useRouter();
   const query = useSearchParams();
   const roomId = query.get("roomId");
+  // const groupId = query.get("group_id"); // No longer needed for this workflow
+  const [error, setError] = useState('');
+  const [meetingData, setMeetingData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const user = useSelector((state: RootState) => state.auth.user);
+  const isTeacher = user?.role === 'teacher';
+  const isStudent = user?.role === 'student';
 
-  // Fetch meeting data when roomId changes
-  useEffect(() => {
+  const fetchMeetingData = useCallback(async () => {
     if (!roomId) return;
-
-    const getRoom = async () => {
-      try {
-        // Adjust endpoint to match your backend (assuming /meetings/ is correct)
-        const response = await axiosClientInstance.get(`/meetings/${roomId}/start_meeting/`);
-        const { room, token, domain } = response.data;
-        setRoomData({ room, token, domain });
-      } catch (error) {
-        console.error("Error starting the live session:", error);
-        setError("Failed to start the meeting. Please try again.");
+    
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      let response;
+      if (isTeacher) {
+        response = await axiosClientInstance.get(`/live/${roomId}/start_meeting/`);
+      } else if (isStudent) {
+        response = await axiosClientInstance.post(`/live/${roomId}/join_meeting/`);
       }
-    };
+      
+      if (response?.data) {
+        setMeetingData(response.data);
+      } else {
+        setError('Invalid meeting data received');
+      }
+    } catch (err) {
+      setError('Failed to load meeting data. Please try again later.');
+      console.error('Error fetching meeting data:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [roomId, isTeacher, isStudent]);
 
-    getRoom();
-  }, [roomId]);
-
-  // Initialize Jitsi meeting when roomData is available
   useEffect(() => {
-    if (!roomData || !window.JitsiMeetExternalAPI) return;
-
-    const { room, token, domain } = roomData;
-    const jitsiDomain = domain.replace("https://", ""); // Remove protocol for Jitsi API
-
-    const options = {
-      roomName: room,
-      parentNode: document.getElementById("jitsi-container"),
-      jwt: token,
-      width: "100%",
-      height: "100vh",
-      configOverwrite: {
-        prejoinPageEnabled: false,
-        startWithAudioMuted: false,
-        startWithVideoMuted: false,
-      },
-      interfaceConfigOverwrite: {
-        filmStripOnly: false,
-      },
-    };
-
-    const api = new window.JitsiMeetExternalAPI(jitsiDomain, options);
-    api.executeCommand("displayName", "Teacher");
-
-    // Cleanup Jitsi instance on unmount
-    return () => {
-      api.dispose();
-    };
-  }, [roomData]);
-
-  // Loading and error states
-  if (!roomData && !error) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  }
-
+    fetchMeetingData();
+  }, [fetchMeetingData]);
+  console.log(meetingData);
+  
   if (error) {
-    return <div className="min-h-screen flex items-center justify-center text-red-500">{error}</div>;
+    router.push('/group/allgroups');
+    return null;
   }
+
+  if (isLoading || !meetingData) {
+    return <div>Loading meeting data...</div>;
+  }
+
+  const isMeetingActive = meetingData?.meeting?.is_active;
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div id="jitsi-container" className="w-full h-screen" />
-          <div className="relative">
-              <NoteTakingApp />
-            </div>
+    <div className="App">
+      {isStudent && !isMeetingActive && (
+        <div className="alert alert-danger">
+          هذا البث غير شغال حاليا يرجى الانتظار حتى البدأ
+        </div>
+      )}
+
+      {(isMeetingActive || isTeacher) && (
+        <div>
+          <JitsiMeetOptimized 
+            key={`jitsi-${roomId}`} 
+            meetingData={meetingData} 
+          />
+
+          <NoteTakingApp />
+        </div>
+      )}
     </div>
   );
 };
 
-export default StartLive;
+export default App;

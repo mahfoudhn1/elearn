@@ -15,7 +15,8 @@ from .models import Note
 from .serializers import NoteSerializer
 from urllib.parse import unquote
 
-class NoteViewst(viewsets.ModelViewSet):
+from core.views import UUIDLookupMixin
+class NoteViewst(UUIDLookupMixin, viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = NoteSerializer
 
@@ -80,7 +81,7 @@ class NoteViewst(viewsets.ModelViewSet):
     #     serializer = self.get_serializer(queryset, many=True)
     #     return Response(serializer.data)
     
-class TodoViewSet(viewsets.ModelViewSet):
+class TodoViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
     queryset = TodoList.objects.all()
     serializer_class = TodoSerializer
     permission_classes= [IsAuthenticated]

@@ -6,7 +6,7 @@ import axiosClientInstance from "../../lib/axiosInstance";
 interface StudentFormProps {
   phone_number: string;
   setPhone_number: (value: string) => void;
-  teaching_level:string;
+  teaching_level: string;
   setTeaching_level: (value: string) => void;
   wilaya: string;
   setWilaya: (value: string) => void;
@@ -24,13 +24,13 @@ const StudentReg: React.FC<StudentFormProps> = ({
   grades,
   onSubmit,
 }) => {
-  const [grade_id, setGrade_id] = useState<number>(0);
-  const [field_of_study_id, setField_of_study_id] = useState<number>(0);
+  const [grade_id, setGrade_id] = useState<string>("");
+  const [field_of_study_id, setField_of_study_id] = useState<string>("");
   const [filteredGrades, setFilteredGrades] = useState<Grade[]>([]);
   const [fieldsOfStudy, setFieldsOfStudy] = useState<field_of_study[]>([]);
   const [availableFields, setAvailableFields] = useState<field_of_study[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  // Fetch fields of study from the backend
+
   useEffect(() => {
     const fetchFieldsOfStudy = async () => {
       try {
@@ -45,7 +45,6 @@ const StudentReg: React.FC<StudentFormProps> = ({
     fetchFieldsOfStudy();
   }, []);
 
-  // Filter grades based on the selected school level
   useEffect(() => {
     if (grade_id) {
       const selectedGrade = grades.find((grade) => grade.id === grade_id);
@@ -56,20 +55,17 @@ const StudentReg: React.FC<StudentFormProps> = ({
     }
   }, [grade_id, grades]);
 
-  // Update available fields of study based on the selected grade
   useEffect(() => {
     if (grade_id) {
       const selectedGrade = grades.find((grade) => grade.id === grade_id);
       if (selectedGrade && selectedGrade.school_level === "ثانوي") {
         if (selectedGrade.name === "السنة الاولى") {
-          const firstYearFields = fieldsOfStudy.filter(
-            (field) => field.name === "ادب و فلسفة" || field.name === "علوم تجريبية"
+          setAvailableFields(
+            fieldsOfStudy.filter(
+              (field) => field.name === "ادب و فلسفة" || field.name === "علوم تجريبية"
+            )
           );
-          setAvailableFields(firstYearFields);
-        } else if (
-          selectedGrade.name === "السنة الثانية" ||
-          selectedGrade.name === "السنة الثالثة"
-        ) {
+        } else if (selectedGrade.name === "السنة الثانية" || selectedGrade.name === "السنة الثالثة") {
           setAvailableFields(fieldsOfStudy);
         } else {
           setAvailableFields([]);
@@ -82,12 +78,11 @@ const StudentReg: React.FC<StudentFormProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-
     if (name === "grade_id") {
-      setGrade_id(Number(value));
-      setField_of_study_id(0); // Reset field_of_study_id when grade changes
+      setGrade_id(value);
+      setField_of_study_id("");
     } else if (name === "field_of_study_id") {
-      setField_of_study_id(Number(value));
+      setField_of_study_id(value);
     } else if (name === "phone_number") {
       setPhone_number(value);
     } else if (name === "wilaya") {
@@ -97,36 +92,41 @@ const StudentReg: React.FC<StudentFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const submitData = {
+    onSubmit({
       grade_id,
       field_of_study_id,
       phone_number,
       wilaya,
-    };
-    onSubmit(submitData);
+    });
   };
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+  if (isLoading) return <div className="text-gray-300 text-center">جار التحميل...</div>;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      className="max-w-lg mx-auto p-6 bg-white text-grey rounded-xl shadow-lg space-y-5"
+    >
+      <h2 className="text-2xl font-bold text-orange-600 text-center">تسجيل الطالب</h2>
+
       {/* School Level */}
-      <div>
-        <label className="block text-gray-700">اختيار الطور</label>
+      <div className="">
+        <label className="block mb-1 font-medium">اختيار الطور</label>
         <select
           name="school_level"
           value={grades.find((grade) => grade.id === grade_id)?.school_level || ""}
           onChange={(e) => {
             const schoolLevel = e.target.value;
-            const filtered = grades.filter((grade) => grade.school_level === schoolLevel);
-            setFilteredGrades(filtered);
-            setGrade_id(0); // Reset grade_id when school level changes
-            setField_of_study_id(0); // Reset field_of_study_id when school level changes
+            setFilteredGrades(grades.filter((grade) => grade.school_level === schoolLevel));
+            setGrade_id("");
+            setField_of_study_id("");
           }}
-          className="mt-1 p-2 w-full border bg-white rounded-md focus:border-gray focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300"        >
-          <option value="" disabled>اختيار الطور</option>
+          className="mt-1 p-2 w-full rounded-md border border-gray-700 focus:ring-2 focus:ring-orange-600"
+          required
+        >
+          <option value="" disabled>
+            اختيار الطور
+          </option>
           <option value="ابتدائي">ابتدائي</option>
           <option value="متوسط">متوسط</option>
           <option value="ثانوي">ثانوي</option>
@@ -136,15 +136,17 @@ const StudentReg: React.FC<StudentFormProps> = ({
       {/* Grade */}
       {filteredGrades.length > 0 && (
         <div>
-          <label className="block text-gray-700">اختيار السنة الدراسية</label>
-
+          <label className="block mb-1 font-medium">اختيار السنة الدراسية</label>
           <select
             name="grade_id"
             value={grade_id || ""}
             onChange={handleChange}
-            className="mt-1 p-2 w-full border bg-white rounded-md focus:border-gray focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300"
-            >
-            <option value="" disabled>اختيار السنة</option>
+            className="mt-1 p-2 w-full rounded-md  border border-gray-700 focus:ring-2 focus:ring-orange-600"
+            required
+          >
+            <option value="" disabled>
+              اختيار السنة
+            </option>
             {filteredGrades.map((grade) => (
               <option key={grade.id} value={grade.id}>
                 {grade.name}
@@ -157,15 +159,16 @@ const StudentReg: React.FC<StudentFormProps> = ({
       {/* Field of Study */}
       {availableFields.length > 0 && (
         <div>
-          <label className="block text-gray-700">اختيار التخصص</label>
-
+          <label className="block mb-1 font-medium">اختيار التخصص</label>
           <select
             name="field_of_study_id"
             value={field_of_study_id || ""}
             onChange={handleChange}
-            className="mt-1 p-2 w-full border bg-white rounded-md focus:border-gray focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300"
-            >
-            <option value="" disabled>اختيار التخصص</option>
+            className="mt-1 p-2 w-full rounded-md  border border-gray-700 focus:ring-2 focus:ring-orange-600"
+          >
+            <option value="" disabled>
+              اختيار التخصص
+            </option>
             {availableFields.map((field) => (
               <option key={field.id} value={field.id}>
                 {field.name}
@@ -177,52 +180,39 @@ const StudentReg: React.FC<StudentFormProps> = ({
 
       {/* Phone Number */}
       <div>
-        <label className="block mb-2 text-sm font-medium text-gray">Phone Number</label>
-        <div className="relative">
-          <div className="absolute inset-y-0 start-0 top-0 flex items-center ps-3.5 pointer-events-none">
-            <svg
-              className="w-4 h-4 text-gray"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="currentColor"
-              viewBox="0 0 19 18"
-            >
-              <path d="M18 13.446a3.02 3.02 0 0 0-.946-1.985l-1.4-1.4a3.054 3.054 0 0 0-4.218 0l-.7.7a.983.983 0 0 1-1.39 0l-2.1-2.1a.983.983 0 0 1 0-1.389l.7-.7a2.98 2.98 0 0 0 0-4.217l-1.4-1.4a2.824 2.824 0 0 0-4.218 0c-3.619 3.619-3 8.229 1.752 12.979C6.785 16.639 9.45 18 11.912 18a7.175 7.175 0 0 0 5.139-2.325A2.9 2.9 0 0 0 18 13.446Z" />
-            </svg>
-          </div>
-          <input
-            type="text"
-            id="phone_number"
-            name = 'phone_number'
-            className="border text-black text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5"
-            minLength={10}
-            maxLength={10}
-            placeholder="123-456-7890"
-            value={phone_number}
-            onChange={handleChange}
+        <label className="block mb-1 font-medium">رقم الهاتف <span className="text-oragne-600"> (ضروري) </span> </label>
+        <input
+          type="text"
+          name="phone_number"
+          className="w-full p-2 rounded-md  border border-gray-700 focus:ring-2 focus:ring-orange-600"
+          minLength={10}
+          maxLength={10}
+          placeholder="06xxxxxxxx"
+          value={phone_number}
+          onChange={handleChange}
+          required
         />
-      </div>
       </div>
 
       {/* Wilaya */}
       <div>
-      <label className="block text-sm font-medium text-gray">الولاية</label>
-      <input
+        <label className="block mb-1 font-medium">الولاية</label>
+        <input
           type="text"
           name="wilaya"
           value={wilaya || ""}
           onChange={handleChange}
-          className="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300"
-          />
+          className="w-full p-2 rounded-md  border border-gray-700 focus:ring-2 focus:ring-orange-600"
+        />
       </div>
-     
-      {/* Submit Button */}
+
+      {/* Submit */}
       <button
-          type="submit"
-          className="w-full bg-gray-dark text-white p-2 rounded-md hover:bg-green focus:outline-none focus:bg-black focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-colors duration-300"
-        >
-          تسجيل
-        </button>
+        type="submit"
+        className="w-full py-2 bg-grey-900 hover:bg-orange-600 rounded-md font-semibold text-white transition"
+      >
+        تسجيل
+      </button>
     </form>
   );
 };

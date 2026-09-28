@@ -68,16 +68,11 @@ export const LogoutThunk = createAsyncThunk(
   'auth/logout',
   async (dispatch:AppDispatch ) => {
     try {
-      await axiosClientInstance.post('/logout/', {}, {
-        withCredentials: true, 
-      });
+      await axiosClientInstance.post('/logout/', {});
       
-      document.cookie = 'access_token=; Max-Age=0; path=/;'; 
-      document.cookie = 'refresh_token=; Max-Age=0; path=/;';
       dispatch(logout());
       
-      // Optionally redirect the user
-      // You can use history.push('/login') if you're using react-router
+
     } catch (error) {
       console.error('Error during logout:', error);
       // Optionally dispatch an error action

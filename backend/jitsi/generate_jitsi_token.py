@@ -1,50 +1,55 @@
-
-# from datetime import datetime, timedelta
 import jwt
-# from django.conf import settings
-# from pathlib import Path
 import time
+from django.conf import settings
 
-def load_private_key(key_path=None, key_string=None):
-    """
-    Load private key from file or string
-    """
-    if key_string:
-        return key_string
-    if key_path:
-        with open(key_path, 'r') as key_file:
-            return key_file.read()
-    raise ValueError("Either key_path or key_string must be provided")
+def generate_jitsi_token(user, room_name, expires_in):  # Increased to 24 hours
+    secret = settings.JITSI_APP_SECRET
+    app_id = settings.JITSI_APP_ID
+    jitsi_domain = settings.JITSI_APP_DOMAIN
 
-def generate_jitsi_token(user, room_name):
-    # Jitsi secret key (configured in your Jitsi setup)
-    secret = "mahfoud1996"
-    
-    # Jitsi app ID (configured in your Jitsi setup)
-    app_id = "mahfoud_hn"
-    
-    # Token payload
+    is_moderator = hasattr(user, 'teacher')  # Teacher is moderator
+
+
     payload = {
+        "aud": "riffaedu",
+        "iss": app_id,
+        "sub": jitsi_domain,
+        "room": room_name,
+        "exp": int(time.time()) + expires_in,
+        "nbf": int(time.time()) - 3600,  
         "context": {
             "user": {
-                "id": user.id,
-                "name": user.username,
-                "email": user.email,
+                "id": str(user.uuid),
+                "name": user.get_full_name() or user.username,
+                "email": user.email or "",
+                "moderator": is_moderator,
+                "avatar": user.profile.get_avatar_url() if hasattr(user, 'profile') else "",
             },
-            "group": room_name,
-        },
-        "aud": app_id,
-        "iss": app_id,
-        "sub": "localhost",  # Replace with your Jitsi domain
-        "room": room_name,
-        "exp": int(time.time()) + 3600,  # Token expiration time (1 hour)
-        "moderator": hasattr(user, 'teacher'),  # Grant moderator rights to teachers
+            "features": {
+                "livestreaming": is_moderator,
+                "recording": is_moderator,  
+                "screen-sharing": is_moderator,
+                "outbound-call": False,
+                "transcription": False,
+                "sip-inbound-call": False,
+                "toolbox": [
+                    'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
+                    'fodeviceselection', 'hangup', 'profile', 'chat', 'recording',
+                    'livestreaming', 'etherpad', 'sharedvideo', 'settings', 'raisehand',
+                    'videoquality', 'filmstrip', 'feedback', 'stats', 'shortcuts',
+                    'tileview', 'videobackgroundblur', 'download', 'help', 'mute-everyone',
+                    'security'
+                ]
+            }
+        }
     }
-    
-    # Generate JWT token
+
+    # Add additional claims for better session stability
+    payload.update({
+        "allow_empty_token": False,
+        "always_display_toolbox": True,
+        "enableWelcomePage": False,
+    })
+
     token = jwt.encode(payload, secret, algorithm='HS256')
     return token
-
-
-
-

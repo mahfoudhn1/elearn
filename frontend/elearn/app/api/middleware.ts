@@ -6,8 +6,10 @@ export function middleware(req: NextRequest) {
 
 
   const origin = req.headers.get('origin');
-  const allowedOrigins = ['http://localhost:3000'];
-
+  const allowedOrigins = ['https://riffaa.com'];
+  if (req.nextUrl.pathname.startsWith('/nextapi/api/auth/google/callback')) {
+    return NextResponse.next();
+  }
   if (origin && allowedOrigins.includes(origin)) {
     const response = NextResponse.next();
     response.headers.set('Access-Control-Allow-Origin', origin);
@@ -20,13 +22,22 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  // Handle user state check
-  const cookie = req.cookies.get('access_token'); // Replace with your actual auth token cookie key
-  const authCookie = req.cookies.get('auth_token'); // Assuming you store a token in cookies
+  const cookie = req.cookies.get('access_token'); 
+  const authCookie = req.cookies.get('auth_token');
   const userRole = req.cookies.get('user_role');
 
-  const isProtectedPage = !['/', '/login','/register', '/continuereg/role'].includes(req.nextUrl.pathname);
+  const publicPaths = [
+    '/',
+    '/login',
+    '/form',
+    '/register',
+    '/continuereg/role',
+    '/student-form',
+    '/student-form/4eme',
+    '/student-form/terminal'
+  ];
 
+  const isProtectedPage = !publicPaths.includes(req.nextUrl.pathname);
   if (!cookie && isProtectedPage) {
     const url = req.nextUrl.clone();
     url.pathname = '/login';
@@ -34,10 +45,9 @@ export function middleware(req: NextRequest) {
   }
 
   if (cookie && isProtectedPage) {
-    const userRole = req.cookies.get('role');  // Assume you store role in a cookie
+    const userRole = req.cookies.get('role');  
 
     if (!userRole) {
-      // Redirect them to the continue registration page
       const url = req.nextUrl.clone();
       url.pathname = '/continuereg/role';
       return NextResponse.redirect(url);

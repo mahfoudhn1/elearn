@@ -4,58 +4,70 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from languagesteaching.models import StudentLanguageProficiency,Language
 from subscription.models import Subscription
 from groups.serializers import GroupSerializer
 from groups.models import Group
 from users.models import Teacher, Student, SchoolLevel
-from users.serializers import StudentSerializer
+from users.serializers import StudentSerializer 
 
+from django.shortcuts import get_object_or_404
 
-class GroupViewSet(viewsets.ModelViewSet):
+from core.views import UUIDLookupMixin
+class GroupViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
     serializer_class = GroupSerializer
     permission_classes = [IsAuthenticated]
 
+
     def get_queryset(self):
         user = self.request.user
-        field_of_study_id = self.request.query_params.get('field_of_study', None)
-        school_level_name = self.request.query_params.get('school_level', None)
-        group_id = self.kwargs.get('pk', None)
+        field_of_study_id = self.request.query_params.get('field_of_study')
+        school_level_name = self.request.query_params.get('school_level')
+        language_name = self.request.query_params.get('language_name')
+        group_id = self.kwargs.get('pk')
+
         queryset = Group.objects.all()
 
         if group_id:
-            try:
-                return Group.objects.filter(id=group_id)
-            except Group.DoesNotExist:
-                raise NotFound("Group not found")
+            return Group.objects.filter(uuid=group_id)
 
-
-        if school_level_name:
-            try:
-                school_level = SchoolLevel.objects.get(name=school_level_name)
-            except SchoolLevel.DoesNotExist:
+        school_level = get_object_or_404(SchoolLevel, name=school_level_name)
+        queryset = queryset.filter(school_level=school_level)
+       
+        if school_level_name == "ثانوي":
+            if not field_of_study_id:
                 return Group.objects.none()
-            
-            queryset = queryset.filter(school_level=school_level.id)
+            queryset = queryset.filter(field_of_study__uuid=field_of_study_id)
 
-            if school_level_name == "ثانوي":
-                if not field_of_study_id:
-                  
-                    return Group.objects.none()
-                queryset = queryset.filter(field_of_study=field_of_study_id)
-
-        elif field_of_study_id:
-            queryset = queryset.filter(field_of_study=field_of_study_id)
+        # If language filtering is requested
+        if language_name:
+            queryset = queryset.filter(group_type=Group.GroupType.LANGUAGE)
+            queryset = queryset.filter(language__name__icontains=language_name)
 
         if user.role == 'teacher':
-            try:
-                teacher = user.teacher
-                queryset = queryset.filter(admin=teacher)
-            except Teacher.DoesNotExist:
-                return Group.objects.none()
-        if user.role == 'student':
-            return queryset.filter(students=user.student)
+            queryset = queryset.filter(admin=user.teacher)
+            print("teacher", queryset )
+        elif user.role == 'student':
+            queryset = queryset.filter(students=user.student)
+
         return queryset
-    
+
+
+
+    @action(detail=False, methods=['get'])
+    def teacher_groups(self, request):
+        user = request.user
+        if user.role != 'teacher':
+            return Response({"error": "Only teachers can access this."}, status=403)
+
+        try:
+            teacher = user.teacher
+        except Teacher.DoesNotExist:
+            return Response({"error": "Teacher profile not found."}, status=404)
+
+        teacher_groups = Group.objects.filter(admin=teacher)
+        serializer = self.get_serializer(teacher_groups, many=True)
+        return Response(serializer.data)
     @action(detail=False, methods=['get'])
     def student_groups(self, request):
         user = request.user
@@ -71,7 +83,7 @@ class GroupViewSet(viewsets.ModelViewSet):
         group_id = pk  
 
         try:
-            group = Group.objects.get(id=group_id)
+            group = Group.objects.get(uuid=group_id)
         except Group.DoesNotExist:
             return Response({'error': 'Group not found.'}, status=status.HTTP_404_NOT_FOUND) 
 
@@ -87,8 +99,8 @@ class GroupViewSet(viewsets.ModelViewSet):
         student_id = request.data.get('student_id')
 
         try:
-            group = Group.objects.get(id=group_id)
-            student = Student.objects.get(id=student_id)
+            group = Group.objects.get(uuid=group_id)
+            student = Student.objects.get(uuid=student_id)
 
 
             group.students.add(student)
@@ -113,7 +125,7 @@ class GroupViewSet(viewsets.ModelViewSet):
                 return Response({'error': 'Student ID is required'}, status=status.HTTP_400_BAD_REQUEST)
             
             try:
-                student = group.students.get(id=student_id)  # Get the student from the group
+                student = group.students.get(uuid=student_id)  # Get the student from the group
                 group.students.remove(student)  # Remove the student from the group
                 return Response({'message': 'Student removed from group successfully'}, status=status.HTTP_204_NO_CONTENT)
             except Student.DoesNotExist:
@@ -130,43 +142,56 @@ class GroupViewSet(viewsets.ModelViewSet):
         if not group_id:
             return Response({'error': 'group_id parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        group = get_object_or_404(Group, id=group_id)
+        group = get_object_or_404(Group, uuid=group_id)
 
         try:
             teacher = Teacher.objects.get(user=user)
         except Teacher.DoesNotExist:
             return Response({'error': 'The authenticated user is not a teacher'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Get students subscribed to this teacher and not in any group
+        # Start with active subscriptions that are not in any group
         subscriptions = Subscription.objects.filter(
             teacher=teacher,
             is_active=True
         ).exclude(student__groups__isnull=False)
 
-        subscriptions = subscriptions.filter(
-            student__school_level=group.school_level,
-            student__grade=group.grade
-        )
+        if group.group_type == Group.GroupType.ACADEMIC:
+            subscriptions = subscriptions.filter(
+                student__grade__school_level=group.school_level,
+                student__grade=group.grade
+            )
+            if group.field_of_study:
+                subscriptions = subscriptions.filter(
+                    student__field_of_study=group.field_of_study
+                )
 
+        elif group.group_type == Group.GroupType.LANGUAGE:
+            matching_students = StudentLanguageProficiency.objects.filter(
+                language=group.language,
+                level=group.language_level
+            ).values_list('student_id', flat=True)
+
+            subscriptions = subscriptions.filter(student_id__in=matching_students)
+
+        # Extract students from subscriptions
         students = [subscription.student for subscription in subscriptions]
-
         serializer = StudentSerializer(students, many=True)
         return Response(serializer.data)
+
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def profile_groups(self, request):
         user = request.user
         teacher_id = request.query_params.get('teacher_id')
-        print(teacher_id)
-        print(user)
+ 
         if user.role != 'student':
             return Response({"detail": "This action is only available for students."}, status=status.HTTP_403_FORBIDDEN)
 
         student = get_object_or_404(Student, user=user)
 
-        teacher = get_object_or_404(Teacher, id=teacher_id)
+        teacher = get_object_or_404(Teacher, uuid=teacher_id)
 
-        student_grade = student.grade  # Assuming the Student model has a ForeignKey to Grade
+        student_grade = student.grade 
 
         groups = Group.objects.filter(admin=teacher, grade=student_grade)
 

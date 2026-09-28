@@ -11,63 +11,41 @@ from django.utils import timezone
 @receiver(post_save, sender=PrivateSessionRequest)
 def notify_on_private_session_request(sender, instance, created, **kwargs):
     if created:
-        message = f"📩 لديك طلب جلسة خاصة جديد من {instance.student.user.first_name} {instance.student.user.last_name}."
-        Notification.objects.create(
+        message = f"📩 لديك طلب حصة خاصة جديد من {instance.student.user.get_full_name()}."
+        send_notification(
             recipient=instance.teacher.user,
             sender=instance.student.user,
-            notification_type='group',  # Change type if needed
+            notification_type="private_session",
             message=message
         )
 
-        send_notification(instance.teacher.user.id, {
-            'type': 'group',
-            'message': message
-        })
-
-    elif instance.status == 'accepted':
-        # Notify the student when the teacher accepts the session
-        message = f"✅ تم قبول جلسة خاصة من قبل {instance.teacher.user.username}. الموعد المقترح: {instance.proposed_date}."
-        Notification.objects.create(
+    elif instance.status == "accepted":
+        message = f"✅ تم قبول حصة خاصة من قبل {instance.teacher.user.username}. الموعد المقترح: {instance.proposed_date}."
+        send_notification(
             recipient=instance.student.user,
             sender=instance.teacher.user,
-            notification_type='group',
+            notification_type="private_session",
             message=message
         )
 
-        send_notification(instance.student.user.id, {
-            'type': 'group',
-            'message': message
-        })
-
-    elif instance.status == 'rejected':
-        # Notify the student when the teacher rejects the session
-        message = f"❌ تم رفض طلب الجلسة الخاصة من قبل {instance.teacher.user.username}."
-        Notification.objects.create(
+    elif instance.status == "rejected":
+        message = f"❌ تم رفض طلب الحصة الخاصة الخاصة من قبل {instance.teacher.user.username}."
+        send_notification(
             recipient=instance.student.user,
             sender=instance.teacher.user,
-            notification_type='group',
+            notification_type="private_session",
             message=message
         )
 
-        send_notification(instance.student.user.id, {
-            'type': 'group',
-            'message': message
-        })
-
-    elif instance.status == 'deleted':
-        # Notify the teacher when the student deletes the request
-        message = f"🗑️ قام {instance.student.user.username} بحذف طلب الجلسة الخاصة."
-        Notification.objects.create(
+    elif instance.status == "deleted":
+        message = f"🗑️ قام {instance.student.user.username} بحذف طلب الحصة الخاصة الخاصة."
+        send_notification(
             recipient=instance.teacher.user,
             sender=instance.student.user,
-            notification_type='group',
+            notification_type="private_session",
             message=message
         )
-
-        send_notification(instance.teacher.user.id, {
-            'type': 'group',
-            'message': message
-        })
+        
 @receiver(post_save, sender=CheckSessionPaiment)
 def update_payment_status(sender, instance, **kwargs):
     if instance.is_verified:
@@ -88,10 +66,11 @@ def create_jitsi_room(sender, instance, created, **kwargs):
         if not Meeting.objects.filter(privetsession=instance).exists():
             room_id = str(uuid.uuid4())[:8]
             
-            Meeting.objects.create(
+            meeting=Meeting.objects.create(
                 teacher=instance.teacher,
                 room_name=f"PrivateSession-{room_id}",
-                privetsession=instance,  # Matches your model's field name
+                privetsession=instance, 
                 is_active=True,
                 start_time=instance.proposed_date if instance.proposed_date else timezone.now(),
             )
+            meeting.students.add(instance.student)

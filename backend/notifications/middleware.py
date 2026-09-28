@@ -1,17 +1,12 @@
 import jwt
 from django.conf import settings
-from urllib.parse import parse_qs
 from channels.middleware import BaseMiddleware
-from django.contrib.auth import get_user_model
 from channels.db import database_sync_to_async
-
-User = get_user_model()
 
 class JWTAuthMiddleware(BaseMiddleware):
     async def __call__(self, scope, receive, send):
         cookies = self.get_cookies(scope)
-
-        token = cookies.get("access_token", None) 
+        token = cookies.get("access_token", None)
 
         if token:
             scope["user"] = await self.get_user_from_token(token)
@@ -34,9 +29,12 @@ class JWTAuthMiddleware(BaseMiddleware):
     @database_sync_to_async
     def get_user_from_token(self, token):
         """Decode JWT and get user instance."""
+        from django.contrib.auth import get_user_model  
+        User = get_user_model()
+
         try:
             decoded_data = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
             user_id = decoded_data.get("user_id")
             return User.objects.get(id=user_id)
         except (jwt.ExpiredSignatureError, jwt.DecodeError, User.DoesNotExist):
-            return None  
+            return None

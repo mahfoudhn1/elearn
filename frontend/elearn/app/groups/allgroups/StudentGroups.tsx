@@ -9,7 +9,7 @@ interface StudentGroupsProps {
 
 const StudentGroups: React.FC<StudentGroupsProps> = ({ groups }) => {
     const router = useRouter()
-    const handleGroup = (id:number)=>{
+    const handleGroup = (id: string)=>{
         router.push(`/groups/allgroups/${id}`)
       }
     

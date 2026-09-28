@@ -67,19 +67,19 @@ const ForwardReg: React.FC = () => {
       <div className="flex mb-4">
         <button
           onClick={() => setCurrentTab(0)}
-          className={`flex-1 text-center py-2 px-4 ${currentTab === 0 ? 'bg-gray-dark text-white' : 'bg-gray-200'}`}
+          className={`flex-1 text-center py-2 px-4 ${currentTab === 0 ? 'bg-grey-900 text-white' : 'bg-gray-200'}`}
         >
           Choose Role
         </button>
         <button
           onClick={() => setCurrentTab(1)}
-          className={`flex-1 text-center py-2 px-4 ${currentTab === 1 ? 'bg-gray-dark text-white' : 'bg-gray-200'}`}
+          className={`flex-1 text-center py-2 px-4 ${currentTab === 1 ? 'bg-grey-900 text-white' : 'bg-gray-200'}`}
         >
           Enter Details
         </button>
         <button
           onClick={() => setCurrentTab(2)}
-          className={`flex-1 text-center py-2 px-4 ${currentTab === 2 ? 'bg-gray-dark text-white' : 'bg-gray-200'}`}
+          className={`flex-1 text-center py-2 px-4 ${currentTab === 2 ? 'bg-grey-900 text-white' : 'bg-gray-200'}`}
         >
           Confirm
         </button>
@@ -92,13 +92,13 @@ const ForwardReg: React.FC = () => {
             <div className="flex space-x-4">
               <button
                 onClick={() => setRole('teacher')}
-                className={`py-2 px-4 ${role === 'teacher' ? 'bg-gray-dark text-white' : 'bg-gray-200'}`}
+                className={`py-2 px-4 ${role === 'teacher' ? 'bg-grey-900 text-white' : 'bg-gray-200'}`}
               >
                 Teacher
               </button>
               <button
                 onClick={() => setRole('student')}
-                className={`py-2 px-4 ${role === 'student' ? 'bg-gray-dark text-white' : 'bg-gray-200'}`}
+                className={`py-2 px-4 ${role === 'student' ? 'bg-grey-900 text-white' : 'bg-gray-200'}`}
               >
                 Student
               </button>
@@ -216,7 +216,7 @@ const ForwardReg: React.FC = () => {
             )}
             <button
               onClick={handleRegister}
-              className="mt-4 bg-green-500 text-white py-2 px-4 rounded"
+              className="mt-4 bg-orange-600-500 text-white py-2 px-4 rounded"
             >
               Register
             </button>

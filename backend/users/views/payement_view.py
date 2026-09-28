@@ -6,7 +6,8 @@ from django.utils import timezone
 from users.serializers import PaymentSerializer
 from users.models import Payment
 
-class PaymentViewSet(viewsets.ModelViewSet):
+from core.views import UUIDLookupMixin
+class PaymentViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
     permission_classes = [IsAuthenticated]

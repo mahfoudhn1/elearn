@@ -180,26 +180,24 @@ if (isLoading) {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Settings</h1>
+<h1 className="text-2xl font-bold mb-6">الاعدادات</h1>
 
       {/* General Profile Information */}
       <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Profile Information</h2>
         {user && <ProfileForm user={user[0]} onSubmit={handleProfileUpdate} />}      
         </div>
 
       {/* Teacher-Specific Information */}
       {teacher && user && (
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Teacher Information</h2>
-           <TeacherForm teacher={teacher} onSubmit={handleTeacherUpdate} />
+          <TeacherForm teacher={teacher} onSubmit={handleTeacherUpdate} />
         </div>
       )}
 
       {/* Student-Specific Information */}
       {student && user && (
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Student Information</h2>
+
           <StudentForm student={student} onSubmit={handleStudentUpdate} />
         </div>
       )}

@@ -1,34 +1,54 @@
 from datetime import datetime, timedelta
 from django.db import models
 from django.utils import timezone
+from languagesteaching.models import Language, LanguageLevel
 from users.models import Student, User
 from subscription.models import Subscription
 from django.db import models
 
 
+from core.models import UUIDModel
 GROUP_STATUS_CHOICES = [
         ('open', 'Open'),
         ('closed', 'Closed'),
     ]
 
+class Group(UUIDModel):
+    class GroupType(models.TextChoices):
+        ACADEMIC = 'ACADEMIC', 'Academic'
+        LANGUAGE = 'LANGUAGE', 'Language'
 
-
-
-class Group(models.Model):
     name = models.CharField(max_length=200)
     admin = models.ForeignKey("users.Teacher", on_delete=models.CASCADE)
     students = models.ManyToManyField("users.Student", blank=True, related_name="groups")
-    school_level = models.ForeignKey("users.SchoolLevel", on_delete=models.CASCADE, default=1)
-    grade = models.ForeignKey('users.Grade', on_delete=models.CASCADE, default=1)
-    field_of_study = models.ForeignKey("users.FieldOfStudy", on_delete=models.CASCADE, blank=True, null=True)  
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=20, choices=GROUP_STATUS_CHOICES, default='open')
+    group_type = models.CharField(max_length=10, choices=GroupType.choices, default=GroupType.ACADEMIC)
+
+    school_level = models.ForeignKey("users.SchoolLevel", on_delete=models.CASCADE, blank=True, null=True)
+    grade = models.ForeignKey('users.Grade', on_delete=models.CASCADE, blank=True, null=True)
+    field_of_study = models.ForeignKey("users.FieldOfStudy", on_delete=models.CASCADE, blank=True, null=True)
+
+    # For language groups
+    language = models.ForeignKey(Language, on_delete=models.CASCADE, blank=True, null=True)
+    language_level = models.ForeignKey(LanguageLevel, on_delete=models.CASCADE, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        if self.language:
+            self.group_type = self.GroupType.LANGUAGE
+        else:
+            self.group_type = self.GroupType.ACADEMIC
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
 
-class Schedule(models.Model):
+    
+    def __str__(self):
+        return self.name
+
+class Schedule(UUIDModel):
     
     SCHEDULE_TYPE_CHOICES = [
         ('weekly', 'Weekly Recurring'),
@@ -70,7 +90,7 @@ class Schedule(models.Model):
     def __str__(self) -> str:
         return f"{self.user}, {self.day_of_week}, {self.scheduled_date}"
    
-class StudentGroupRequest(models.Model):
+class StudentGroupRequest(UUIDModel):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -79,3 +99,79 @@ class StudentGroupRequest(models.Model):
 
     def __str__(self):
         return f"{self.student} - {self.group.name} Request"
+    
+    
+
+    
+class Quiz(UUIDModel):
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name='quizzes_created')
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    time_limit_minutes = models.PositiveIntegerField(default=30)
+    is_published = models.BooleanField(default=False)
+
+class Question(UUIDModel):
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, blank=True, null=True, related_name='questions')
+    QUESTION_TYPES = [
+        ('MC', 'Multiple Choice'),
+        ('TF', 'True/False'),
+        ('SA', 'Short Answer'),
+    ]
+    question_type = models.CharField(max_length=2, choices=QUESTION_TYPES, null=True, blank=True)
+    text = models.TextField()
+    # For MC questions, store options as JSON
+    options = models.JSONField(blank=True, null=True) 
+    correct_answer = models.JSONField(null=True, blank=True)  # Can store various answer types
+    points = models.PositiveIntegerField(default=1)
+    order = models.PositiveIntegerField(default=1)
+
+class QuizAttempt(UUIDModel):
+    student = models.ForeignKey("users.student", on_delete=models.CASCADE, related_name='quiz_attempts')
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE,null=True, blank=True, related_name='attempts')
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    score = models.FloatField(null=True, blank=True)
+
+class StudentAnswer(UUIDModel):
+    attempt = models.ForeignKey(QuizAttempt, on_delete=models.CASCADE, null=True, blank=True, related_name='answers')
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    answer = models.JSONField(null=True, blank=True)  # Stores student's answer in format matching question type
+    is_correct = models.BooleanField(default=False)
+    awarded_points = models.FloatField(default=0)
+
+    
+class GroupCourse(UUIDModel):
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name="courses")
+    teacher = models.ForeignKey("users.Teacher", on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    group_video = models.FileField(upload_to='group_courses/videos/', blank=True, null=True)  
+    created_at = models.DateTimeField(default=timezone.now)
+
+    quiz = models.ForeignKey(Quiz , on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.title} - {self.group.name}"
+
+class Video(UUIDModel):
+    class UploadStatus(models.TextChoices):
+        PENDING = 'PENDING', 'Pending'
+        COMPLETED = 'COMPLETED', 'Completed'
+        FAILED = 'FAILED', 'Failed'
+
+    teacher = models.ForeignKey("users.Teacher", on_delete=models.CASCADE, related_name='videos')
+    group = models.ForeignKey("Group", on_delete=models.CASCADE, related_name='videos')
+    title = models.CharField(max_length=255)
+    r2_object_key = models.CharField(max_length=1024, blank=True, null=True)
+    upload_id = models.CharField(max_length=1024, null=True, blank=True)
+    upload_status = models.CharField(
+        max_length=10,
+        choices=UploadStatus.choices,
+        default=UploadStatus.PENDING
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title

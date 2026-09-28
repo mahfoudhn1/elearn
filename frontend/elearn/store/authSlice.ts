@@ -4,7 +4,7 @@ import Cookies from 'js-cookie';
 
 
 interface User {
-  id: number;
+  id: string;
   username: string;
   email: string;
   role: string;
@@ -48,7 +48,7 @@ interface AuthState {
         state.isAuthenticated = false;
         state.loginStatus = '';  
         Cookies.remove('user_role');
-        Cookies.remove('access_token');
+
       },
       registerSuccess(state, action: PayloadAction<{ message: string }>) {
         state.registrationStatus = action.payload.message;

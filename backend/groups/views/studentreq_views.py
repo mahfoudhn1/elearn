@@ -8,8 +8,10 @@ from groups.models import StudentGroupRequest, Group
 from groups.serializers import StudentGroupRequestSerializer
 from users.models import Student
 from rest_framework import serializers
+from users.models import Teacher
 
-class StudentGroupRequestViewSet(viewsets.ModelViewSet):
+from core.views import UUIDLookupMixin
+class StudentGroupRequestViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
     queryset = StudentGroupRequest.objects.all()
     serializer_class = StudentGroupRequestSerializer
     permission_classes = [IsAuthenticated]
@@ -29,7 +31,7 @@ class StudentGroupRequestViewSet(viewsets.ModelViewSet):
             raise serializers.ValidationError("Group ID must be provided.")
         
         try:
-            group = Group.objects.get(id=group_id)
+            group = Group.objects.get(uuid=group_id)
             teacher = group.admin 
             if not teacher:
                 raise serializers.ValidationError("Group does not have an associated teacher.")

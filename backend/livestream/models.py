@@ -2,8 +2,9 @@ from django.db import models
 from users.models import Teacher
 from groups.models import Group
 
+from core.models import UUIDModel
 # Create your models here.
-class ZoomMeeting(models.Model):
+class ZoomMeeting(UUIDModel):
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True, blank=True)
     topic = models.CharField(max_length=255)

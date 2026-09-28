@@ -8,7 +8,8 @@ import requests as req
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated,AllowAny
+
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 import logging
@@ -28,6 +29,7 @@ def get_tokens_for_user(user):
     }
 
 class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
+    permission_classes = [AllowAny]
     def create(self, request, *args, **kwargs):
         code = request.data.get('code')
 
@@ -90,14 +92,15 @@ class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
             last_name = names[1] if len(names) > 1 else ''
             username = user_email.split('@')[0]
             
-           
+            print(username)
             user, created = User.objects.get_or_create(
                 email=user_email,
                 defaults={
                     'username': username,
                     'first_name': first_name,
                     'last_name': last_name,
-                    'avatar_file': profile_picture
+                    'avatar_file': profile_picture,
+                    'email_verified':True
                 }
             )
             
@@ -105,6 +108,7 @@ class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
                 user.first_name = first_name
                 user.last_name = last_name
                 user.avatar_file = profile_picture
+                user.email_verified= True
                 user.save()
 
             tokens = get_tokens_for_user(user)
@@ -121,15 +125,22 @@ class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
                 'access_token',
                 tokens['access'],
                 httponly=True,
-                secure= False, 
+                secure=True,
+                domain='riffaa.com',  # Ensure the domain is correctly set
+                path='/',
+                samesite='Lax',
             )
-
             response.set_cookie(
                 'refresh_token',
                 tokens['refresh'],
                 httponly=True,
-                secure= False,  # Use secure cookies if HTTPS is enabled
+                secure=True,
+                samesite='Lax',
+                max_age=60 * 60 * 24 * 7,  # 7 days
+                path='/',
             )
+
+
 
             
             response_data = {
@@ -149,3 +160,4 @@ class GoogleOAuthCallbackViewSet(viewsets.ViewSet):
                 'error': 'Token verification failed',
                 'details': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
+

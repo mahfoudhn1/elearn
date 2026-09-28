@@ -4,12 +4,13 @@ from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 
+from core.serializers import UUIDModelSerializer, UUIDRelatedField
 class AuthSerializer(serializers.Serializer):
     code = serializers.CharField(required=False)
     error = serializers.CharField(required=False)
 
     
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(UUIDModelSerializer):
     avatar = serializers.SerializerMethodField()
 
     class Meta:
@@ -20,19 +21,19 @@ class UserSerializer(serializers.ModelSerializer):
     def get_avatar(self, obj):
         return obj.get_avatar()
 
-class fieldofstudySerializer(serializers.ModelSerializer):
+class fieldofstudySerializer(UUIDModelSerializer):
     class Meta:
         model = FieldOfStudy
         fields = ['id', 'name' ]
 
-class gradeSerializer(serializers.ModelSerializer):
+class gradeSerializer(UUIDModelSerializer):
     
     school_level = serializers.StringRelatedField()
     class Meta:
         model = Grade
         fields = ['id', 'name', 'school_level' ]
         
-class TeacherSerializer(serializers.ModelSerializer):
+class TeacherSerializer(UUIDModelSerializer):
     user = UserSerializer(read_only=True)
     class Meta:
         model = Teacher
@@ -47,7 +48,7 @@ class TeacherSerializer(serializers.ModelSerializer):
 
         return teacher
     
-class StudentSerializer(serializers.ModelSerializer):
+class StudentSerializer(UUIDModelSerializer):
     user = UserSerializer(read_only=True)  # Read-only for responses
     
     # Read-only nested representations for responses
@@ -55,14 +56,14 @@ class StudentSerializer(serializers.ModelSerializer):
     field_of_study = fieldofstudySerializer(read_only=True)
 
     # Write-only ID fields for creation/updates
-    grade_id = serializers.PrimaryKeyRelatedField(
+    grade_id = UUIDRelatedField(
         queryset=Grade.objects.all(),
         source="grade",  # Links to the `grade` field in the model
         write_only=True,
         required=False,  # Optional
         allow_null=True  # Allows null values
     )
-    field_of_study_id = serializers.PrimaryKeyRelatedField(
+    field_of_study_id = UUIDRelatedField(
         queryset=FieldOfStudy.objects.all(),
         source="field_of_study",  # Links to the `field_of_study` field in the model
         write_only=True,
@@ -91,7 +92,7 @@ class StudentSerializer(serializers.ModelSerializer):
         return student
     
 
-class RegisterSerializer(serializers.ModelSerializer):
+class RegisterSerializer(UUIDModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
     password2 = serializers.CharField(write_only=True, required=True, help_text="Confirm your password")
     role = serializers.ChoiceField(choices=get_user_model().ROLE_CHOICE, required=False, allow_null=True)
@@ -151,7 +152,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
+    username = serializers.CharField(required=False, allow_blank=False)
+    email = serializers.EmailField(required=False, allow_blank=False)
     password = serializers.CharField(write_only = True)
     token = serializers.SerializerMethodField()
 
@@ -164,25 +166,30 @@ class LoginSerializer(serializers.Serializer):
         }
 
     def validate(self, data):
-        username = data.get('username')
+        username = (data.get('username') or '').strip()
+        email = (data.get('email') or '').strip()
         password = data.get('password')
+        if not (username or email) or not password:
+            raise serializers.ValidationError("Username or email and password are required")
 
-        if not username or not password:
-            raise serializers.ValidationError("Both username and password are required")
+        if email and not username:
+            user_record = User.objects.filter(email__iexact=email).first()
+            if user_record:
+                username = user_record.username
 
         user = authenticate(username=username, password=password)
 
         if user is None:
             raise serializers.ValidationError("Invalid credentials")
 
-        if not user.email_verified:  
-            raise serializers.ValidationError("Your email is not verified. Please verify your email.")
+        # if not user.email_verified:  
+        #     raise serializers.ValidationError("Your email is not verified. Please verify your email.")
 
         data['user'] = user 
         return data
 
     
-class PaymentSerializer(serializers.ModelSerializer):
+class PaymentSerializer(UUIDModelSerializer):
     class Meta:
         model = Payment
         fields = ['teacher', 'current_balance', 'total_earned']

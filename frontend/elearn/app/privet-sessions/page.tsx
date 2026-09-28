@@ -1,12 +1,13 @@
 "use client"
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from "next/navigation"; // Update import
+
 import { useSelector } from 'react-redux';
 import axiosClientInstance from '../lib/axiosInstance';
 import { RootState } from '../../store/store';
 
 interface PrivateSession {
-  id: number;
+  id: string;
   student: { user: { first_name: string; last_name: string } };
   teacher: { user: { first_name: string; last_name: string } };
   proposed_date: string;
@@ -16,7 +17,8 @@ interface PrivateSession {
 }
 
 const PrivateSessionsPage = () => {
-  const router = useRouter();
+  const params = useParams();
+  const router = useRouter(); 
   const userRole = useSelector((state: RootState) => state.auth.user?.role);
   const [sessions, setSessions] = useState<PrivateSession[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -44,7 +46,7 @@ const PrivateSessionsPage = () => {
   }, [userRole, router]);
 
   // Handle session deletion
-  const handleDelete = async (sessionId: number, event: React.MouseEvent) => {
+  const handleDelete = async (sessionId: string, event: React.MouseEvent) => {
     event.stopPropagation();
     const confirmed = window.confirm('هل أنت متأكد من حذف طلب الجلسة هذا؟');
     if (!confirmed) return;
@@ -58,7 +60,7 @@ const PrivateSessionsPage = () => {
       console.error(err);
     }
   };
-  const handleseassion = async(id:number)=>{
+  const handleseassion = async(id: string)=>{
     router.push(`/privet-sessions/${id}`)
   }
 
@@ -115,20 +117,20 @@ const PrivateSessionsPage = () => {
               <tr key={session.id} className="hover:bg-gray-light cursor-pointer transition-colors"
               onClick={()=>{handleseassion(session.id)}}
               >
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-dark">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-grey-900">
                   {session.id}
                 </td>
                 {userRole === 'student' && (
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-dark">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-grey-900">
                     {session.teacher.user.first_name} {session.teacher.user.last_name}
                   </td>
                 )}
                 {userRole === 'teacher' && (
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-dark">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-grey-900">
                     {session.student.user.first_name} {session.student.user.last_name}
                   </td>
                 )}
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-dark">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-grey-900">
                   {new Date(session.proposed_date).toLocaleDateString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right">

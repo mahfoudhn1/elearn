@@ -15,13 +15,13 @@ import 'draft-js/dist/Draft.css';
 import { jsPDF } from 'jspdf';
 
 interface Note {
-  id: number;
+  id: string;
   title: string;
   created_at: string;
   content: string;
 }
 interface MenuVisibleState {
-  [noteId: number]: boolean; // Keeps track of visibility per note by noteId
+  [noteId: string]: boolean; // Keeps track of visibility per note by noteId
 }
 const Note: React.FC = () => {
   const params = useParams() as { id: string };
@@ -116,14 +116,14 @@ const Note: React.FC = () => {
     setEditorState(EditorState.createWithContent(contentState));
     setShowForm(true);
   };
-  const toggleMenu = (noteId: number) => {
+  const toggleMenu = (noteId: string) => {
     setMenuVisible((prev) => ({
       ...prev,
       [noteId]: !prev[noteId],
     }));
   };
   
-  const deleteNote = async (noteId: number) => {
+  const deleteNote = async (noteId: string) => {
     if (window.confirm("متأكد من حذف المذكرة ؟")) {
       try {
         await axiosClientInstance.delete(`/notes/notes/${noteId}/`);

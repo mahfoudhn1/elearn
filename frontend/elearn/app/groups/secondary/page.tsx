@@ -14,11 +14,11 @@ interface GradeIcon {
   bgColor: string;
 }
 interface fieldofstudy{
-  id:number;
+  id: string;
   name:string
 }
 interface schoolLevel{
-  id:number;
+  id: string;
   name:string;
 }
 
@@ -27,7 +27,7 @@ const gradeIconMapping: { [key: string]: GradeIcon } = {
   'رياضيات': { icon: faSquareRootAlt, bgColor: 'bg-blue' },
   'تقني رياضي': { icon: faCompassDrafting, bgColor: 'bg-orange' },
   'علوم تجريبية': { icon: faFlask, bgColor: 'bg-green' },
-  'تسيير و  اقتصاد': { icon: faLandmark, bgColor: 'bg-gray-dark' },
+  'تسيير و  اقتصاد': { icon: faLandmark, bgColor: 'bg-grey-900' },
   'ادب و فلسفة': { icon: faBook, bgColor: 'bg-yellow-400' },
   'لغات اجنبية': { icon: faLanguage, bgColor: 'bg-purple-600' },
 
@@ -58,7 +58,7 @@ const GroupsList: FC = () => {
 
   const school_Level = "ثانوي"
   
-  const handelGroup = (id: number)=>{
+  const handelGroup = (id: string)=>{
     router.push(`/groups/allgroups?field=${id}&school_Level=${encodeURIComponent(school_Level)}`);
 
     }
@@ -81,7 +81,7 @@ const GroupsList: FC = () => {
                   <span className={`grid h-20 w-20 place-items-center rounded-full ${gradeIconMapping[field.name]?.bgColor} transition-all duration-300 group-hover:${gradeIconMapping[field.name]?.bgColor}`}>
                   <FontAwesomeIcon icon={gradeIconMapping[field.name]?.icon} className='text-2xl text-gray-300' />
                     </span>
-                    <h1 className='text-gray-dark group-hover:text-white text-xl font-semibold'>{field.name}</h1>
+                    <h1 className='text-grey-900 group-hover:text-white text-xl font-semibold'>{field.name}</h1>
                   </div>
                   <div className="space-y-6 pt-5 text-base leading-7 text-gray-600 transition-all duration-300 group-hover:text-white/90">
                   <div> <p> يمكنك إنشاء مجموعات تخصصية للتواصل مع الطلبة وجدولة بثوث أسبوعية مباشرة، مع تحديد عدد الطلبة في كل مجموعة إلى 30 لضمان أفضل تجربة تعليمية. </p> </div>

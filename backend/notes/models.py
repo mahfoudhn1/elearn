@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 
 
+from core.models import UUIDModel
 class subjsctChoice(models.TextChoices):
     MATHEMATICS = 'رياضيات', 'رياضيات'
     PHYSICS = 'فيزياء', 'فيزياء'
@@ -19,7 +20,7 @@ class subjsctChoice(models.TextChoices):
     PHILOSOPHY = 'فلسفة', 'فلسفة'
     ECONOMICS = 'اقتصاد', 'اقتصاد'
 
-class Note(models.Model):
+class Note(UUIDModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     title = models.TextField()
     content = models.TextField(null=True, blank=True)
@@ -30,7 +31,7 @@ class Note(models.Model):
         return f"note from {self.user.username} title: {self.title} "
 
 
-class TodoList(models.Model):
+class TodoList(UUIDModel):
     time = models.CharField(max_length=10)  # e.g., "10:00 AM"
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)

@@ -11,7 +11,8 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const publicPages = ["/", "/login", "/register",'/verify-email'];
+  const publicPages = ["/", "/login", "/register",'/verify-email', '/api/auth', '/student-form',    '/student-form/4eme',
+    '/student-form/terminal', '/privacy-policy', '/workwithus/teacher', '/workwithus/student', '/form'];
 
   useEffect(() => {
     if (!user && !publicPages.includes(pathname)) {
@@ -23,3 +24,4 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   return <>{children}</>;
 }
+

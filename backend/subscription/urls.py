@@ -1,9 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import SubscriptionViewSet, UploadCheckView
+from .views import SubscriptionViewSet, UploadCheckView, subscriptionPlanView
 
 router = DefaultRouter()
 router.register(r'subscriptions', SubscriptionViewSet, basename='subscription')
+router.register(r'plans', subscriptionPlanView, basename='plan')
 # router.register(r'upload-check', UploadCheckView, basename='upload-check')
 
 

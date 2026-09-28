@@ -20,7 +20,7 @@ from django.conf.urls.static import static
 from django.conf import settings
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('api/admin-8J3z9kP2YbQqLmNvX1rT/', admin.site.urls),
 
     path("api/", include("users.urls")),
     path("api/subscriptions/", include("subscription.urls")),
@@ -28,9 +28,16 @@ urlpatterns = [
     path("api/live/", include("jitsi.urls")),
     path("api/courses/", include("courses.urls")),
     path("api/groups/", include("groups.urls")),
+    path("api/", include("schedule.urls")),
     path("api/privet/", include("privetsessions.urls")),
     path("api/flashcards/", include("flashcards.urls")),
     path("api/notes/", include("notes.urls")),
+    path("api/chat/", include("chat.urls")),
+    path("api/lan/", include("languagesteaching.urls")),
+    # path("api/forms/", include("froms.urls")),
+    path("api/studentform/", include("studentform.urls")),
+
     path("api/notifications/", include("notifications.urls")),
+    path("api/ai/", include("riffaaAi.urls")),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,15 +1,20 @@
+import uuid as uuid_lib
 from django.db import models
 from django.utils import timezone
-from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.contrib.auth.models import AbstractUser
 from decimal import Decimal
 
+from core.models import UUIDModel
 class User(AbstractUser):
     ROLE_CHOICE=(
         ("teacher", "Teacher"),
         ("student", "Student")
     )
+    uuid = models.UUIDField(default=uuid_lib.uuid4, unique=True, editable=False, db_index=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICE, null=True, blank=True)
     email_verified = models.BooleanField(default=False)
+    verification_token = models.UUIDField(default=uuid_lib.uuid4, unique=True, null=True, blank=True)
+
     avatar_url = models.URLField(blank=True, null=True)
     avatar_file = models.ImageField(upload_to='avatars/', null=True, blank=True)
 
@@ -23,14 +28,14 @@ class User(AbstractUser):
     
 
 
-class SchoolLevel(models.Model):
+class SchoolLevel(UUIDModel):
     name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.name
 
 
-class Grade(models.Model):
+class Grade(UUIDModel):
     name = models.CharField(max_length=50)
     school_level = models.ForeignKey(SchoolLevel, on_delete=models.CASCADE, related_name="grades")
 
@@ -38,7 +43,7 @@ class Grade(models.Model):
         return f"{self.name} ({self.school_level.name})"
 
 
-class FieldOfStudy(models.Model):
+class FieldOfStudy(UUIDModel):
     name = models.CharField(max_length=100)
 
     def __str__(self):
@@ -64,7 +69,7 @@ class subjsctChoice(models.TextChoices):
     ECONOMICS = 'اقتصاد', 'اقتصاد'
 
 
-class Teacher(models.Model):
+class Teacher(UUIDModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="teacher")
     bio = models.TextField(max_length= 600, null=True, blank=True)
     profile_privet = models.BooleanField(default=True)
@@ -84,7 +89,7 @@ class Teacher(models.Model):
 
 
 
-class Student(models.Model):
+class Student(UUIDModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="student")
     teaching_level = models.CharField(max_length=20, choices = SchoolChoice.choices, null=True, blank=True) 
 
@@ -97,7 +102,7 @@ class Student(models.Model):
         return f"{self.user.first_name} {self.user.last_name}"
     
 
-class Payment(models.Model):
+class Payment(UUIDModel):
     teacher = models.OneToOneField(Teacher, on_delete=models.CASCADE, related_name='payment')
     current_balance = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     total_earned = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
@@ -130,7 +135,7 @@ class Payment(models.Model):
     def __str__(self):
         return f"Payment for {self.teacher} - Balance: {self.current_balance}"
 
-class PaymentHistory(models.Model):
+class PaymentHistory(UUIDModel):
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='payment_history')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_date = models.DateTimeField(default=timezone.now)

@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { loginSuccess } from '../../../../../store/authSlice';
 import { useRouter, useSearchParams } from 'next/navigation';
-import axios from 'axios';
 import axiosClientInstance from '../../../../lib/axiosInstance';
 
 const GoogleCallback = () => {
@@ -28,7 +27,7 @@ const GoogleCallback = () => {
         setStatus({ loading: true, error: null });
         
         const response = await axiosClientInstance.post(
-          'http://localhost:8000/api/auth/callback/google/', 
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/callback/google/`, 
           { code },
           {
             headers: {
