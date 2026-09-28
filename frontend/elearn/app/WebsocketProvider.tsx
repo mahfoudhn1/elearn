@@ -76,6 +76,7 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
     ws.onmessage = (event: MessageEvent) => {
       // ... your message parsing logic
     };
+    
 
     ws.onclose = () => {
       console.log("🔴 WebSocket disconnected");
