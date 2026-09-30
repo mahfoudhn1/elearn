@@ -10,6 +10,7 @@ from subscription.models import Subscription, SubscriptionPlan
 from users.models import FieldOfStudy, Grade, SchoolLevel, Student, Teacher, User
 
 from .models import VideoAsset
+from .services import R2MediaService
 
 
 def make_teacher(username="teacher"):
@@ -20,6 +21,73 @@ def make_teacher(username="teacher"):
         role="teacher",
     )
     return Teacher.objects.create(user=user)
+
+
+class MultipartPlanTests(APITestCase):
+    def test_part_plan_scales_with_file_size(self):
+        part_size, part_count = R2MediaService.plan_parts(50 * 1024 * 1024)
+        self.assertGreaterEqual(part_size, R2MediaService.MIN_PART_SIZE_BYTES)
+        self.assertEqual(part_count, -(-50 * 1024 * 1024 // part_size))
+
+    def test_part_count_stays_bounded_for_large_file(self):
+        part_size, part_count = R2MediaService.plan_parts(50 * 1024 * 1024 * 1024)
+        self.assertLessEqual(part_count, R2MediaService.MAX_PARTS)
+        self.assertLessEqual(part_count * part_size, 50 * 1024 * 1024 * 1024 + part_size)
+
+    def test_multipart_init_returns_matching_part_urls(self):
+        teacher = make_teacher("teacher-multipart")
+        client = APIClient()
+        client.force_authenticate(teacher.user)
+
+        size = 250 * 1024 * 1024  # above the multipart threshold
+        with patch(
+            "media_assets.views.R2MediaService.create_multipart_upload",
+            return_value={"UploadId": "upload-123"},
+        ), patch(
+            "media_assets.views.R2MediaService.presign_part_upload",
+            side_effect=lambda key, upload_id, number: f"https://r2.test/part/{number}",
+        ):
+            response = client.post(
+                reverse("video-asset-init"),
+                {"filename": "big.mp4", "mime_type": "video/mp4", "size_bytes": size},
+                format="json",
+            )
+
+        self.assertEqual(response.status_code, 201, response.data)
+        expected_part_size, expected_count = R2MediaService.plan_parts(size)
+        self.assertEqual(response.data["part_size"], expected_part_size)
+        self.assertEqual(response.data["part_count"], expected_count)
+        self.assertEqual(len(response.data["part_urls"]), expected_count)
+        self.assertEqual(
+            response.data["part_urls"][0]["part_number"],
+            1,
+        )
+
+    def test_parts_endpoint_represigns(self):
+        teacher = make_teacher("teacher-represign")
+        asset = VideoAsset.objects.create(
+            owner=teacher,
+            original_filename="big.mp4",
+            mime_type="video/mp4",
+            size_bytes=250 * 1024 * 1024,
+            r2_key="videos/test/big.mp4",
+        )
+        client = APIClient()
+        client.force_authenticate(teacher.user)
+
+        with patch(
+            "media_assets.views.R2MediaService.presign_part_upload",
+            side_effect=lambda key, upload_id, number: f"https://r2.test/part/{number}",
+        ):
+            response = client.post(
+                reverse("video-asset-parts", args=[asset.uuid]),
+                {"upload_id": "upload-123", "part_numbers": [1, 2]},
+                format="json",
+            )
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertEqual(
+            [item["part_number"] for item in response.data["part_urls"]], [1, 2]
+        )
 
 
 class VideoAssetAPITests(APITestCase):

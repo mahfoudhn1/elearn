@@ -37,7 +37,7 @@ MEDIA_ROOT = os.getenv(
     'MEDIA_ROOT',
     '/var/www/media/' if IS_PRODUCTION else str(BASE_DIR / 'media'),
 )
-MEDIA_VIDEO_MAX_SIZE_BYTES = int(os.getenv('MEDIA_VIDEO_MAX_SIZE_BYTES', 100 * 1024 * 1024))
+MEDIA_VIDEO_MAX_SIZE_BYTES = int(os.getenv('MEDIA_VIDEO_MAX_SIZE_BYTES', 5 * 1024 * 1024 * 1024))
 
 R2_ENDPOINT_URL = os.getenv('R2_ENDPOINT_URL', '')
 R2_BUCKET_NAME = os.getenv('R2_BUCKET_NAME', '')

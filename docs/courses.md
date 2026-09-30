@@ -70,10 +70,15 @@ save_position, submit, start}`, which any student with access may call.
 
 | Method | Path | Purpose |
 |---|---|---|
-| POST | `/init/` | Body `{filename, mime_type, size_bytes}`. Returns either a single signed `upload_url` (small files) or a multipart `upload_id` + presigned `part_urls`. Enforces MIME allowlist and `MEDIA_VIDEO_MAX_SIZE_BYTES`. |
+| POST | `/init/` | Body `{filename, mime_type, size_bytes}`. Returns a single signed `upload_url` for small files, or a multipart `upload_id` plus `part_size`, `part_count`, and presigned `part_urls` for large ones. Enforces the MIME allowlist and `MEDIA_VIDEO_MAX_SIZE_BYTES` (default 5 GiB). |
+| POST | `<uuid>/parts/` | Body `{upload_id, part_numbers?}`. Re-presigns multipart part URLs (for expired URLs or resuming); omit `part_numbers` to re-presign the whole planned set. |
 | POST | `<uuid>/complete/` | Body `{upload_id?, parts: [{part_number, etag}]}`. Completes multipart, verifies size via `head_object`, marks the asset `READY`, returns a signed preview `url`. |
 | GET | `<uuid>/playback/` | Subscription-checked signed playback URL (`expires_in`). |
 | DELETE | `<uuid>/` | Owner only; also deletes the R2 object. |
+
+Multipart part size is chosen server-side by `R2MediaService.plan_parts`: at least
+8 MiB, growing with the file so the number of presigned URLs never exceeds
+`MAX_PARTS` (1000). Clients **must** slice using the returned `part_size`.
 
 Failed `init`/`complete` operations mark the asset `FAILED` and are logged under
 the `media_assets.uploads` logger. R2 SDK errors are logged under

@@ -225,6 +225,7 @@ export interface VideoUploadInit {
   key: string;
   upload_id?: string;
   part_size?: number;
+  part_count?: number;
   status: string;
   part_urls?: Array<{ part_number: number; url: string }>;
   upload_url?: string;

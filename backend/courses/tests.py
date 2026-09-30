@@ -333,6 +333,20 @@ class QuizFlowTests(APITestCase):
             f"/api/courses/surveys/{self.survey.uuid}/submit/", payload, format="json"
         )
 
+    def test_student_detail_with_shuffle_enabled(self):
+        Survey.objects.filter(pk=self.survey.pk).update(
+            shuffle_questions=True, shuffle_choices=True
+        )
+        response = self.client.get(f"/api/courses/surveys/{self.survey.uuid}/")
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertEqual(len(response.data["questions"]), 1)
+        self.assertFalse(
+            any(
+                "is_correct" in choice
+                for choice in response.data["questions"][0]["choices"]
+            )
+        )
+
     def test_start_creates_attempt_and_respects_max_attempts(self):
         response = self.client.post(f"/api/courses/surveys/{self.survey.uuid}/start/")
         self.assertEqual(response.status_code, 201, response.data)

@@ -16,7 +16,26 @@ class R2MediaService:
         "video/quicktime",
         "video/x-matroska",
     }
+    # Files above this use multipart; smaller ones get a single presigned PUT.
     MULTIPART_THRESHOLD_BYTES = 100 * 1024 * 1024
+    # S3/R2 requires every part except the last to be at least 5 MiB.
+    MIN_PART_SIZE_BYTES = 8 * 1024 * 1024
+    # Keep the presigned URL list bounded for very large uploads.
+    MAX_PARTS = 1000
+
+    @classmethod
+    def plan_parts(cls, size_bytes):
+        """Return ``(part_size, part_count)`` for a multipart upload.
+
+        The part size grows with the file so the number of presigned URLs stays
+        within ``MAX_PARTS`` regardless of how large the video is.
+        """
+        import math
+
+        size = max(int(size_bytes), 1)
+        part_size = max(cls.MIN_PART_SIZE_BYTES, math.ceil(size / cls.MAX_PARTS))
+        part_count = max(math.ceil(size / part_size), 1)
+        return part_size, part_count
 
     def __init__(self):
         self.endpoint_url = getattr(settings, "R2_ENDPOINT_URL", "")

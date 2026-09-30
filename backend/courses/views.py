@@ -387,8 +387,7 @@ class SurveyViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
         ):
             import random
 
-            instance = self.get_object()
-            data = SurveyDetailSerializer(instance, context=self).data
+            data = self.get_serializer(survey).data
             if survey.shuffle_questions:
                 questions = list(data["questions"])
                 random.shuffle(questions)

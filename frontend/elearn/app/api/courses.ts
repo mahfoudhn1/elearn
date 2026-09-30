@@ -307,6 +307,18 @@ export async function completeVideoUpload(
   return response.data;
 }
 
+export async function presignVideoParts(
+  assetId: string,
+  uploadId: string,
+  partNumbers?: number[],
+): Promise<{ part_urls: Array<{ part_number: number; url: string }> }> {
+  const response = await axiosClientInstance.post(`/media/videos/${assetId}/parts/`, {
+    upload_id: uploadId,
+    part_numbers: partNumbers,
+  });
+  return response.data;
+}
+
 export async function fetchTrackingOverview(): Promise<TrackingOverview> {
   const response = await axiosClientInstance.get("/tracking/overview/");
   return response.data;

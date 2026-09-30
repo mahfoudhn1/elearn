@@ -6,10 +6,11 @@ import { AlertCircle, CheckCircle2, FileVideo, Pause, Play, RotateCcw, Upload, X
 import {
   completeVideoUpload,
   initVideoUpload,
+  presignVideoParts,
 } from "../../../api/courses";
 import type { VideoUploadInit } from "../../../types/course";
 
-const PART_SIZE = 10 * 1024 * 1024;
+const DEFAULT_PART_SIZE = 8 * 1024 * 1024;
 const PARALLEL_UPLOADS = 3;
 
 type UploadState = "idle" | "uploading" | "paused" | "completing" | "done" | "error" | "canceled";
@@ -46,17 +47,20 @@ export default function VideoUploader({
   const canceledRef = useRef(false);
   const activeXhrsRef = useRef<Set<XMLHttpRequest>>(new Set());
   const partProgressRef = useRef<Map<number, number>>(new Map());
+  // The server decides the multipart part size; the client must slice to match.
+  const partSizeRef = useRef(DEFAULT_PART_SIZE);
 
   const recomputeProgress = useCallback(() => {
     let loaded = 0;
     let total = 0;
+    const partSize = partSizeRef.current;
     Array.from(partProgressRef.current.entries()).forEach(([partNumber, bytes]) => {
       if (completedRef.current.has(partNumber)) {
-        loaded += PART_SIZE;
-        total += PART_SIZE;
+        loaded += partSize;
+        total += partSize;
       } else {
         loaded += bytes;
-        total += PART_SIZE;
+        total += partSize;
       }
     });
     if (total > 0) setProgress(Math.min(Math.round((loaded / total) * 95), 95));
@@ -111,8 +115,9 @@ export default function VideoUploader({
           }
           const part = queue.shift();
           if (!part) break;
-          const start = (part.part_number - 1) * PART_SIZE;
-          const end = Math.min(start + PART_SIZE, selected.size);
+          const partSize = partSizeRef.current;
+          const start = (part.part_number - 1) * partSize;
+          const end = Math.min(start + partSize, selected.size);
           await uploadSinglePart(part, selected.slice(start, end));
         }
       };
@@ -153,13 +158,28 @@ export default function VideoUploader({
         }
         if (!init) throw new Error("Upload initialization failed.");
 
+        if (init.part_size && init.part_size > 0) {
+          partSizeRef.current = init.part_size;
+        }
+
+        // On resume the cached presigned URLs may be stale; ask for fresh ones.
+        if (init.upload_id && (resumeInit || !init.part_urls?.length)) {
+          try {
+            const fresh = await presignVideoParts(init.id, init.upload_id);
+            init = { ...init, part_urls: fresh.part_urls };
+            initRef.current = init;
+          } catch {
+            /* fall back to the cached URLs below */
+          }
+        }
+
         if (init.upload_id && init.part_urls && init.part_urls.length > 0) {
-          const totalParts = Math.ceil(selected.size / PART_SIZE);
-          const parts: UploadPart[] =
-            init.part_urls.length >= totalParts
-              ? init.part_urls
-              : init.part_urls;
-          await uploadRemainingMultipartParts(selected, parts);
+          // Use exactly the part URLs the server planned; slicing must match
+          // the server's part size.
+          partProgressRef.current = new Map(
+            init.part_urls.map((part) => [part.part_number, 0]),
+          );
+          await uploadRemainingMultipartParts(selected, init.part_urls);
         } else if (init.upload_url) {
           partProgressRef.current = new Map([[1, 0]]);
           await new Promise<void>((resolve, reject) => {
