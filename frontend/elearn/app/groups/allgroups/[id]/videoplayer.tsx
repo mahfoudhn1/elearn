@@ -2,7 +2,9 @@
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import "video.js/dist/video-js.css";
-import videojs, { VideoJsPlayerOptions } from "video.js";
+import videojs from "video.js";
+
+type VideoJsPlayer = ReturnType<typeof videojs>;
 import axiosClientInstance from "../../../lib/axiosInstance";
 
 interface Video {
@@ -16,7 +18,7 @@ export default function GroupVideo({ groupId }: { groupId: string }) {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const videoNode = useRef<HTMLVideoElement>(null);
-  const playerRef = useRef<videojs.Player>();
+  const playerRef = useRef<VideoJsPlayer | null>(null);
 
   useEffect(() => {
     async function fetchVideos() {
@@ -35,7 +37,7 @@ export default function GroupVideo({ groupId }: { groupId: string }) {
   useEffect(() => {
     if (!loading && videos.length > 0 && videoNode.current) {
       const video = videos[0];
-      const options: VideoJsPlayerOptions = {
+      const options = {
         controls: true,
         autoplay: false,
         responsive: true,

@@ -34,7 +34,13 @@ class OwnsCourseObjectPermission(permissions.BasePermission):
 
     message = "You do not have access to this course."
 
-    STUDENT_WRITE_ACTIONS = {"mark_as_finished", "mark_as_unfinished", "submit"}
+    STUDENT_WRITE_ACTIONS = {
+        "mark_as_finished",
+        "mark_as_unfinished",
+        "save_position",
+        "submit",
+        "start",
+    }
 
     def _is_student_write_action(self, view):
         return getattr(view, "action", None) in self.STUDENT_WRITE_ACTIONS

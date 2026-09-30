@@ -1,10 +1,10 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import axiosSSRInstance from "../../lib/axiosServer";
+import { createAxiosSSRInstance } from "../../lib/axiosServer";
 
 export async function POST(req: Request) {
   const { meetingNumber, role } = await req.json(); // Parse JSON body from the request
 
   try {
+    const axiosSSRInstance = createAxiosSSRInstance();
     const response = await axiosSSRInstance.post('/livestream/signiture/', {
       meeting_number:meetingNumber ,
       role,

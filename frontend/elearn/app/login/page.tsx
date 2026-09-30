@@ -1,5 +1,5 @@
 "use client"
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store/store';
 import { login } from '../../store/authThunks';
@@ -19,9 +19,14 @@ const Loginpage = () => {
   const [password, setPassword] = useState('');
   const [captchaToken, setCaptchaToken] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isLocalhost, setIsLocalhost] = useState(false);
 
   const [err, setErr] = useState<string>()
   const router = useRouter()
+
+  useEffect(() => {
+    setIsLocalhost(['localhost', '127.0.0.1', '[::1]', '::1'].includes(window.location.hostname));
+  }, []);
 
 
   const handleCaptchaSuccess = (token: string) => {
@@ -31,8 +36,10 @@ const Loginpage = () => {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
-    if (!captchaToken) {
+
+    const hostname = window.location.hostname;
+    const onLocalhost = ['localhost', '127.0.0.1', '[::1]', '::1'].includes(hostname);
+    if (!onLocalhost && !captchaToken) {
       alert("Please complete the CAPTCHA.");
       return;
     }
@@ -109,11 +116,13 @@ const handleGoogleSuccess = () => {
             {loading ? "جاري الدخول..." : "سجل الدخول"}
           </button>
 
-            <Turnstile
-              className='my-6'
-              sitekey="0x4AAAAAABCXUolhlT329THY"
-              onSuccess={handleCaptchaSuccess}
-            />
+            {!isLocalhost && (
+              <Turnstile
+                className='my-6'
+                sitekey="0x4AAAAAABCXUolhlT329THY"
+                onSuccess={handleCaptchaSuccess}
+              />
+            )}
           <div className=' mt-6  items-center text-center mx-auto ' >
           <GoogleButton 
           label='استخدم حساب جوجل'

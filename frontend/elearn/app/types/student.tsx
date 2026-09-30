@@ -106,14 +106,17 @@ language: string;
 export interface Group {
   id: string;
   name: string;
-  school_level: string;
-  group_type : string;
-  language: string;
-  language_level:string;
+  school_level: string | null;
+  group_type: string;
+  language: string | null;
+  language_level: string | null;
   grade: string | null;
+  field_of_study?: string | null;
   schedule?: Schedule[];
   students?: Student[];
-  field_of_study_nest: string;
+  field_of_study_nest?: string | null;
+  status?: string;
+  admin?: { name: string; email: string };
 }
 export interface Grade{
   id: string;

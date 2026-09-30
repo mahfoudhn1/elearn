@@ -13,3 +13,4 @@
 //     return NextResponse.json({ error: 'Error connecting to Zoom' }, { status: 500 });
 //   }
 // }
+export {};

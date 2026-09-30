@@ -27,7 +27,7 @@ const GoogleCallback = () => {
         setStatus({ loading: true, error: null });
         
         const response = await axiosClientInstance.post(
-          'https://riffaa.com/api/auth/callback/google/', 
+          '/auth/callback/google/',
           { code },
           {
             headers: {

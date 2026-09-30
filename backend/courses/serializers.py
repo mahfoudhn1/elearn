@@ -9,8 +9,10 @@ from .models import (
     Course,
     Lesson,
     Material,
+    Section,
     Survey,
     SurveyAnswer,
+    SurveyAttempt,
     SurveyChoice,
     SurveyQuestion,
     SurveyResponse,
@@ -67,7 +69,9 @@ class MaterialSerializer(UUIDModelSerializer):
         lesson = attrs.get("lesson", getattr(self.instance, "lesson", None))
         course = attrs.get("course", getattr(self.instance, "course", None))
 
-        if not file and not url:
+        if file is None and not url:
+            if self.instance is not None and getattr(self.instance, "file", None):
+                return attrs
             raise serializers.ValidationError(
                 "Provide a file or a URL for the material."
             )
@@ -83,19 +87,26 @@ class MaterialSerializer(UUIDModelSerializer):
 class LessonSerializer(UUIDModelSerializer):
     materials = MaterialSerializer(many=True, read_only=True)
     is_finished = serializers.SerializerMethodField()
+    last_position_seconds = serializers.SerializerMethodField()
 
     class Meta:
         model = Lesson
         fields = [
             "id",
             "course",
+            "section",
             "title",
             "description",
             "video",
+            "video_asset",
+            "duration_seconds",
+            "is_preview",
+            "is_published",
             "order",
             "created_at",
             "materials",
             "is_finished",
+            "last_position_seconds",
         ]
         read_only_fields = ["created_at"]
 
@@ -109,25 +120,42 @@ class LessonSerializer(UUIDModelSerializer):
         )
         return progress.exists()
 
+    def get_last_position_seconds(self, obj):
+        request = self.context.get("request")
+        student = getattr(request.user, "student", None) if request else None
+        if not student:
+            return 0
+        progress = UserLessonProgress.objects.filter(
+            student=student, lesson=obj
+        ).first()
+        return progress.last_position_seconds if progress else 0
+
 
 class LessonListSerializer(UUIDModelSerializer):
     """Lightweight lesson payload for nested course output."""
 
     materials_count = serializers.SerializerMethodField()
     is_finished = serializers.SerializerMethodField()
+    last_position_seconds = serializers.SerializerMethodField()
 
     class Meta:
         model = Lesson
         fields = [
             "id",
             "course",
+            "section",
             "title",
             "description",
             "video",
+            "video_asset",
+            "duration_seconds",
+            "is_preview",
+            "is_published",
             "order",
             "created_at",
             "materials_count",
             "is_finished",
+            "last_position_seconds",
         ]
 
     def get_materials_count(self, obj):
@@ -142,6 +170,24 @@ class LessonListSerializer(UUIDModelSerializer):
             student=student, lesson=obj, is_finished=True
         ).exists()
 
+    def get_last_position_seconds(self, obj):
+        request = self.context.get("request")
+        student = getattr(request.user, "student", None) if request else None
+        if not student:
+            return 0
+        progress = UserLessonProgress.objects.filter(
+            student=student, lesson=obj
+        ).first()
+        return progress.last_position_seconds if progress else 0
+
+
+class SectionSerializer(UUIDModelSerializer):
+    lessons = LessonListSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Section
+        fields = ["id", "course", "title", "order", "lessons"]
+
 
 class SurveySummarySerializer(UUIDModelSerializer):
     questions_count = serializers.SerializerMethodField()
@@ -154,6 +200,7 @@ class SurveySummarySerializer(UUIDModelSerializer):
             "lesson",
             "title",
             "description",
+            "kind",
             "is_published",
             "created_at",
             "questions_count",
@@ -219,6 +266,7 @@ class CourseListSerializer(UUIDModelSerializer):
 
 
 class CourseDetailSerializer(CourseListSerializer):
+    sections = SectionSerializer(many=True, read_only=True)
     lessons = LessonListSerializer(many=True, read_only=True)
     materials = serializers.SerializerMethodField()
     surveys = serializers.SerializerMethodField()
@@ -226,6 +274,7 @@ class CourseDetailSerializer(CourseListSerializer):
 
     class Meta(CourseListSerializer.Meta):
         fields = CourseListSerializer.Meta.fields + [
+            "sections",
             "lessons",
             "materials",
             "surveys",
@@ -269,6 +318,16 @@ class CourseWriteSerializer(UUIDModelSerializer):
         model = Course
         fields = ["id", "title", "description", "thumbnail", "is_published"]
 
+    def validate(self, attrs):
+        is_published = attrs.get("is_published", getattr(self.instance, "is_published", False))
+        if is_published and self.instance is not None:
+            published_lessons = self.instance.lessons.filter(is_published=True).exists()
+            if not published_lessons:
+                raise serializers.ValidationError({
+                    "is_published": "A course can only be published when it has at least one published lesson."
+                })
+        return attrs
+
 
 class SurveyChoiceSerializer(UUIDModelSerializer):
     class Meta:
@@ -289,6 +348,7 @@ class SurveyQuestionSerializer(UUIDModelSerializer):
             "order",
             "explanation",
             "expected_answer",
+            "expected_answers",
             "choices",
         ]
 
@@ -302,7 +362,6 @@ class SurveyQuestionSerializer(UUIDModelSerializer):
         if is_owner:
             return data
 
-        # Never leak correct answers to students before they submit.
         for choice in data:
             choice.pop("is_correct", None)
             choice.pop("order", None)
@@ -317,6 +376,7 @@ class SurveyQuestionSerializer(UUIDModelSerializer):
         )
         if not is_owner:
             data.pop("expected_answer", None)
+            data.pop("expected_answers", None)
             data.pop("explanation", None)
         return data
 
@@ -325,6 +385,8 @@ class SurveyDetailSerializer(UUIDModelSerializer):
     questions = SurveyQuestionSerializer(many=True, read_only=True)
     total_points = serializers.IntegerField(read_only=True)
     my_response = serializers.SerializerMethodField()
+    my_attempts = serializers.SerializerMethodField()
+    attempts_left = serializers.SerializerMethodField()
 
     class Meta:
         model = Survey
@@ -334,12 +396,30 @@ class SurveyDetailSerializer(UUIDModelSerializer):
             "lesson",
             "title",
             "description",
+            "kind",
             "is_published",
+            "time_limit_minutes",
+            "passing_score_percent",
+            "max_attempts",
+            "shuffle_questions",
+            "shuffle_choices",
+            "show_results",
+            "available_from",
+            "available_until",
             "created_at",
             "total_points",
             "questions",
             "my_response",
+            "my_attempts",
+            "attempts_left",
         ]
+
+    def _student_attempts(self, obj):
+        request = self.context.get("request")
+        student = getattr(request.user, "student", None) if request else None
+        if not student:
+            return SurveyAttempt.objects.none()
+        return SurveyAttempt.objects.filter(survey=obj, student=student)
 
     def get_my_response(self, obj):
         request = self.context.get("request")
@@ -353,7 +433,31 @@ class SurveyDetailSerializer(UUIDModelSerializer):
         )
         if not response:
             return None
-        return SurveyResponseSerializer(response, context=self.context).data
+        data = SurveyResponseSerializer(response, context=self.context).data
+        if obj.show_results == Survey.ShowResults.NEVER:
+            data = {key: value for key, value in data.items() if key != "answers"}
+        return data
+
+    def get_my_attempts(self, obj):
+        attempts = self._student_attempts(obj).order_by("attempt_number")
+        return [
+            {
+                "id": str(attempt.uuid),
+                "attempt_number": attempt.attempt_number,
+                "started_at": attempt.started_at,
+                "submitted_at": attempt.submitted_at,
+                "score": attempt.score,
+                "passed": attempt.passed,
+                "time_spent_seconds": attempt.time_spent_seconds,
+            }
+            for attempt in attempts
+        ]
+
+    def get_attempts_left(self, obj):
+        if obj.max_attempts is None:
+            return None
+        used = self._student_attempts(obj).count()
+        return max(obj.max_attempts - used, 0)
 
 
 class SurveyChoiceWriteSerializer(UUIDModelSerializer):
@@ -372,6 +476,7 @@ class SurveyQuestionWriteSerializer(UUIDModelSerializer):
             "text",
             "question_type",
             "expected_answer",
+            "expected_answers",
             "explanation",
             "points",
             "order",
@@ -386,11 +491,14 @@ class SurveyQuestionWriteSerializer(UUIDModelSerializer):
         expected_answer = attrs.get(
             "expected_answer", getattr(self.instance, "expected_answer", "")
         )
+        expected_answers = attrs.get(
+            "expected_answers", getattr(self.instance, "expected_answers", [])
+        )
 
         if question_type == SurveyQuestion.QuestionType.SHORT_ANSWER:
-            if not expected_answer:
+            if not expected_answer and not expected_answers:
                 raise serializers.ValidationError(
-                    {"expected_answer": "Short answer questions need an expected answer."}
+                    {"expected_answer": "Short answer questions need at least one accepted answer."}
                 )
         else:
             if len(choices) < 2:
@@ -398,7 +506,12 @@ class SurveyQuestionWriteSerializer(UUIDModelSerializer):
                     {"choices": "Provide at least two choices."}
                 )
             correct = [choice for choice in choices if choice.get("is_correct")]
-            if len(correct) != 1:
+            if question_type == SurveyQuestion.QuestionType.MULTIPLE_SELECT:
+                if not correct:
+                    raise serializers.ValidationError(
+                        {"choices": "Mark at least one choice as correct."}
+                    )
+            elif len(correct) != 1:
                 raise serializers.ValidationError(
                     {"choices": "Mark exactly one choice as correct."}
                 )
@@ -416,7 +529,16 @@ class SurveyWriteSerializer(UUIDModelSerializer):
             "lesson",
             "title",
             "description",
+            "kind",
             "is_published",
+            "time_limit_minutes",
+            "passing_score_percent",
+            "max_attempts",
+            "shuffle_questions",
+            "shuffle_choices",
+            "show_results",
+            "available_from",
+            "available_until",
             "questions",
         ]
 
@@ -471,6 +593,7 @@ class SurveyAnswerInputSerializer(serializers.Serializer):
 
 class SurveySubmitSerializer(serializers.Serializer):
     answers = SurveyAnswerInputSerializer(many=True)
+    attempt = serializers.UUIDField(required=False, allow_null=True)
 
     def validate_answers(self, answers):
         if not answers:

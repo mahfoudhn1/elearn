@@ -28,7 +28,15 @@ class SchedulingService:
         return getattr(self.user, "student", None)
 
     def get_personal_items_queryset(self, start: datetime | None = None, end: datetime | None = None):
-        qs = PersonalScheduleItem.objects.filter(user=self.user)
+        # Terminal items no longer occupy time, so a finished or cancelled task
+        # (or a missed exam) must not block a new booking that overlaps it.
+        qs = PersonalScheduleItem.objects.filter(user=self.user).exclude(
+            status__in=[
+                PersonalScheduleItem.Status.COMPLETED,
+                PersonalScheduleItem.Status.CANCELLED,
+                PersonalScheduleItem.Status.MISSED,
+            ]
+        )
         if start and end:
             qs = qs.filter(start_datetime__lt=end, end_datetime__gt=start)
         return qs

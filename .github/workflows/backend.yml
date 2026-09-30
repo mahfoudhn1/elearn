@@ -1,0 +1,75 @@
+name: Backend
+
+on:
+  push:
+    paths:
+      - "backend/**"
+  pull_request:
+    paths:
+      - "backend/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: elearn
+          POSTGRES_USER: elearn
+          POSTGRES_PASSWORD: elearn
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U elearn"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DJANGO_SECRET_KEY: ci-secret-key
+      DEBUG: "False"
+      DB_NAME: elearn
+      DB_USER: elearn
+      DB_PASSWORD: elearn
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      REDIS_URL: redis://localhost:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install -r requirements-dev.txt
+
+      - name: Lint
+        working-directory: backend
+        run: ruff check .
+
+      - name: Django system check
+        working-directory: backend
+        run: python manage.py check
+
+      - name: Ensure migrations are complete
+        working-directory: backend
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Test
+        working-directory: backend
+        run: python manage.py test

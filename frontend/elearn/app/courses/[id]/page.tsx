@@ -1,184 +1,62 @@
 "use client";
-import React, { useEffect, useState } from 'react';
-import ReactPlayer from 'react-player';
-import { motion } from 'framer-motion';
-import axiosClientInstance from '../../lib/axiosInstance';
-import { fetchCourse } from './course';
-import { GroupCourse, Answer } from '../../types/student';
-import Quiz from './quiz';
-import QuizAnswerForm from './quizanswer';
 
-const CourseViewer: React.FC<{ courseId: string }> = ({ courseId }) => {
-  const [course, setCourse] = useState<GroupCourse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [submissionError, setSubmissionError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+import { useQuery } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
-  useEffect(() => {
-    const loadCourse = async () => {
-      try {
-        const fetchedCourse = await fetchCourse(); // Pass courseId to fetchCourse
-        setCourse(fetchedCourse);
-        setLoading(false);
-      } catch (err: any) {
-        setError(err.message || 'Failed to load course');
-        setLoading(false);
-      }
-    };
-    loadCourse();
-  }, [courseId]);
+import { fetchCourse } from "../../api/courses";
+import type { Course } from "../../types/course";
+import CoursePlayer from "./CoursePlayer";
+import QuizPlayer from "./QuizPlayer";
 
-  const handleAnswerSubmit = async (answers: { [questionId: string]: Answer | string }) => {
-    if (!course?.quiz) return;
+export default function CourseViewerPage() {
+  const params = useParams<{ id: string }>();
+  const courseId = params?.id ?? "";
 
-    setSubmitting(true);
-    setSubmissionError(null);
+  const courseQuery = useQuery({
+    queryKey: ["course", courseId],
+    queryFn: () => fetchCourse(courseId),
+    enabled: Boolean(courseId),
+  });
 
-    try {
-      const submissionPromises = Object.entries(answers).map(async ([questionId, answer]) => {
-        let selected_answer: number | string;
-
-        if (typeof answer === 'string') {
-          // Short Answer: Send the text directly
-          selected_answer = answer;
-        } else {
-          // Multiple Choice or True/False: Send the Answer ID
-          selected_answer = answer.id;
-        }
-
-        const response = await axiosClientInstance.post('/groups/studentanswer/', {
-          question: questionId,
-          selected_answer,
-        });
-
-        return response.data;
-      });
-
-      const newStudentAnswers = await Promise.all(submissionPromises);
-
-      setCourse((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          student_answers: [
-            ...(prev.student_answers || []),
-            ...newStudentAnswers,
-          ],
-        };
-      });
-    } catch (err: any) {
-      setSubmissionError(err.response?.data?.detail || 'Failed to submit answers');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  if (loading) {
+  if (courseQuery.isLoading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-gray-100 to-gray-200">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1 }}
-          className="w-12 h-12 border-4 border-t-blue-500 border-gray-300 rounded-full"
-        />
+      <div className="flex min-h-[50vh] items-center justify-center" dir="rtl">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-600" aria-label="جارٍ التحميل" />
       </div>
     );
   }
 
-  if (error || !course) {
+  if (courseQuery.isError || !courseQuery.data) {
     return (
-      <div className="text-center text-red-500 bg-red-50 p-6 rounded-lg mx-auto max-w-2xl mt-10">
-        {error || 'Course not found'}
+      <div className="mx-auto mt-16 max-w-xl rounded-2xl bg-red-50 p-6 text-center" dir="rtl" role="alert">
+        <p className="text-red-700">تعذر تحميل الدورة.</p>
+        <button
+          type="button"
+          onClick={() => courseQuery.refetch()}
+          className="mt-3 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white"
+        >
+          إعادة المحاولة
+        </button>
       </div>
     );
   }
+
+  const course = courseQuery.data as Course;
+  const courseWideSurveys = (course.surveys ?? []).filter((survey) => !survey.lesson);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-white shadow-2xl rounded-2xl p-8 mb-8 transform hover:shadow-3xl transition-shadow duration-300"
-        >
-          <h1 className="text-4xl font-extrabold text-grey-900 tracking-tight">
-            {course.title}
-          </h1>
-          {course.description && (
-            <p className="mt-4 text-lg text-gray-600 leading-relaxed">
-              {course.description}
-            </p>
-          )}
-          <p className="mt-2 text-sm text-gray-500">
-            Created: {new Date(course.created_at).toLocaleDateString()}
-          </p>
-        </motion.div>
+    <div className="mx-auto max-w-6xl px-4 py-8">
+      <CoursePlayer course={course} />
 
-        {course.group_video ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-white shadow-2xl rounded-2xl p-8 mb-8"
-          >
-            <h2 className="text-2xl font-bold text-grey-900 mb-6">Course Video</h2>
-            <div className="relative aspect-w-16 aspect-h-9 rounded-xl overflow-hidden">
-              <ReactPlayer
-                url={course.group_video}
-                controls
-                width="100%"
-                height="100%"
-                config={{
-                  file: {
-                    attributes: {
-                      poster: 'https://via.placeholder.com/1280x720?text=Course+Video',
-                    },
-                  },
-                }}
-              />
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="bg-white shadow-2xl rounded-2xl p-8 mb-8 text-gray-600 text-center"
-          >
-            No video available for this course.
-          </motion.div>
-        )}
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="bg-white shadow-2xl rounded-2xl p-8"
-        >
-          <h2 className="text-2xl font-bold text-grey-900 mb-6">Surveys</h2>
-          {course.quiz ? (
-            <>
-              <Quiz quiz={course.quiz} />
-              <QuizAnswerForm
-                questions={course.quiz.questions}
-                onSubmit={handleAnswerSubmit}
-              />
-              {submissionError && (
-                <p className="text-red-500 mt-4">{submissionError}</p>
-              )}
-              {submitting && (
-                <p className="text-gray-600 mt-4">Submitting answers...</p>
-              )}
-            </>
-          ) : (
-            <p className="text-gray-600">No quiz available for this course.</p>
-          )}
-        </motion.div>
-      </div>
+      {!course.access.is_locked && courseWideSurveys.length > 0 ? (
+        <section className="mt-8 space-y-4" dir="rtl" aria-label="اختبارات الدورة">
+          <h2 className="text-lg font-bold text-gray-900">اختبارات الدورة</h2>
+          {courseWideSurveys.map((survey) => (
+            <QuizPlayer key={survey.id} surveyId={survey.id} />
+          ))}
+        </section>
+      ) : null}
     </div>
   );
-};
-
-export default CourseViewer;
+}

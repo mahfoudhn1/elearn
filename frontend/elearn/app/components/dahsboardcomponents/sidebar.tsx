@@ -12,14 +12,23 @@ import {
   ClipboardList,
   Menu,
   Presentation,
+  GraduationCap,
+  Activity,
+  BookMarked,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../../store/store';
 
 const Sidebar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false); // Mobile sidebar
   const [isExpanded, setIsExpanded] = useState(false); // Large screen expansion
   const pathname = usePathname();
   const [isMobile, setIsMobile] = useState(false);
+  const user = useSelector((state: RootState) => state.auth.user);
+  const isTeacher = user?.role === 'teacher';
+  const isStudent = user?.role === 'student';
+  const coursesHref = isTeacher ? '/courses/manage' : '/courses';
 
   useEffect(() => {
     const checkMobile = () => {
@@ -109,6 +118,46 @@ const Sidebar: React.FC = () => {
                       </span>
                     </Link>
                   </li>
+
+                  <li className={`transition-colors duration-75 hover:bg-orange-600 hover:text-white rounded-lg ${pathname.startsWith('/courses') ? 'bg-orange-600 text-white' : ''}`}>
+                    <Link
+                      href={coursesHref}
+                      className="flex items-center p-2 text-gray-900 rounded-lg group"
+                    >
+                      <GraduationCap className="flex-shrink-0 w-5 h-5" />
+                      <span className={`flex-1 me-3 whitespace-nowrap ${(isMobile && isOpen) || isExpanded ? 'block' : 'hidden'}`}>
+                        {isTeacher ? 'إدارة الدورات' : 'الدورات'}
+                      </span>
+                    </Link>
+                  </li>
+
+                  {!isTeacher ? (
+                    <li className={`transition-colors duration-75 hover:bg-orange-600 hover:text-white rounded-lg ${pathname.startsWith('/tracking') ? 'bg-orange-600 text-white' : ''}`}>
+                      <Link
+                        href={'/tracking'}
+                        className="flex items-center p-2 text-gray-900 rounded-lg group"
+                      >
+                        <Activity className="flex-shrink-0 w-5 h-5" />
+                        <span className={`flex-1 me-3 whitespace-nowrap ${(isMobile && isOpen) || isExpanded ? 'block' : 'hidden'}`}>
+                          متابعة التقدم
+                        </span>
+                      </Link>
+                    </li>
+                  ) : null}
+
+                  {isTeacher ? (
+                    <li className={`transition-colors duration-75 hover:bg-orange-600 hover:text-white rounded-lg ${pathname.startsWith('/tracking') ? 'bg-orange-600 text-white' : ''}`}>
+                      <Link
+                        href={'/tracking'}
+                        className="flex items-center p-2 text-gray-900 rounded-lg group"
+                      >
+                        <BookMarked className="flex-shrink-0 w-5 h-5" />
+                        <span className={`flex-1 me-3 whitespace-nowrap ${(isMobile && isOpen) || isExpanded ? 'block' : 'hidden'}`}>
+                          تقدم الطلاب
+                        </span>
+                      </Link>
+                    </li>
+                  ) : null}
 
                   <li className={`transition-colors duration-75 hover:bg-orange-600 hover:text-white rounded-lg ${pathname === '/notes' ? 'bg-orange-600 text-white' : ''}`}>
                     <Link

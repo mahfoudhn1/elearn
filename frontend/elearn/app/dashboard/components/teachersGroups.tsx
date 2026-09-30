@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import axiosClientInstance from '../../lib/axiosInstance'
+import { fetchTeacherGroups } from '../../lib/groupsApi'
 import { useRouter } from 'next/navigation'
 import { BookOpenText, GraduationCap, UsersRound } from 'lucide-react'
 import { Group } from '../../types/student'
@@ -14,8 +14,8 @@ export default function StudentGroupsSlider() {
   const router = useRouter()
 
   useEffect(() => {
-    axiosClientInstance.get('/groups/teacher_groups/')
-      .then(res => setGroups(res.data))
+    fetchTeacherGroups()
+      .then(setGroups)
       .catch(err => console.error('Error fetching teacher groups', err))
   }, [])
 

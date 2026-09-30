@@ -1,8 +1,6 @@
 import { cookies } from "next/headers";
-import createAxiosInstance from "../lib/axiosInstance";
+import axiosClientInstance from "../lib/axiosInstance";
 
-
-const axiosInstance = createAxiosInstance();
 async function refreshAccessToken() {
     const cookieStore = cookies();
     const refreshToken = cookieStore.get('refresh_token')?.value;
@@ -12,7 +10,7 @@ async function refreshAccessToken() {
     }
   
     try {
-      const response = await axiosInstance.post('/token/refresh/', null, {
+      const response = await axiosClientInstance.post('/token/refresh/', null, {
         headers: {
           'Authorization': `Bearer ${refreshToken}`,
         },

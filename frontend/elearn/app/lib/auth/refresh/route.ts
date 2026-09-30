@@ -1,14 +1,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
+import { API_BASE_URL } from '../../apiUrl';
 
 export async function POST(request: NextRequest) {
   try {
     // Get the refresh token from the request body
     const { refreshToken } = await request.json(); // Use request.json() to parse the body
-    console.log(refreshToken);
-    
-    const refreshResponse = await axios.post('https://riffaa.com/api/token/refresh/', {
+    const refreshResponse = await axios.post(`${API_BASE_URL}/token/refresh/`, {
       refreshToken,
     }, {
       withCredentials: true,

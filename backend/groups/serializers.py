@@ -37,7 +37,9 @@ class ScheduleSerializer(UUIDModelSerializer):
 
 
 class GroupSerializer(UUIDModelSerializer):
-    school_level = serializers.CharField()
+    school_level = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
     admin = serializers.SerializerMethodField(read_only=True)
     field_of_study_nest = fieldofstudySerializer(read_only=True)
     language = serializers.CharField(write_only=True, required=False)
@@ -75,17 +77,16 @@ class GroupSerializer(UUIDModelSerializer):
         except Teacher.DoesNotExist:
             raise serializers.ValidationError("User is not associated with any teacher.")
 
-        # Resolve school_level name to ID
+        # Resolve school_level name to an instance when provided. Language
+        # groups are not attached to a school level, so it stays optional.
         school_level_name = validated_data.pop('school_level', None)
-        if not school_level_name:
-            raise serializers.ValidationError({"school_level": "This field is required."})
-
-        try:
-            school_level = SchoolLevel.objects.get(name=school_level_name)
-        except SchoolLevel.DoesNotExist:
-            raise serializers.ValidationError({"school_level": f"School level '{school_level_name}' does not exist."})
-
-        validated_data['school_level'] = school_level
+        if school_level_name:
+            school_level = SchoolLevel.objects.filter(name=school_level_name).first()
+            if school_level is None:
+                raise serializers.ValidationError(
+                    {"school_level": f"School level '{school_level_name}' does not exist."}
+                )
+            validated_data['school_level'] = school_level
 
         # Handle optional language and language_level
         language_id = validated_data.pop('language', None)

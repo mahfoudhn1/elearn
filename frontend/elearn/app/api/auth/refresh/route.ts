@@ -1,19 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
+import { API_BASE_URL } from '../../../lib/apiUrl';
 
 export async function POST(request: NextRequest) {
   try {
     // Get the refresh token from the request body
     const { refreshToken } = await request.json();
     
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-    console.log(apiUrl)
-    if (!apiUrl) {
-      throw new Error('API URL not configured');
-    }
-
     const refreshResponse = await axios.post(
-      `${apiUrl}/token/refresh/`,
+      `${API_BASE_URL}/token/refresh/`,
       { refreshToken },
       { withCredentials: true }
     );

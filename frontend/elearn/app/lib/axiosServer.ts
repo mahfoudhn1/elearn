@@ -1,6 +1,7 @@
 // lib/axiosServer.ts
 import axios from 'axios';
 import { cookies } from 'next/headers';
+import { API_BASE_URL } from './apiUrl';
 
 export function createAxiosSSRInstance() {
   const cookieStore = cookies();
@@ -8,7 +9,7 @@ export function createAxiosSSRInstance() {
   const refreshToken = cookieStore.get('refresh_token')?.value;
 
   const instance = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL,
+    baseURL: API_BASE_URL,
     withCredentials: true,
     headers: {
       'Content-Type': 'application/json',
@@ -31,7 +32,7 @@ export function createAxiosSSRInstance() {
 
         try {
           const refreshResponse = await axios.post(
-            'https://riffaa.com/nextapi/api/auth/refresh',
+            `${API_BASE_URL}/token/refresh/`,
             { refreshToken },
             { withCredentials: true }
           );

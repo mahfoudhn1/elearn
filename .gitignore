@@ -89,3 +89,10 @@ backend/$
 # Local data with user PII
 backend/mydata.json
 backend/studentforms_clean.json
+COURSE_FUNCTIONALITY.md
+PROJECT_OVERVIEW.md
+SCHEDULING_SYSTEM.md
+docs/courses.md
+docs/migration-runbook.md
+docs/r2-cors.md
+docs/tracking.md

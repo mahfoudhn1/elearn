@@ -22,9 +22,11 @@ class UserSerializer(UUIDModelSerializer):
         return obj.get_avatar()
 
 class fieldofstudySerializer(UUIDModelSerializer):
+    grade_name = serializers.CharField(source='grade.name', read_only=True, allow_null=True)
+
     class Meta:
         model = FieldOfStudy
-        fields = ['id', 'name' ]
+        fields = ['id', 'name', 'grade', 'grade_name']
 
 class gradeSerializer(UUIDModelSerializer):
     
@@ -166,26 +168,32 @@ class LoginSerializer(serializers.Serializer):
         }
 
     def validate(self, data):
-        username = (data.get('username') or '').strip()
+        identifier = (data.get('username') or '').strip()
         email = (data.get('email') or '').strip()
         password = data.get('password')
-        if not (username or email) or not password:
+        if not (identifier or email) or not password:
             raise serializers.ValidationError("Username or email and password are required")
 
-        if email and not username:
-            user_record = User.objects.filter(email__iexact=email).first()
-            if user_record:
-                username = user_record.username
+        # The identifier may be a username, or an email placed in either field.
+        user_record = None
+        if identifier:
+            user_record = User.objects.filter(username__iexact=identifier).first()
+        if user_record is None:
+            lookup_email = email or identifier
+            if lookup_email:
+                user_record = User.objects.filter(email__iexact=lookup_email).first()
 
+        username = user_record.username if user_record else (identifier or email)
         user = authenticate(username=username, password=password)
 
         if user is None:
             raise serializers.ValidationError("Invalid credentials")
 
         # if not user.email_verified:  
-        #     raise serializers.ValidationError("Your email is not verified. Please verify your email.")
+        #     raise serializers.ValidationError("Your email is not verified. Please check your email for verification.")
 
-        data['user'] = user 
+        data['username'] = user.username
+        data['user'] = user
         return data
 
     

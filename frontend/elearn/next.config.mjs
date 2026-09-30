@@ -44,12 +44,6 @@ const nextConfig = {
     styledComponents: true, // Add support for styled-components
   },
 
-  env: {
-    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL, // Expose API URL to frontend
-  },
-
   productionBrowserSourceMaps: false, // Disable source maps in production
 };
 

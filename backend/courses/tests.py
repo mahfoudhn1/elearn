@@ -8,7 +8,7 @@ from rest_framework.test import APIClient, APITestCase
 from subscription.models import Subscription, SubscriptionPlan
 from users.models import FieldOfStudy, Grade, SchoolLevel, Student, Teacher, User
 
-from .models import Course, Lesson, Survey
+from .models import Course, Lesson, Survey, SurveyChoice, SurveyQuestion
 
 
 def make_teacher(username="teacher"):
@@ -138,13 +138,31 @@ class CourseContentTests(APITestCase):
 
     def test_teacher_adds_lesson_and_material(self):
         self.client.force_authenticate(self.teacher.user)
+        section_response = self.client.post(
+            reverse("section-list"),
+            {"course": str(self.course.uuid), "title": "Unit 1"},
+            format="json",
+        )
+        self.assertEqual(section_response.status_code, 201, section_response.data)
+        self.assertEqual(section_response.data["order"], 1)
+
         lesson_response = self.client.post(
             reverse("lesson-list"),
-            {"course": str(self.course.uuid), "title": "Intro", "video": "https://example.com/v.mp4"},
+            {
+                "course": str(self.course.uuid),
+                "section": section_response.data["id"],
+                "title": "Intro",
+                "video": "https://example.com/v.mp4",
+            },
             format="json",
         )
         self.assertEqual(lesson_response.status_code, 201, lesson_response.data)
         self.assertEqual(lesson_response.data["order"], 1)
+
+        detail = self.client.get(reverse("course-detail", args=[self.course.uuid]))
+        self.assertEqual(detail.status_code, 200)
+        self.assertEqual(len(detail.data["sections"]), 1)
+        self.assertEqual(detail.data["sections"][0]["lessons"][0]["title"], "Intro")
 
         from django.core.files.uploadedfile import SimpleUploadedFile
 
@@ -232,3 +250,149 @@ class CourseContentTests(APITestCase):
         response = self.client.post(url)
         self.assertEqual(response.status_code, 200, response.data)
         self.assertTrue(response.data["is_finished"])
+
+    def test_save_position_reports_progress_and_auto_finishes(self):
+        lesson = Lesson.objects.create(
+            course=self.course,
+            title="Intro",
+            video="https://example.com/v.mp4",
+            duration_seconds=120,
+            order=1,
+        )
+        self.client.force_authenticate(self.student.user)
+        url = f"/api/courses/lessons/{lesson.uuid}/save_position/"
+
+        response = self.client.post(url, {"position_seconds": 30}, format="json")
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertEqual(response.data["last_position_seconds"], 30)
+        self.assertFalse(response.data["is_finished"])
+
+        response = self.client.post(url, {"position_seconds": 110}, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.data["is_finished"])
+
+        detail = self.client.get(f"/api/courses/{self.course.uuid}/")
+        self.assertEqual(detail.status_code, 200)
+        lesson_data = next(
+            item for item in detail.data["lessons"] if item["id"] == str(lesson.uuid)
+        )
+        self.assertEqual(lesson_data["last_position_seconds"], 110)
+        self.assertTrue(lesson_data["is_finished"])
+
+    def test_unsubscribed_student_cannot_save_position(self):
+        lesson = Lesson.objects.create(course=self.course, title="Intro", order=1)
+        other = make_student("stranger")
+        self.client.force_authenticate(other.user)
+        url = f"/api/courses/lessons/{lesson.uuid}/save_position/"
+        response = self.client.post(url, {"position_seconds": 5}, format="json")
+        # The lesson is not even visible in the unsubscribed student's queryset.
+        self.assertIn(response.status_code, (403, 404))
+
+
+class QuizFlowTests(APITestCase):
+    def setUp(self):
+        self.teacher = make_teacher()
+        self.student = make_student()
+        self.plan = SubscriptionPlan.objects.create(
+            name="Monthly", price=Decimal("1000.00"), duration_days=30
+        )
+        subscription = Subscription.objects.create(
+            teacher=self.teacher, student=self.student, plan=self.plan
+        )
+        subscription.activate()
+        self.course = Course.objects.create(teacher=self.teacher, title="Physics")
+        self.survey = Survey.objects.create(
+            course=self.course,
+            title="Checkpoint",
+            kind=Survey.Kind.QUIZ,
+            time_limit_minutes=10,
+            max_attempts=2,
+            passing_score_percent=50,
+        )
+        self.question = SurveyQuestion.objects.create(
+            survey=self.survey, text="2 + 2?", points=1
+        )
+        self.wrong = SurveyChoice.objects.create(
+            question=self.question, text="3", is_correct=False
+        )
+        self.correct = SurveyChoice.objects.create(
+            question=self.question, text="4", is_correct=True
+        )
+        self.client = APIClient()
+        self.client.force_authenticate(self.student.user)
+
+    def _submit(self, attempt=None):
+        payload = {
+            "answers": [
+                {"question": str(self.question.uuid), "choice": str(self.correct.uuid)}
+            ]
+        }
+        if attempt:
+            payload["attempt"] = attempt
+        return self.client.post(
+            f"/api/courses/surveys/{self.survey.uuid}/submit/", payload, format="json"
+        )
+
+    def test_start_creates_attempt_and_respects_max_attempts(self):
+        response = self.client.post(f"/api/courses/surveys/{self.survey.uuid}/start/")
+        self.assertEqual(response.status_code, 201, response.data)
+        self.assertEqual(response.data["attempt_number"], 1)
+        self.assertEqual(response.data["attempts_left"], 1)
+        self.assertIsNotNone(response.data["deadline"])
+
+        self.client.post(f"/api/courses/surveys/{self.survey.uuid}/start/")
+
+        third = self.client.post(f"/api/courses/surveys/{self.survey.uuid}/start/")
+        self.assertEqual(third.status_code, 403)
+
+    def test_submit_with_attempt_records_score_and_passed(self):
+        start = self.client.post(f"/api/courses/surveys/{self.survey.uuid}/start/")
+        attempt = start.data["attempt"]
+
+        response = self._submit(attempt)
+        self.assertEqual(response.status_code, 201, response.data)
+        self.assertEqual(response.data["score"], 1)
+        self.assertTrue(response.data["passed"])
+
+        from .models import SurveyAttempt
+
+        record = SurveyAttempt.objects.get(uuid=attempt)
+        self.assertTrue(record.passed)
+        self.assertIsNotNone(record.submitted_at)
+
+    def test_resubmitting_same_attempt_is_rejected(self):
+        start = self.client.post(f"/api/courses/surveys/{self.survey.uuid}/start/")
+        attempt = start.data["attempt"]
+        self._submit(attempt)
+        again = self._submit(attempt)
+        self.assertEqual(again.status_code, 400, again.data)
+
+    def test_attempts_listing(self):
+        self._submit()
+        response = self.client.get(f"/api/courses/surveys/{self.survey.uuid}/attempts/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["attempt_number"], 1)
+
+    def test_unavailable_quiz_is_rejected(self):
+        Survey.objects.filter(pk=self.survey.pk).update(
+            available_from=timezone.now() + timedelta(days=1)
+        )
+        response = self.client.post(f"/api/courses/surveys/{self.survey.uuid}/start/")
+        self.assertEqual(response.status_code, 400)
+
+    def test_teacher_analytics(self):
+        self._submit()
+        self.client.force_authenticate(self.teacher.user)
+        response = self.client.get(
+            f"/api/courses/surveys/{self.survey.uuid}/analytics/"
+        )
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertEqual(response.data["attempts_submitted"], 1)
+        self.assertEqual(response.data["questions"][0]["correct_rate"], 100)
+
+        self.client.force_authenticate(self.student.user)
+        denied = self.client.get(
+            f"/api/courses/surveys/{self.survey.uuid}/analytics/"
+        )
+        self.assertEqual(denied.status_code, 403)

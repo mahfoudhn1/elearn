@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import axiosClientInstance from '../../lib/axiosInstance'
+import { fetchStudentGroups } from '../../lib/groupsApi'
 import { useRouter } from 'next/navigation'
 import { BookOpenText, GraduationCap, UsersRound } from 'lucide-react'
 import { Group } from '../../types/student'
@@ -14,9 +14,9 @@ export default function TeacherGroupsList() {
   const router = useRouter()
 
   useEffect(() => {
-    axiosClientInstance.get('/groups/student_groups/')
-      .then(res => setGroups(res.data))
-      .catch(err => console.error('Error fetching teacher groups', err))
+    fetchStudentGroups()
+      .then(setGroups)
+      .catch(err => console.error('Error fetching student groups', err))
   }, [])
 
   const handleGroupClick = (id: string) => {

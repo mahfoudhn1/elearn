@@ -17,6 +17,7 @@ from .serializers import (
     StudySessionStartSerializer,
 )
 from .services import PomodoroError, PomodoroService, ProductivityService, SchedulingService
+from .services.localtime import local_day_bounds, local_today
 
 #: Upper bound on an analytics window. ``daily()`` zero-fills every day in the
 #: range, so an unbounded span would happily try to build a decade of rows.
@@ -86,9 +87,10 @@ class PersonalScheduleItemViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"])
     def today(self, request):
-        now = timezone.now()
-        start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        end = start + timedelta(days=1)
+        # "Today" is the student's local day, not the server's UTC day.
+        preferences, _ = PomodoroSettings.objects.get_or_create(user=request.user)
+        offset = preferences.timezone_offset_minutes
+        start, end = local_day_bounds(local_today(offset, timezone.now()), offset)
         items = self.get_queryset().filter(start_datetime__lt=end, end_datetime__gt=start)
         return Response(self.get_serializer(items, many=True).data)
 

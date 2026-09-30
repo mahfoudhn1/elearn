@@ -2,6 +2,8 @@ asgiref==3.8.1
 attrs==25.1.0
 autobahn==24.4.2
 Automat==24.8.1
+boto3==1.40.34
+botocore==1.40.34
 cachetools==5.4.0
 certifi==2024.7.4
 cffi==1.17.0
@@ -32,7 +34,7 @@ pyasn1_modules==0.4.0
 pycparser==2.22
 PyJWT==2.8.0
 pyOpenSSL==25.0.0
-python-dotenv @ file:///home/conda/feedstock_root/build_artifacts/python-dotenv-split_1706018097647/work
+python-dotenv==1.0.1
 redis==5.2.1
 requests==2.32.3
 requests-oauthlib==2.0.0

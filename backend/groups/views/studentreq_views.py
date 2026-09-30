@@ -39,7 +39,13 @@ class StudentGroupRequestViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
             subscription_exists = Subscription.objects.filter(student=student, teacher=teacher, is_active=True).exists()
             if not subscription_exists:
                 raise serializers.ValidationError("تستطيع دخول المجمواعات بعد تفعيل اشتراكم.")
-            
+
+            pending = StudentGroupRequest.objects.filter(
+                student=student, group=group, is_accepted=False, is_rejected=False
+            ).exists()
+            if pending:
+                raise serializers.ValidationError("لديك طلب انضمام قيد الانتظار لهذه المجموعة.")
+
             # Create the request object
             student_group_request = StudentGroupRequest.objects.create(
                 student=student, 
@@ -58,38 +64,26 @@ class StudentGroupRequestViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
             return Response({"detail": "Only teachers can manage group join requests."}, status=status.HTTP_403_FORBIDDEN)
 
         request_instance = self.get_object()
+        group = request_instance.group
+
+        try:
+            teacher = Teacher.objects.get(user=request.user)
+        except Teacher.DoesNotExist:
+            return Response({"detail": "User does not have an associated Teacher instance."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if group.admin != teacher:
+            return Response({"detail": "You are not the admin of this group."}, status=status.HTTP_403_FORBIDDEN)
 
         if 'accept' in request.data:
-            request_instance.is_accepted = True
-            request_instance.is_rejected = False
-
-            try:
-                group = request_instance.group
-                student = request_instance.student
-                try:
-                    teacher = Teacher.objects.get(user=request.user)
-                except Teacher.DoesNotExist:
-                    return Response({"detail": "User does not have an associated Teacher instance."}, status=status.HTTP_400_BAD_REQUEST)
-
-                if group.admin != teacher:
-                    return Response({"detail": "You are not the admin of this group."}, status=status.HTTP_403_FORBIDDEN)
-                
-                StudentGroupRequest.delete(request_instance)
-                group.students.add(student)
-                group.save()
-
-            except Group.DoesNotExist:
-                return Response({"detail": "Group does not exist."}, status=status.HTTP_400_BAD_REQUEST)
-            except Student.DoesNotExist:
-                return Response({"detail": "Student does not exist."}, status=status.HTTP_400_BAD_REQUEST)
-            except Exception as e:
-                return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-        elif 'reject' in request.data:
-            request_instance.is_rejected = True
-            request_instance.is_accepted = False
+            group.students.add(request_instance.student)
             request_instance.delete()
+            return Response({"detail": "Request accepted."}, status=status.HTTP_200_OK)
 
-        
-        serlizer = self.get_serializer()
-        return Response(serlizer.data, status=status.HTTP_200_OK)
+        if 'reject' in request.data:
+            request_instance.delete()
+            return Response({"detail": "Request rejected."}, status=status.HTTP_200_OK)
+
+        return Response(
+            {"detail": "Provide 'accept' or 'reject' in the request body."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )

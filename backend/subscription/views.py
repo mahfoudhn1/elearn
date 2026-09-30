@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from users.serializers import StudentSerializer
 from .models import CheckUpload, Subscription, SubscriptionPlan
 from .serializers import CheckUploadSerializer, SubscriptionPlanSerializer, SubscriptionSerialize
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from django.utils import timezone
 from users.models import Student, Teacher
 from rest_framework.decorators import action
@@ -131,7 +131,7 @@ class SubscriptionViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
 class subscriptionPlanView(UUIDLookupMixin, viewsets.ModelViewSet):
     queryset = SubscriptionPlan.objects.all()
     serializer_class = SubscriptionPlanSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
 class UploadCheckView(APIView):
     permission_classes = [IsAuthenticated]

@@ -1,89 +1,54 @@
-import { cookies } from 'next/headers';
 import GroupsPerLevel from './GroupsPerLevel';
-import StudentGroups from './StudentGroups';
-import { createAxiosSSRInstance } from '../../lib/axiosServer';
+import {
+  fetchCurrentUserSSR,
+  fetchGradesSSR,
+  fetchGroupsSSR,
+  fetchStudentGroupsSSR,
+} from '../../lib/groupsApiServer';
 
 interface SearchParams {
   field?: string;
   lang?: string;
-  school_Level: string;
-}
-
-// Data fetch helpers — now each one gets its own fresh axios instance
-async function getData({
-  field_of_study_id,
-  school_level,
-  lang,
-}: {
-  field_of_study_id?: number;
-  school_level: string;
-  lang?: string;
-}) {
-  const axiosSSRInstance = createAxiosSSRInstance();
-
-  if (field_of_study_id) {
-    const res = await axiosSSRInstance.get(
-      `/groups/?school_level=${encodeURIComponent(school_level)}&field_of_study=${field_of_study_id}`
-    );
-    return res.data;
-  }
-
-  if (lang) {
-    const res = await axiosSSRInstance.get(
-      `/groups/?school_level=${encodeURIComponent(school_level)}&language_name=${encodeURIComponent(lang)}`
-    );
-    return res.data;
-  }
-
-  const res = await axiosSSRInstance.get(
-    `/groups/?school_level=${encodeURIComponent(school_level)}`
-  );
-  return res.data;
-}
-
-async function getGrades(school_level: string) {
-  const axiosSSRInstance = createAxiosSSRInstance();
-  const res = await axiosSSRInstance.get(`/grades/?school_level=${encodeURIComponent(school_level)}`);
-  return res.data;
-}
-
-async function getUserRole() {
-  const axiosSSRInstance = createAxiosSSRInstance();
-  const res = await axiosSSRInstance.get('/users/');
-  return res.data[0].role;
-}
-
-async function getStudentGroups() {
-  const axiosSSRInstance = createAxiosSSRInstance();
-  const res = await axiosSSRInstance.get('/groups/student_groups/');
-  return res.data;
+  grade?: string;
+  school_Level?: string;
 }
 
 export default async function GroupsPage({ searchParams }: { searchParams: SearchParams }) {
+  const schoolLevel = searchParams.school_Level || 'ثانوي';
+  const field = searchParams.field;
+  const grade = searchParams.grade;
+  const lang = searchParams.lang;
+
   try {
-    const field = searchParams.field ? Number(searchParams.field) : undefined;
-    const lang = searchParams.lang || undefined;
-    const schoolLevel = searchParams.school_Level || "ثانوي";
+    const user = await fetchCurrentUserSSR();
+    const isStudent = user?.role === 'student';
+    const isLanguage = Boolean(lang);
 
-    const userRole = await getUserRole();
-    console.log('User role:', userRole);
+    const filters = isLanguage
+      ? { languageName: lang }
+      : { schoolLevel, grade, fieldOfStudy: field };
 
-    if (userRole === 'student') {
-      const studentGroups = await getStudentGroups();
-      return <StudentGroups groups={studentGroups} />;
-    }
+    const [groups, grades, myGroups] = await Promise.all([
+      fetchGroupsSSR(filters),
+      isLanguage ? Promise.resolve([]) : fetchGradesSSR(schoolLevel),
+      isStudent ? fetchStudentGroupsSSR() : Promise.resolve([]),
+    ]);
 
-    const groupsCategories = await getData({
-      field_of_study_id: field,
-      school_level: schoolLevel,
-      lang: lang,
-    });
-
-    const allGrades = await getGrades(schoolLevel);
-
-    return <GroupsPerLevel groupsCategories={groupsCategories} allGrades={allGrades} />;
+    return (
+      <GroupsPerLevel
+        groupsCategories={groups}
+        allGrades={grades}
+        isStudent={isStudent}
+        myGroupIds={myGroups.map((group) => group.id)}
+        context={{ schoolLevel, grade, field, lang }}
+      />
+    );
   } catch (error) {
     console.error('Error loading data in GroupsPage:', error);
-    return <p>Error loading data.</p>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-stone-50">
+        <p className="text-gray-600">تعذر تحميل المجموعات. حاول مرة أخرى.</p>
+      </div>
+    );
   }
 }

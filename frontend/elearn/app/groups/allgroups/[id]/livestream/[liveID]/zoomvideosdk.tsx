@@ -1,11 +1,12 @@
 import uitoolkit from "@zoom/videosdk-ui-toolkit";
 import "@zoom/videosdk-ui-toolkit/dist/videosdk-ui-toolkit.css";
+import { API_BASE_URL } from "../../../../../lib/apiUrl";
 
 function Videosdk() {
   let sessionContainer: HTMLDivElement | null = null;
   // set your auth endpoint here 
   // a sample is available here: https://github.com/zoom/videosdk-auth-endpoint-sample
-  const authEndpoint = "http://localhost:8000/api/livestream/videosdk/"; // http://localhost:4000
+  const authEndpoint = `${API_BASE_URL}/livestream/videosdk/`;
   const config = {
     videoSDKJWT: "",
     sessionName: "test",

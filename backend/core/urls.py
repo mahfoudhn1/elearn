@@ -27,6 +27,7 @@ urlpatterns = [
     path("api/livestream/", include("livestream.urls")),
     path("api/live/", include("jitsi.urls")),
     path("api/courses/", include("courses.urls")),
+    path("api/media/", include("media_assets.urls")),
     path("api/groups/", include("groups.urls")),
     path("api/", include("schedule.urls")),
     path("api/privet/", include("privetsessions.urls")),
@@ -39,5 +40,6 @@ urlpatterns = [
 
     path("api/notifications/", include("notifications.urls")),
     path("api/ai/", include("riffaaAi.urls")),
+    path("api/tracking/", include("tracking.urls")),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

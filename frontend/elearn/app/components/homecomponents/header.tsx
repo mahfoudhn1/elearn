@@ -133,6 +133,14 @@ const Header: React.FC = () => {
               </Link>
             </li>
           )}
+          {user &&(
+            <li className="relative group">
+              <Link href={user.role === 'teacher' ? '/courses/manage' : '/courses'}>
+                {user.role === 'teacher' ? 'إدارة الدورات' : 'الدورات'}
+                <span className="absolute left-0 bottom-0 w-full h-0 bg-orange-600 bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
+              </Link>
+            </li>
+          )}
           <li className="relative group">
             <Link href="#about">
               من نحن
@@ -231,6 +239,15 @@ const Header: React.FC = () => {
               <li className="relative group" onClick={()=>setIsMenuOpen(false)}>
                 <Link href="/dashboard">
                   لوحة التحكم
+                  <span className="absolute left-0 bottom-0 w-full h-0 bg-orange-600 bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
+                </Link>
+              </li>
+            )}
+
+            {authState && user && (
+              <li className="relative group" onClick={()=>setIsMenuOpen(false)}>
+                <Link href={user.role === 'teacher' ? '/courses/manage' : '/courses'}>
+                  {user.role === 'teacher' ? 'إدارة الدورات' : 'الدورات'}
                   <span className="absolute left-0 bottom-0 w-full h-0 bg-orange-600 bg-opacity-50 transform scale-y-0 group-hover:h-2.5 group-hover:scale-y-100 transition-all duration-300"></span>
                 </Link>
               </li>

@@ -86,25 +86,36 @@ class PersonalScheduleItemSerializer(UUIDModelSerializer):
         if status_value == PersonalScheduleItem.Status.COMPLETED and not attrs.get("completed_at") and not getattr(self.instance, "completed_at", None):
             attrs["completed_at"] = timezone.now()
 
-        exclude_id = self.instance.id if self.instance else None
-        conflicts = SchedulingService(user).check_conflict(start_dt, end_dt, exclude_personal_item_id=exclude_id)
-        if conflicts:
-            first_conflict = conflicts[0]
-            if first_conflict.source == "group_schedule":
+        # Only re-check conflicts when the booked time actually moves. A pure
+        # status/progress edit (e.g. marking a task COMPLETED) must not be
+        # rejected just because the item overlaps a class scheduled later.
+        time_changed = (
+            self.instance is None
+            or start_dt != self.instance.start_datetime
+            or end_dt != self.instance.end_datetime
+        )
+        if time_changed:
+            exclude_id = self.instance.id if self.instance else None
+            conflicts = SchedulingService(user).check_conflict(
+                start_dt, end_dt, exclude_personal_item_id=exclude_id
+            )
+            if conflicts:
+                first_conflict = conflicts[0]
+                if first_conflict.source == "group_schedule":
+                    raise serializers.ValidationError(
+                        {
+                            "non_field_errors": [
+                                f"Conflicts with group session '{first_conflict.title}' between {first_conflict.start} and {first_conflict.end}."
+                            ]
+                        }
+                    )
                 raise serializers.ValidationError(
                     {
                         "non_field_errors": [
-                            f"Conflicts with group session '{first_conflict.title}' between {first_conflict.start} and {first_conflict.end}."
+                            f"Conflicts with personal schedule item '{first_conflict.title}' between {first_conflict.start} and {first_conflict.end}."
                         ]
                     }
                 )
-            raise serializers.ValidationError(
-                {
-                    "non_field_errors": [
-                        f"Conflicts with personal schedule item '{first_conflict.title}' between {first_conflict.start} and {first_conflict.end}."
-                    ]
-                }
-            )
 
         return attrs
 

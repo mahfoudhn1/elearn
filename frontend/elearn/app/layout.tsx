@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "./components/homecomponents/header";
 import StoreProvider from "./ StoreProvider";
+import QueryProvider from "./QueryProvider";
 import Footer from './components/homecomponents/Footer';
 import { WebSocketProvider } from "./contexts/notificationContext";
 
@@ -77,6 +78,7 @@ export default function RootLayout({
         />
       </noscript>
       <StoreProvider>
+    <QueryProvider>
     <WebSocketProvider>
         <UserRoleWarper>
         <Header/>
@@ -99,6 +101,7 @@ export default function RootLayout({
           <Footer />
           </UserRoleWarper>
       </WebSocketProvider>
+      </QueryProvider>
 
         </StoreProvider>
         <GoogleAnalytics gaId="G-NL31TK0S0M" />

@@ -57,19 +57,10 @@ class StudentFormViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
 
-        # Captcha check
+        # Captcha check (skipped outside production, see users.utils.verify_captcha)
         captcha_token = data.get("captcha")
-        if not captcha_token:
-            return Response({"error": "الكابتشا مفقودة"}, status=status.HTTP_400_BAD_REQUEST)
-
-        url = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
-        verify_response = requests.post(url, data={
-            "secret": settings.CLOUDFLARE_TURNSTILE_SECRET_KEY,
-            "response": captcha_token
-        }).json()
-
-        if not verify_response.get("success", False):
-            return Response({"error": "فشل التحقق من الكابتشا", "details": verify_response}, status=400)
+        if not verify_captcha(captcha_token):
+            return Response({"error": "فشل التحقق من الكابتشا"}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)

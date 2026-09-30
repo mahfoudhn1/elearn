@@ -1,0 +1,13 @@
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["**/migrations/**", "**/__pycache__/**"]
+
+[tool.ruff.lint]
+# Start with correctness-focused rules; expand over time.
+select = ["E9", "F63", "F7", "F82"]
+
+[tool.ruff.lint.per-file-ignores]
+# Settings and generated management commands tolerate unused imports.
+"core/settings.py" = ["F401"]
+"**/management/commands/*.py" = ["F401"]

@@ -3,39 +3,47 @@ from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv('.env')
-
-# Set the Django environment and production flag
-DJANGO_ENV = os.getenv('DJANGO_ENV', 'development')
-IS_PRODUCTION = DJANGO_ENV == 'production'
-
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / '.env')
+
+DJANGO_ENV = os.getenv('DJANGO_ENV', 'development').lower()
+IS_PRODUCTION = DJANGO_ENV == 'production'
 
 # Secret key and debugging settings
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
-DEBUG = not IS_PRODUCTION
+DEBUG = os.getenv('DJANGO_DEBUG', str(not IS_PRODUCTION)).lower() in ('1', 'true', 'yes')
 
 # Allowed hosts based on environment
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'https://riffaa.com').split(',')
-if IS_PRODUCTION:
-    ALLOWED_HOSTS = ['https://riffaa.com', 'https://www.riffaa.com']
 ALLOWED_HOSTS = [
-    'riffaa.com',
-    'www.riffaa.com',
-    'localhost',
-    '127.0.0.1',
+    host.strip()
+    for host in os.getenv(
+        'ALLOWED_HOSTS',
+        'riffaa.com,www.riffaa.com,localhost,127.0.0.1',
+    ).split(',')
+    if host.strip()
 ]
 # ========================
 # Static & Media Files
 # ========================
 STATIC_URL = '/api/static/' if IS_PRODUCTION else '/static/'
-STATIC_ROOT = '/var/www/staticfiles/' 
+STATIC_ROOT = os.getenv(
+    'STATIC_ROOT',
+    '/var/www/staticfiles/' if IS_PRODUCTION else str(BASE_DIR / 'staticfiles'),
+)
 MEDIA_URL = '/api/media/' if IS_PRODUCTION else '/media/'
-MEDIA_ROOT = '/var/www/media/' 
+MEDIA_ROOT = os.getenv(
+    'MEDIA_ROOT',
+    '/var/www/media/' if IS_PRODUCTION else str(BASE_DIR / 'media'),
+)
+MEDIA_VIDEO_MAX_SIZE_BYTES = int(os.getenv('MEDIA_VIDEO_MAX_SIZE_BYTES', 100 * 1024 * 1024))
+
+R2_ENDPOINT_URL = os.getenv('R2_ENDPOINT_URL', '')
+R2_BUCKET_NAME = os.getenv('R2_BUCKET_NAME', '')
+R2_PUBLIC_BASE_URL = os.getenv('R2_PUBLIC_BASE_URL', '')
+R2_ACCESS_KEY_ID = os.getenv('R2_ACCESS_KEY_ID', '')
+R2_SECRET_ACCESS_KEY = os.getenv('R2_SECRET_ACCESS_KEY', '')
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
@@ -59,6 +67,7 @@ INSTALLED_APPS = [
     'subscription',
     'livestream',
     'courses',
+    'media_assets',
     'groups',
     'privetsessions',
     'flashcards',
@@ -70,7 +79,8 @@ INSTALLED_APPS = [
     "froms",
     "studentform",
     "riffaaAi",
-    "schedule"
+    "schedule",
+    "tracking",
 
     ]
 
@@ -130,7 +140,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],  
+            "hosts": [os.getenv('REDIS_URL', 'redis://127.0.0.1:6379/0')],
         },
     },
 }
@@ -194,24 +204,25 @@ REST_FRAMEWORK = {
 
 #CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost:3000').split(',')
 CSRF_TRUSTED_ORIGINS = [
-    "https://riffaa.com",
-    "https://www.riffaa.com",
-    "http://localhost:3000",
-    "http://localhost:8081",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:8081",
+    origin.strip()
+    for origin in os.getenv(
+        'CSRF_TRUSTED_ORIGINS',
+        'https://riffaa.com,https://www.riffaa.com,http://localhost:3000,'
+        'http://localhost:8081,http://127.0.0.1:3000,http://127.0.0.1:8081',
+    ).split(',')
+    if origin.strip()
 ]
 CORS_ALLOW_CREDENTIALS = True
 
 # CORS settings for production
 if IS_PRODUCTION:
     CORS_ALLOWED_ORIGINS = [
-        'https://riffaa.com',
-        'https://www.riffaa.com',
-        'http://localhost:3000',
-        'http://localhost:8081',
-        'http://127.0.0.1:3000',
-        'http://127.0.0.1:8081',
+        origin.strip()
+        for origin in os.getenv(
+            'CORS_ALLOWED_ORIGINS',
+            'https://riffaa.com,https://www.riffaa.com',
+        ).split(',')
+        if origin.strip()
     ]
 
 else:
@@ -234,7 +245,7 @@ CORS_ALLOWED_HEADERS = [
     'x-mobile-client',
 ]
 
-SECURE_HSTS_SECONDS = 31_536_000  # 1 year
+SECURE_HSTS_SECONDS = 31_536_000 if IS_PRODUCTION else 0
 #SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 #SECURE_HSTS_PRELOAD = True
 CSRF_COOKIE_HTTPONLY = True
@@ -242,9 +253,10 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 SECURE_REFERRER_POLICY = 'same-origin'
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SECURE_SSL_REDIRECT = IS_PRODUCTION
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_COOKIE_SECURE = IS_PRODUCTION
+CSRF_COOKIE_SECURE = IS_PRODUCTION
 
 
 # Default primary key field type
@@ -264,7 +276,7 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
     'AUTH_COOKIE': 'access_token',
-    'AUTH_COOKIE_SECURE': False,  # Set to True in production
+    'AUTH_COOKIE_SECURE': IS_PRODUCTION,
     'AUTH_COOKIE_HTTP_ONLY': True,
 }
 

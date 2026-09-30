@@ -7,7 +7,7 @@ interface StudentTablesProps {
     studentSubcriptions: Subscription[];
 }
 
-function teacherTable({ studentSubcriptions }: StudentTablesProps) {
+function TeacherTable({ studentSubcriptions }: StudentTablesProps) {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 20;
@@ -194,4 +194,4 @@ function teacherTable({ studentSubcriptions }: StudentTablesProps) {
   );
 }
 
-export default teacherTable;
+export default TeacherTable;

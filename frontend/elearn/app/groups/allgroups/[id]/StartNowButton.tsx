@@ -7,9 +7,13 @@ import { RootState } from "../../../../store/store";
 
 import { Video } from "lucide-react";
 
+interface MeetingRef {
+  id: string;
+}
+
 export default function StartNowButton({ schedules }: { schedules: any[] }) {
   const [showButton, setShowButton] = useState(false);
-  const [currentMeeting, setCurrentMeeting] = useState(null);
+  const [currentMeeting, setCurrentMeeting] = useState<MeetingRef | null>(null);
   const router = useRouter();
   const user = useSelector((state: RootState) => state.auth.user);
 
