@@ -32,12 +32,16 @@ class ActivityEventSerializer(serializers.ModelSerializer):
             "event_type",
             "object_uuid",
             "course_uuid",
+            "source_type",
+            "source_id",
+            "subject",
+            "is_scheduled",
             "duration_seconds",
             "metadata",
             "occurred_at",
             "client_event_id",
         ]
-        read_only_fields = ["id", "user"]
+        read_only_fields = ["id", "user", "source_type", "source_id", "subject", "is_scheduled"]
 
     def validate_event_type(self, value):
         if value not in CLIENT_EVENT_TYPES:
@@ -77,6 +81,9 @@ class StudyGoalSerializer(UUIDModelSerializer):
         allow_null=True,
     )
     target = serializers.IntegerField(min_value=1)
+    subject = serializers.CharField(
+        max_length=150, required=False, allow_blank=True, allow_null=True
+    )
 
     class Meta:
         model = StudyGoal
@@ -86,6 +93,7 @@ class StudyGoalSerializer(UUIDModelSerializer):
             "period",
             "target",
             "course",
+            "subject",
             "is_active",
             "effective_from",
             "created_at",
@@ -118,6 +126,10 @@ class StudyGoalSerializer(UUIDModelSerializer):
         else:
             course = instance.course if instance else None
         target = attrs.get("target", instance.target if instance else None)
+        subject = attrs.get("subject", instance.subject if instance else None)
+        if subject is not None:
+            subject = subject.strip() or None
+            attrs["subject"] = subject
         is_active = attrs.get(
             "is_active", instance.is_active if instance else True
         )
@@ -148,6 +160,10 @@ class StudyGoalSerializer(UUIDModelSerializer):
                 siblings = siblings.filter(course__isnull=True)
             else:
                 siblings = siblings.filter(course=course)
+            if subject is None:
+                siblings = siblings.filter(subject__isnull=True)
+            else:
+                siblings = siblings.filter(subject=subject)
             if instance is not None:
                 siblings = siblings.exclude(pk=instance.pk)
             if siblings.exists():

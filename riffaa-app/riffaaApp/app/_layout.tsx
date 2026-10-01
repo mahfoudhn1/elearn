@@ -16,6 +16,7 @@ import { AccessibilityInfo, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { OfflineBanner } from '../components/OfflineBanner';
+import { PomodoroRuntime } from '../components/PomodoroRuntime';
 import { AppBackground, ErrorState } from '../components/ui';
 import { BlurTargetContext } from '../components/ui/blurTarget';
 import '../global.css';
@@ -170,6 +171,7 @@ export default function RootLayout() {
           options={{ animation: 'fade', animationDuration: 240 }}
         />
       </Stack>
+              <PomodoroRuntime />
               <OfflineBanner />
             </BlurTargetContext.Provider>
           </View>

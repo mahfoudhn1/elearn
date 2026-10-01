@@ -269,6 +269,14 @@ class StudySessionViewSet(
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
+        request_id = data.get("request_id")
+        if request_id is not None:
+            replay = StudySession.objects.filter(
+                user=request.user, start_request_id=request_id
+            ).first()
+            if replay is not None:
+                return Response(self._payload(replay), status=status.HTTP_200_OK)
+
         try:
             session = PomodoroService(request.user).start(
                 subject=data.get("subject"),
@@ -276,6 +284,11 @@ class StudySessionViewSet(
                 group=data.get("group"),
                 planned_pomodoros=data.get("planned_pomodoros"),
                 notes=data.get("notes"),
+                source_type=data.get("source_type"),
+                source_id=data.get("source_id"),
+                course_uuid=data.get("course_uuid"),
+                is_scheduled=data.get("is_scheduled"),
+                request_id=request_id,
             )
         except PomodoroError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
@@ -302,7 +315,28 @@ class StudySessionViewSet(
 
     @action(detail=True, methods=["post"], url_path="complete-interval")
     def complete_interval(self, request, pk=None):
-        return self._transition("complete_interval")
+        session = self.get_object()
+        interval = session.current_interval
+        claimed_seconds = request.data.get("focus_seconds")
+        if claimed_seconds is not None:
+            try:
+                claimed_seconds = drf_serializers.IntegerField(min_value=0).run_validation(
+                    claimed_seconds
+                )
+            except drf_serializers.ValidationError as exc:
+                raise drf_serializers.ValidationError({"focus_seconds": exc.detail})
+            if interval is None or claimed_seconds > interval.elapsed_seconds:
+                raise drf_serializers.ValidationError(
+                    {"focus_seconds": "Cannot exceed the server-measured elapsed time."}
+                )
+        service = PomodoroService(request.user)
+        try:
+            session = service.complete_interval(
+                session, request_id=request.data.get("request_id")
+            )
+        except PomodoroError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(self._payload(session))
 
     @action(detail=True, methods=["post"], url_path="skip-interval")
     def skip_interval(self, request, pk=None):
@@ -320,11 +354,11 @@ class StudySessionViewSet(
     def abandon(self, request, pk=None):
         return self._transition("abandon")
 
-    def _transition(self, method_name):
+    def _transition(self, method_name, **kwargs):
         session = self.get_object()
         service = PomodoroService(self.request.user)
         try:
-            session = getattr(service, method_name)(session)
+            session = getattr(service, method_name)(session, **kwargs)
         except PomodoroError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(self._payload(session))

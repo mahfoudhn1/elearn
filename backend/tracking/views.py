@@ -37,7 +37,11 @@ class ActivityEventViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "head", "options"]
 
     def get_queryset(self):
-        return ActivityEvent.objects.filter(user=self.request.user)
+        queryset = ActivityEvent.objects.filter(user=self.request.user)
+        scheduled = self.request.query_params.get("is_scheduled")
+        if scheduled in {"true", "false"}:
+            queryset = queryset.filter(is_scheduled=(scheduled == "true"))
+        return queryset
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -105,10 +109,14 @@ class StudyGoalViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
         new_metric = validated.get("metric", instance.metric)
         new_period = validated.get("period", instance.period)
         new_target = validated.get("target", instance.target)
+        new_course = validated.get("course", instance.course)
+        new_subject = validated.get("subject", instance.subject)
         scope_changed = (
             new_metric != instance.metric
             or new_period != instance.period
             or new_target != instance.target
+            or new_course != instance.course
+            or new_subject != instance.subject
         )
 
         if scope_changed:

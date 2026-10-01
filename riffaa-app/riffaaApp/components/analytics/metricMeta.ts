@@ -16,6 +16,11 @@ export const METRIC_META: Record<GoalMetric, MetricMeta> = {
     labelKey: 'watchMinutes',
     unitKey: 'unitMinutes',
   },
+  STUDY_MINUTES: {
+    icon: 'timer-outline',
+    labelKey: 'studyMinutes',
+    unitKey: 'unitMinutes',
+  },
   LESSONS_COMPLETED: {
     icon: 'book-outline',
     labelKey: 'lessonsCompleted',
@@ -30,6 +35,7 @@ export const METRIC_META: Record<GoalMetric, MetricMeta> = {
 
 export const GOAL_METRICS: GoalMetric[] = [
   'WATCH_MINUTES',
+  'STUDY_MINUTES',
   'LESSONS_COMPLETED',
   'QUIZZES_SUBMITTED',
 ];

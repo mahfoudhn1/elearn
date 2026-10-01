@@ -62,6 +62,11 @@ export function GoalCard({
           <AppText variant="bodySm" tone="muted" numberOfLines={1}>
             {progress.current} / {progress.target} {unit}
           </AppText>
+          {goal.subject ? (
+            <AppText variant="caption" tone="subtle" numberOfLines={1}>
+              {goal.subject}
+            </AppText>
+          ) : null}
         </Stack>
         <ProgressRing
           value={progress.percent}
@@ -82,6 +87,12 @@ export function GoalCard({
           />
         ) : null}
       </Row>
+
+      {goal.metric === 'STUDY_MINUTES' ? (
+        <AppText variant="caption" tone="muted">
+          {t('studyTargetHint')}
+        </AppText>
+      ) : null}
 
       <Row gap={8} align="center" wrap>
         <Badge label={statusLabel} tone={statusTone} />

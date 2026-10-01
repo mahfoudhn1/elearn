@@ -137,6 +137,82 @@ class GoalProgressTests(TestCase):
         self.assertEqual(progress["current"], 1)
         self.assertTrue(progress["met"])
 
+    def test_study_minute_goal_reads_focus_events_by_subject(self):
+        goal = self._goal(
+            metric=StudyGoal.Metric.STUDY_MINUTES,
+            target=30,
+            subject="Physics",
+        )
+        ActivityEvent.objects.create(
+            user=self.user,
+            event_type="STUDY_SESSION",
+            subject="Physics",
+            duration_seconds=25 * 60,
+        )
+        ActivityEvent.objects.create(
+            user=self.user,
+            event_type="STUDY_SESSION",
+            subject="Mathematics",
+            duration_seconds=20 * 60,
+        )
+
+        progress = compute_goal_progress(goal)
+
+        self.assertEqual(progress["current"], 25)
+        self.assertFalse(progress["met"])
+
+    def test_all_subject_study_goal_sums_focus_events(self):
+        goal = self._goal(metric=StudyGoal.Metric.STUDY_MINUTES, target=30)
+        ActivityEvent.objects.create(
+            user=self.user,
+            event_type="STUDY_SESSION",
+            subject="Physics",
+            duration_seconds=25 * 60,
+        )
+        ActivityEvent.objects.create(
+            user=self.user,
+            event_type="STUDY_SESSION",
+            subject="Mathematics",
+            duration_seconds=10 * 60,
+        )
+
+        self.assertEqual(compute_goal_progress(goal)["current"], 35)
+
+    def test_study_minute_progress_obeys_course_and_period(self):
+        teacher_user = User.objects.create_user(
+            username="study-target-teacher",
+            email="study-target-teacher@example.com",
+            password="x",
+            role="teacher",
+        )
+        from courses.models import Course
+
+        course = Course.objects.create(teacher=Teacher.objects.create(user=teacher_user), title="Math")
+        goal = self._goal(
+            metric=StudyGoal.Metric.STUDY_MINUTES,
+            target=20,
+            course=course,
+            subject="Physics",
+        )
+        ActivityEvent.objects.create(
+            user=self.user,
+            event_type="STUDY_SESSION",
+            course_uuid=course.uuid,
+            subject="Physics",
+            duration_seconds=25 * 60,
+            occurred_at=datetime.now(dt_timezone.utc),
+        )
+        ActivityEvent.objects.create(
+            user=self.user,
+            event_type="STUDY_SESSION",
+            course_uuid=course.uuid,
+            subject="Physics",
+            duration_seconds=30 * 60,
+            occurred_at=datetime.now(dt_timezone.utc) - timedelta(days=2),
+        )
+
+        self.assertEqual(compute_goal_progress(goal)["current"], 25)
+
     def test_target_edit_applies_next_period(self):
         today = date(2026, 1, 7)
         goal = self._goal(metric=StudyGoal.Metric.LESSONS_COMPLETED, target=5)

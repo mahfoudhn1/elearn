@@ -6,7 +6,7 @@ from rest_framework.test import APIClient, APITestCase
 
 from users.models import Teacher, User
 
-from .models import GoalPeriodResult, StudyGoal
+from .models import ActivityEvent, GoalPeriodResult, StudyGoal
 from .services import local_today, record_activity
 
 
@@ -36,6 +36,15 @@ class StudyGoalAPITests(APITestCase):
         goal = StudyGoal.objects.get(uuid=response.data["id"])
         self.assertEqual(goal.effective_from, local_today(self.user))
         self.assertEqual(goal.user, self.user)
+
+    def test_study_minute_goal_accepts_optional_subject(self):
+        response = self._create(
+            metric="STUDY_MINUTES", period="DAILY", target=60, subject=" Physics "
+        )
+        self.assertEqual(response.status_code, 201, response.data)
+        goal = StudyGoal.objects.get(uuid=response.data["id"])
+        self.assertEqual(goal.subject, "Physics")
+        self.assertEqual(response.data["subject"], "Physics")
 
     def test_duplicate_active_combination_is_rejected(self):
         self.assertEqual(self._create().status_code, 201)
@@ -125,6 +134,24 @@ class StudyGoalAPITests(APITestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["progress"]["current"], 2)
         self.assertIn("streak", response.data[0])
+
+    def test_activity_events_can_filter_scheduled_study(self):
+        ActivityEvent.objects.create(
+            user=self.user,
+            event_type="STUDY_SESSION",
+            duration_seconds=600,
+            is_scheduled=True,
+        )
+        ActivityEvent.objects.create(
+            user=self.user,
+            event_type="STUDY_SESSION",
+            duration_seconds=300,
+            is_scheduled=False,
+        )
+        response = self.client.get(reverse("tracking-event-list"), {"is_scheduled": "false"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["duration_seconds"], 300)
 
     def test_history_action(self):
         goal_uuid = self._create().data["id"]

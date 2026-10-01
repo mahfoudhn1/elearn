@@ -214,7 +214,7 @@ export default function GroupDetailsScreen() {
       </View>
 
       <View className="flex-1">
-        {tab === 'live' ? <LiveTab schedules={schedules} /> : null}
+        {tab === 'live' ? <LiveTab schedules={schedules} groupId={group.id} /> : null}
         {tab === 'chat' ? <ChatTab groupId={group.id} initialMessages={[]} /> : null}
         {tab === 'announcements' ? (
           <AnnouncementsTab announcements={group.announcements} />

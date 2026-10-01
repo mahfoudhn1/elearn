@@ -99,6 +99,21 @@ def _metric_from_events(user, metric, start, end, course_uuid):
 
 def current_for_range(goal, start, end):
     """Achieved value for an explicit local date range."""
+    if goal.metric == StudyGoal.Metric.STUDY_MINUTES:
+        start_utc = local_day_bounds(goal.user, start)[0]
+        end_utc = local_day_bounds(goal.user, end)[1]
+        events = ActivityEvent.objects.filter(
+            user=goal.user,
+            event_type=METRIC_EVENT_TYPE[goal.metric],
+            occurred_at__gte=start_utc,
+            occurred_at__lt=end_utc,
+        )
+        if goal.course_id:
+            events = events.filter(course_uuid=goal.course.uuid)
+        if goal.subject:
+            events = events.filter(subject__iexact=goal.subject)
+        seconds = events.aggregate(total=Sum("duration_seconds"))["total"] or 0
+        return int(seconds) // 60
     if goal.course_id:
         return _metric_from_events(goal.user, goal.metric, start, end, goal.course.uuid)
     return _metric_from_daily(goal.user, goal.metric, start, end)

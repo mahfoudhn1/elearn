@@ -25,6 +25,7 @@ import {
   useLessonProgressMutation,
 } from '../../hooks/useCourses';
 import { useTheme } from '../../hooks/useTheme';
+import { StartStudyButton } from '../../components/StartStudyButton';
 import { useTranslation } from '../../hooks/useTranslation';
 import { trackActivity } from '../../services/api';
 
@@ -197,6 +198,16 @@ export default function PlayerScreen() {
               {lesson.description}
             </AppText>
           ) : null}
+
+          <StartStudyButton
+            source={{
+              type: 'COURSE_LESSON',
+              id: String(lesson.id),
+              courseUuid: String(lesson.course),
+              title: lesson.title,
+              isScheduled: false,
+            }}
+          />
 
           <Card variant="list" className="mt-5">
             <AppText

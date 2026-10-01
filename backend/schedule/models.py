@@ -162,6 +162,11 @@ class StudySession(UUIDModel):
         on_delete=models.SET_NULL,
         related_name="study_sessions",
     )
+    source_type = models.CharField(max_length=32, null=True, blank=True)
+    source_id = models.CharField(max_length=64, null=True, blank=True)
+    course_uuid = models.UUIDField(null=True, blank=True)
+    is_scheduled = models.BooleanField(default=False)
+    start_request_id = models.UUIDField(null=True, blank=True)
     subject = models.CharField(max_length=150, blank=True, null=True)
     group = models.ForeignKey(Group, null=True, blank=True, on_delete=models.SET_NULL)
 
@@ -196,7 +201,12 @@ class StudySession(UUIDModel):
                 fields=["user"],
                 condition=Q(status__in=["ACTIVE", "PAUSED"]),
                 name="schedule_one_open_study_session_per_user",
-            )
+            ),
+            models.UniqueConstraint(
+                fields=["user", "start_request_id"],
+                condition=Q(start_request_id__isnull=False),
+                name="schedule_start_request_per_user",
+            ),
         ]
 
     def __str__(self):
@@ -259,6 +269,7 @@ class PomodoroInterval(UUIDModel):
     last_resumed_at = models.DateTimeField(blank=True, null=True)
     ended_at = models.DateTimeField(blank=True, null=True)
     interruptions = models.PositiveSmallIntegerField(default=0)
+    action_request_id = models.UUIDField(null=True, blank=True)
 
     class Meta:
         ordering = ["sequence"]

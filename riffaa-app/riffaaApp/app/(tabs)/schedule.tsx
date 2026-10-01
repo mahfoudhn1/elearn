@@ -22,6 +22,7 @@ import {
 import { useDirection } from '../../hooks/useDirection';
 import { useSchedule, useScheduleMutations } from '../../hooks/queries';
 import { useTheme } from '../../hooks/useTheme';
+import { StartStudyButton } from '../../components/StartStudyButton';
 import { useTranslation } from '../../hooks/useTranslation';
 import type { ScheduleItem } from '../../services/api/schedule';
 import { formatDate, formatTime } from '../../utils/format';
@@ -88,21 +89,6 @@ export default function ScheduleScreen() {
 
   const removeItem = (item: ScheduleItem) => {
     remove.mutate(item.id);
-  };
-
-  // Open the focus timer attributed to this specific task or exam.
-  const startStudying = (item: ScheduleItem) => {
-    const params: Record<string, string> = {
-      scheduleItemId: String(item.id),
-      title: item.title,
-    };
-    if (item.subject) params.subject = item.subject;
-    if (item.estimated_duration_minutes) {
-      params.plannedPomodoros = String(
-        Math.max(1, Math.round(item.estimated_duration_minutes / 25)),
-      );
-    }
-    router.push({ pathname: '/study-session', params });
   };
 
   const renderItem = (item: ScheduleItem, showMarker: boolean) => {
@@ -178,12 +164,15 @@ export default function ScheduleScreen() {
             ) : null}
             <Row justify="space-between" align="center">
               <Badge label={`${item.progress_percentage}%`} tone="neutral" />
-              <Button
-                label={t('startStudying')}
-                icon="play"
-                size="sm"
-                variant="secondary"
-                onPress={() => startStudying(item)}
+              <StartStudyButton
+                source={{
+                  type: 'SCHEDULE',
+                  id: String(item.id),
+                  scheduleItemId: String(item.id),
+                  subject: item.subject,
+                  title: item.title,
+                  isScheduled: true,
+                }}
               />
             </Row>
           </Stack>

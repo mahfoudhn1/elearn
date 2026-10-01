@@ -129,3 +129,52 @@ class StudySessionTrackingMirrorTests(APITestCase):
 			).count(),
 			1,
 		)
+
+	def test_focus_stop_under_one_minute_is_not_credited(self):
+		response = self.client.post(reverse("study-session-list"), {}, format="json")
+		session_uuid = response.data["id"]
+		interval = PomodoroInterval.objects.get(session__uuid=session_uuid)
+		interval.accumulated_seconds = 59
+		interval.save(update_fields=["accumulated_seconds"])
+
+		self.client.post(
+			reverse("study-session-finish", kwargs={"pk": session_uuid}),
+			{},
+			format="json",
+		)
+
+		self.assertFalse(ActivityEvent.objects.filter(user=self.user).exists())
+
+	def test_replayed_start_request_returns_same_session(self):
+		request_id = "b84c8fc6-1524-45ba-94c6-5e1ce18b8f27"
+		first = self.client.post(
+			reverse("study-session-list"), {"request_id": request_id}, format="json"
+		)
+		second = self.client.post(
+			reverse("study-session-list"), {"request_id": request_id}, format="json"
+		)
+		self.assertEqual(first.status_code, 201)
+		self.assertEqual(second.status_code, 200)
+		self.assertEqual(first.data["id"], second.data["id"])
+
+	def test_complete_interval_replay_does_not_advance_twice(self):
+		started = self.client.post(reverse("study-session-list"), {}, format="json")
+		session_uuid = started.data["id"]
+		request_id = "d16a44f4-4251-44d9-9037-bf129612ea97"
+		url = reverse("study-session-complete-interval", kwargs={"pk": session_uuid})
+		first = self.client.post(url, {"request_id": request_id}, format="json")
+		second = self.client.post(url, {"request_id": request_id}, format="json")
+		self.assertEqual(first.status_code, 200, first.data)
+		self.assertEqual(second.status_code, 200, second.data)
+		self.assertEqual(first.data["current_interval"]["id"], second.data["current_interval"]["id"])
+		self.assertEqual(PomodoroInterval.objects.filter(session__uuid=session_uuid).count(), 2)
+
+	def test_complete_interval_rejects_unelapsed_focus_claim(self):
+		started = self.client.post(reverse("study-session-list"), {}, format="json")
+		response = self.client.post(
+			reverse("study-session-complete-interval", kwargs={"pk": started.data["id"]}),
+			{"focus_seconds": 120},
+			format="json",
+		)
+		self.assertEqual(response.status_code, 400)
+		self.assertIn("focus_seconds", response.data)

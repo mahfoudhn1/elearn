@@ -65,6 +65,8 @@ MAX_ACTIVE_GOALS = 3
 METRIC_MAX_TARGET = {
     ("WATCH_MINUTES", "DAILY"): 24 * 60,
     ("WATCH_MINUTES", "WEEKLY"): 24 * 60 * 7,
+    ("STUDY_MINUTES", "DAILY"): 24 * 60,
+    ("STUDY_MINUTES", "WEEKLY"): 24 * 60 * 7,
     ("LESSONS_COMPLETED", "DAILY"): 100,
     ("LESSONS_COMPLETED", "WEEKLY"): 700,
     ("QUIZZES_SUBMITTED", "DAILY"): 100,
@@ -81,6 +83,8 @@ def max_target_for(metric, period):
 METRIC_MIN_TARGET = {
     ("WATCH_MINUTES", "DAILY"): 30,
     ("WATCH_MINUTES", "WEEKLY"): 120,
+    ("STUDY_MINUTES", "DAILY"): 30,
+    ("STUDY_MINUTES", "WEEKLY"): 120,
     ("LESSONS_COMPLETED", "DAILY"): 1,
     ("LESSONS_COMPLETED", "WEEKLY"): 5,
     ("QUIZZES_SUBMITTED", "DAILY"): 1,
@@ -96,6 +100,7 @@ def min_target_for(metric, period):
 # computed from ActivityEvent (DailyActivity has no course dimension).
 METRIC_EVENT_TYPE = {
     "WATCH_MINUTES": VIDEO_WATCH,
+    "STUDY_MINUTES": STUDY_SESSION,
     "LESSONS_COMPLETED": LESSON_COMPLETED,
     "QUIZZES_SUBMITTED": QUIZ_SUBMITTED,
 }

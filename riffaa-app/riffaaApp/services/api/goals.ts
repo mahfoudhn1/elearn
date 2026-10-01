@@ -13,6 +13,7 @@ import { apiClient } from './client';
 
 export type GoalMetric =
   | 'WATCH_MINUTES'
+  | 'STUDY_MINUTES'
   | 'LESSONS_COMPLETED'
   | 'QUIZZES_SUBMITTED';
 
@@ -25,6 +26,7 @@ export interface StudyGoal {
   target: number;
   /** Course uuid, or null for "all courses". */
   course: string | null;
+  subject: string | null;
   is_active: boolean;
   effective_from: string;
   created_at: string;
@@ -140,6 +142,7 @@ export interface GoalPayload {
   period: GoalPeriod;
   target: number;
   course?: string | null;
+  subject?: string | null;
 }
 
 export interface StudentCourseProgress {

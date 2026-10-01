@@ -48,8 +48,13 @@ Event types a **client** may POST: `COURSE_VIEWED`, `VIDEO_WATCH`,
 ### `DailyActivity`
 
 Per-user, per-day rollup (`unique_together(user, date)`) with `event_count`,
-`lesson_count`, `quiz_count`, `watch_minutes`. `date` is the **user-local**
-date.
+`lesson_count`, `quiz_count`, `watch_minutes`, `study_minutes`. `date` is the
+**user-local** date.
+
+`study_minutes` comes from closed Pomodoro/study sessions: when a session closes
+in the `schedule` app it mirrors a `STUDY_SESSION` ActivityEvent here (its uuid
+is the idempotency key). Existing history can be backfilled with
+`python manage.py backfill_study_activity`.
 
 ### `StudyGoal`
 
@@ -59,7 +64,7 @@ user themselves.
 | Field | Type | Notes |
 |---|---|---|
 | `user` | FK → `AUTH_USER_MODEL` | Owner. |
-| `metric` | CharField | `WATCH_MINUTES`, `LESSONS_COMPLETED`, `QUIZZES_SUBMITTED`. |
+| `metric` | CharField | `WATCH_MINUTES`, `STUDY_MINUTES`, `LESSONS_COMPLETED`, `QUIZZES_SUBMITTED`. |
 | `period` | CharField | `DAILY` or `WEEKLY`. |
 | `target` | PositiveInteger | Min 1, per-metric maximum (see `constants.METRIC_MAX_TARGET`). |
 | `course` | FK → `courses.Course`, nullable | Null means all accessible courses. |
@@ -107,6 +112,14 @@ A closed period's outcome, with the target snapshotted at close time. Unique on
 * **Server is the source of truth**: progress, met/unmet, streaks and
   suggestions are all computed server-side.
 
+Pomodoro focus time is mirrored into `ActivityEvent` as `STUDY_SESSION`, with
+actual server-measured seconds plus nullable `source_type`, `source_id`,
+`subject`, `course_uuid`, and `is_scheduled` attribution. The
+`STUDY_MINUTES` goal metric reads these raw events in
+`tracking.goals.current_for_range`; optional goal subject/course scopes filter
+the same query. No progress counter is stored. `GET /api/tracking/events/?is_scheduled=false`
+filters to unscheduled study records.
+
 ## Recording events
 
 * Server-side: `tracking.services.record_activity(user, event_type, ...)` writes
@@ -136,7 +149,7 @@ A closed period's outcome, with the target snapshotted at close time. Unique on
 | GET | `/api/tracking/goals/progress/` | Authenticated | Each active goal with its server progress object and current streak. |
 | GET | `/api/tracking/goals/history/?goal=<uuid>&limit=12` | Authenticated (owner) | Recent `GoalPeriodResult` rows for one goal. |
 | GET | `/api/tracking/goals/suggestions/?metric=&period=` | Authenticated | Suggested target (average of last 4 completed periods +10%, with a floor). |
-| GET | `/api/tracking/analytics/summary/?range=7d\|30d\|90d` | Authenticated | Totals, active days, streaks, best day, previous-period % change and a zero-filled per-day series. |
+| GET | `/api/tracking/analytics/summary/?range=7d\|30d\|90d` | Authenticated | Totals (including `total_study_minutes` and combined `total_minutes`), active days, streaks, best day, previous-period % change and a zero-filled per-day series (`watch_minutes`, `study_minutes`, …). |
 | GET | `/api/tracking/analytics/weekly-pattern/?range=` | Authenticated | Average watch minutes per weekday and the best weekday. |
 | GET | `/api/tracking/student/courses/` | Student | Per-course progress for accessible courses. |
 | GET | `/api/tracking/teacher/students/` | Teacher | Per-student progress across the teacher's courses, optional `?course=<uuid>`. |

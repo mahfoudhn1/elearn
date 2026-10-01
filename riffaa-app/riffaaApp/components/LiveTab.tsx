@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { AppText, Badge, Button, Card, EmptyState, Row, Screen, Stack } from './ui';
 import { useTheme } from '../hooks/useTheme';
 import { useTranslation } from '../hooks/useTranslation';
+import { StartStudyButton } from './StartStudyButton';
 
 export interface MeetingInfo {
   id: number;
@@ -24,7 +25,7 @@ export interface MeetingInfo {
  * Live tab: a success-tinted hero with the join action when a session is
  * running, plus the group's class timetable as a quiet timeline below.
  */
-export default function LiveTab({ schedules }: { schedules: MeetingInfo[] }) {
+export default function LiveTab({ schedules, groupId }: { schedules: MeetingInfo[]; groupId?: string }) {
   const { tokens } = useTheme();
   const { t } = useTranslation();
   const activeSession = schedules.find((item) => item.Meeting?.is_active === true) ?? null;
@@ -60,6 +61,17 @@ export default function LiveTab({ schedules }: { schedules: MeetingInfo[] }) {
               // TODO(live): open the Jitsi room via `activeSession.Meeting.room_name`.
             }}
           />
+          <View className="mt-2">
+            <StartStudyButton
+              source={{
+                type: 'LIVE_STREAM',
+                id: activeSession.Meeting?.id,
+                groupId,
+                title: t('liveInProgressTitle'),
+                isScheduled: true,
+              }}
+            />
+          </View>
         </Card>
       ) : (
         <Card variant="list" className="mb-5 items-center py-8">

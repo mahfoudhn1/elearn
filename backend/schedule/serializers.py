@@ -201,6 +201,10 @@ SESSION_MODEL_FIELDS = [
     "subject",
     "schedule_item",
     "group",
+    "source_type",
+    "source_id",
+    "course_uuid",
+    "is_scheduled",
     "started_at",
     "ended_at",
     "local_date",
@@ -256,6 +260,14 @@ class StudySessionStartSerializer(serializers.Serializer):
         min_value=1, max_value=24, required=False, allow_null=True
     )
     notes = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    source_type = serializers.ChoiceField(
+        choices=["SCHEDULE", "COURSE_LESSON", "LIVE_STREAM", "UNSCHEDULED"],
+        required=False,
+    )
+    source_id = serializers.CharField(max_length=64, required=False, allow_blank=True)
+    course_uuid = serializers.UUIDField(required=False, allow_null=True)
+    is_scheduled = serializers.BooleanField(required=False)
+    request_id = serializers.UUIDField(required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

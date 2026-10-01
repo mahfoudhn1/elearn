@@ -3,7 +3,9 @@ import { useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Switch, View } from 'react-native';
 
-import { PomodoroClock } from '../components/PomodoroClock';
+import { SharedPomodoroClock } from '../components/SharedPomodoroClock';
+import { StartStudyButton } from '../components/StartStudyButton';
+import { usePomodoro } from '../hooks/usePomodoro';
 import {
   AppText,
   Badge,
@@ -17,7 +19,6 @@ import {
 } from '../components/ui';
 import { useSchedule } from '../hooks/queries';
 import type { ScheduleItem } from '../services/api/schedule';
-import { useQueryClient } from '@tanstack/react-query';
 import { useTheme } from '../hooks/useTheme';
 import { useTranslation } from '../hooks/useTranslation';
 
@@ -29,7 +30,7 @@ import { useTranslation } from '../hooks/useTranslation';
 export default function StudySessionScreen() {
   const { tokens } = useTheme();
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
+  const activeSession = usePomodoro().activeSession;
   const [dndEnabled, setDndEnabled] = useState(false);
 
   const params = useLocalSearchParams<{
@@ -49,24 +50,12 @@ export default function StudySessionScreen() {
 
   const title = item?.title ?? params.title ?? null;
   const subject = item?.subject ?? params.subject ?? null;
-  const plannedPomodoros = params.plannedPomodoros
-    ? Number(params.plannedPomodoros)
-    : undefined;
-
   const targetMinutes =
     item?.target_prep_minutes ?? item?.estimated_duration_minutes ?? null;
   const actualMinutes = item?.actual_duration_minutes ?? 0;
   const trackedPercent = targetMinutes
     ? Math.min(100, Math.round((actualMinutes / targetMinutes) * 100))
     : null;
-
-  // A closed session moves the item's tracked time and the daily rollups.
-  const refreshAfterSession = () => {
-    void queryClient.invalidateQueries({ queryKey: ['schedule'] });
-    void queryClient.invalidateQueries({ queryKey: ['study-stats'] });
-    void queryClient.invalidateQueries({ queryKey: ['analytics'] });
-    void queryClient.invalidateQueries({ queryKey: ['goals'] });
-  };
 
   return (
     <Screen scroll padded={false}>
@@ -108,14 +97,19 @@ export default function StudySessionScreen() {
             </Card>
           ) : null}
 
-          <PomodoroClock
-            collapsible={false}
-            subject={subject}
-            scheduleItemId={scheduleItemId}
-            scheduleItemTitle={title}
-            plannedPomodoros={plannedPomodoros}
-            onSessionRecorded={refreshAfterSession}
-          />
+          <SharedPomodoroClock title={title} />
+          {!activeSession ? (
+            <StartStudyButton
+              source={{
+                type: scheduleItemId ? 'SCHEDULE' : 'UNSCHEDULED',
+                id: scheduleItemId,
+                scheduleItemId,
+                subject,
+                title,
+                isScheduled: Boolean(scheduleItemId),
+              }}
+            />
+          ) : null}
 
           <Card variant="list" className="p-0">
             <Stack className="px-4">

@@ -52,6 +52,7 @@
       "expo-web-browser",
       "expo-status-bar",
       "expo-video",
+      "expo-notifications",
       "@react-native-community/datetimepicker",
       [
         "@react-native-google-signin/google-signin",

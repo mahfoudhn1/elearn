@@ -116,6 +116,10 @@ def record_activity(
     occurred_at=None,
     client_event_id=None,
     course_uuid=None,
+    source_type=None,
+    source_id=None,
+    subject=None,
+    is_scheduled=None,
 ):
     """Write an ActivityEvent and refresh the affected local day's rollup.
 
@@ -153,6 +157,10 @@ def record_activity(
                     event_type=event_type,
                     object_uuid=object_uuid,
                     course_uuid=course_uuid,
+                    source_type=source_type,
+                    source_id=source_id,
+                    subject=subject,
+                    is_scheduled=is_scheduled,
                     duration_seconds=duration_seconds,
                     metadata=metadata,
                     occurred_at=occurred_at,

@@ -14,6 +14,7 @@ import {
   SegmentedControl,
   Skeleton,
   Stack,
+  TextField,
 } from '../../components/ui';
 import { useCourses } from '../../hooks/useCourses';
 import { useGoal, useGoalMutations, useGoalSuggestion } from '../../hooks/queries';
@@ -24,6 +25,7 @@ import type { GoalMetric, GoalPeriod, StudyGoal } from '../../services/api/goals
 /** Mirrors the backend's per-metric ceiling so the stepper cannot exceed it. */
 const MAX_TARGET: Record<GoalMetric, Record<GoalPeriod, number>> = {
   WATCH_MINUTES: { DAILY: 1440, WEEKLY: 10080 },
+  STUDY_MINUTES: { DAILY: 1440, WEEKLY: 10080 },
   LESSONS_COMPLETED: { DAILY: 100, WEEKLY: 700 },
   QUIZZES_SUBMITTED: { DAILY: 100, WEEKLY: 700 },
 };
@@ -49,6 +51,7 @@ function GoalEditorForm({
   const [period, setPeriod] = useState<GoalPeriod>(existing?.period ?? 'DAILY');
   const [target, setTarget] = useState<number>(existing?.target ?? 30);
   const [course, setCourse] = useState<string | null>(existing?.course ?? null);
+  const [subject, setSubject] = useState(existing?.subject ?? '');
   const [error, setError] = useState<string | null>(null);
 
   const { data: suggestion } = useGoalSuggestion(metric, period);
@@ -68,7 +71,7 @@ function GoalEditorForm({
 
   const submit = () => {
     setError(null);
-    const payload = { metric, period, target, course };
+    const payload = { metric, period, target, course, subject: subject.trim() || null };
     const onSuccess = () => router.back();
     const onError = (mutationError: unknown) => {
       const data =
@@ -192,6 +195,14 @@ function GoalEditorForm({
               ))}
             </ScrollView>
           </Stack>
+
+          <TextField
+            label={t('subjectOptional')}
+            value={subject}
+            onChangeText={setSubject}
+            placeholder={t('allSubjectsPlaceholder')}
+            maxLength={150}
+          />
 
           <AppText variant="caption" tone="subtle">
             {t('changesNextPeriod')}

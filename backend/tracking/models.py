@@ -42,6 +42,10 @@ class ActivityEvent(UUIDModel):
     # Denormalised course id for per-course goal calculations. DailyActivity
     # has no course dimension, so course goals are computed from events.
     course_uuid = models.UUIDField(null=True, blank=True, db_index=True)
+    source_type = models.CharField(max_length=32, null=True, blank=True)
+    source_id = models.CharField(max_length=64, null=True, blank=True)
+    subject = models.CharField(max_length=150, null=True, blank=True)
+    is_scheduled = models.BooleanField(null=True, blank=True)
     duration_seconds = models.PositiveIntegerField(default=0)
     metadata = models.JSONField(default=dict, blank=True)
     occurred_at = models.DateTimeField(default=timezone.now)
@@ -94,6 +98,7 @@ class StudyGoal(UUIDModel):
 
     class Metric(models.TextChoices):
         WATCH_MINUTES = "WATCH_MINUTES", "Watch minutes"
+        STUDY_MINUTES = "STUDY_MINUTES", "Study minutes"
         LESSONS_COMPLETED = "LESSONS_COMPLETED", "Lessons completed"
         QUIZZES_SUBMITTED = "QUIZZES_SUBMITTED", "Quizzes submitted"
 
@@ -117,6 +122,7 @@ class StudyGoal(UUIDModel):
         on_delete=models.CASCADE,
         related_name="study_goals",
     )
+    subject = models.CharField(max_length=150, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     # The date the stored target starts applying. Edits push this to the start
     # of the next period so the current period keeps its original target.
@@ -135,19 +141,33 @@ class StudyGoal(UUIDModel):
                 check=models.Q(target__gte=1),
                 name="goal_target_gte_1",
             ),
-            # At most one active goal per (user, metric, period) when the goal
-            # is not tied to a course. Postgres treats NULLs as distinct, so
-            # this needs its own partial constraint.
             models.UniqueConstraint(
                 fields=["user", "metric", "period"],
-                condition=models.Q(is_active=True, course__isnull=True),
+                condition=models.Q(
+                    is_active=True, course__isnull=True, subject__isnull=True
+                ),
                 name="uniq_active_goal_all_courses",
             ),
-            # At most one active goal per (user, metric, period, course).
             models.UniqueConstraint(
                 fields=["user", "metric", "period", "course"],
-                condition=models.Q(is_active=True),
+                condition=models.Q(
+                    is_active=True, course__isnull=False, subject__isnull=True
+                ),
                 name="uniq_active_goal_per_course",
+            ),
+            models.UniqueConstraint(
+                fields=["user", "metric", "period", "subject"],
+                condition=models.Q(
+                    is_active=True, course__isnull=True, subject__isnull=False
+                ),
+                name="uniq_active_goal_per_subject",
+            ),
+            models.UniqueConstraint(
+                fields=["user", "metric", "period", "course", "subject"],
+                condition=models.Q(
+                    is_active=True, course__isnull=False, subject__isnull=False
+                ),
+                name="uniq_active_goal_course_subject",
             ),
         ]
 

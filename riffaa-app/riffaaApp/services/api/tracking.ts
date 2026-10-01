@@ -47,6 +47,10 @@ export interface StudySession {
   schedule_item: string | null;
   schedule_item_title: string | null;
   group: string | null;
+  source_type: "SCHEDULE" | "COURSE_LESSON" | "LIVE_STREAM" | "UNSCHEDULED" | null;
+  source_id: string | null;
+  course_uuid: string | null;
+  is_scheduled: boolean;
   started_at: string;
   ended_at: string | null;
   local_date: string;
@@ -188,6 +192,11 @@ export interface StartStudySessionPayload {
   group?: string | null;
   planned_pomodoros?: number | null;
   notes?: string | null;
+  source_type?: "SCHEDULE" | "COURSE_LESSON" | "LIVE_STREAM" | "UNSCHEDULED";
+  source_id?: string | null;
+  course_uuid?: string | null;
+  is_scheduled?: boolean;
+  request_id?: string;
 }
 
 /** Open a session and start its first focus interval running. */
@@ -220,9 +229,10 @@ export async function resumeStudySession(id: string) {
 }
 
 /** Close the current interval as done and open the next one (break, or focus). */
-export async function completePomodoroInterval(id: string) {
+export async function completePomodoroInterval(id: string, requestId?: string) {
   const response = await apiClient.post<StudySession>(
     `study-sessions/${id}/complete-interval/`,
+    requestId ? { request_id: requestId } : {},
   );
   return response.data;
 }

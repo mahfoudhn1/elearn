@@ -89,7 +89,19 @@ class PomodoroService:
         group=None,
         planned_pomodoros=None,
         notes=None,
+        source_type=None,
+        source_id=None,
+        course_uuid=None,
+        is_scheduled=None,
+        request_id=None,
     ) -> StudySession:
+        if request_id is not None:
+            existing = StudySession.objects.filter(
+                user=self.user, start_request_id=request_id
+            ).first()
+            if existing is not None:
+                return existing
+
         # Clear a forgotten session first, so a stale one cannot lock the
         # student out of ever starting another.
         self.get_active_session()
@@ -108,6 +120,15 @@ class PomodoroService:
                 session = StudySession.objects.create(
                     user=self.user,
                     schedule_item=schedule_item,
+                    source_type=source_type or ("SCHEDULE" if schedule_item else "UNSCHEDULED"),
+                    source_id=source_id or (str(schedule_item.uuid) if schedule_item else None),
+                    course_uuid=course_uuid,
+                    is_scheduled=(
+                        bool(schedule_item)
+                        if is_scheduled is None
+                        else is_scheduled
+                    ),
+                    start_request_id=request_id,
                     subject=(subject or "").strip() or None,
                     group=group,
                     status=StudySession.Status.ACTIVE,
@@ -126,6 +147,12 @@ class PomodoroService:
                     last_resumed_at=now,
                 )
         except IntegrityError as exc:
+            if request_id is not None:
+                existing = StudySession.objects.filter(
+                    user=self.user, start_request_id=request_id
+                ).first()
+                if existing is not None:
+                    return existing
             # Two starts raced past the exists() check; the partial unique
             # constraint caught the loser.
             raise SessionAlreadyOpen("A study session is already open.") from exc
@@ -160,8 +187,10 @@ class PomodoroService:
             self._set_session_status(session, StudySession.Status.ACTIVE)
         return session
 
-    def complete_interval(self, session: StudySession) -> StudySession:
-        return self._close_and_advance(session, PomodoroInterval.Status.COMPLETED)
+    def complete_interval(self, session: StudySession, request_id=None) -> StudySession:
+        return self._close_and_advance(
+            session, PomodoroInterval.Status.COMPLETED, request_id=request_id
+        )
 
     def skip_interval(self, session: StudySession) -> StudySession:
         return self._close_and_advance(session, PomodoroInterval.Status.SKIPPED)
@@ -228,13 +257,22 @@ class PomodoroService:
             session.status = status
             session.save(update_fields=["status", "updated_at"])
 
-    def _close_and_advance(self, session: StudySession, closed_status: str) -> StudySession:
+    def _close_and_advance(
+        self, session: StudySession, closed_status: str, request_id=None
+    ) -> StudySession:
         with transaction.atomic():
             session = self._lock(session)
+            if request_id is not None and session.intervals.filter(
+                action_request_id=request_id
+            ).exists():
+                return session
             interval = self._require_open_interval(session)
             now = timezone.now()
 
             self._close_interval(interval, now, closed_status)
+            if request_id is not None:
+                interval.action_request_id = request_id
+                interval.save(update_fields=["action_request_id"])
             self._credit(session, interval)
             session.save(
                 update_fields=[
@@ -313,6 +351,9 @@ class PomodoroService:
                     else PomodoroInterval.Status.ABANDONED
                 )
                 self._close_interval(interval, now, final)
+                if interval.is_focus and interval.credited_seconds < 60:
+                    interval.accumulated_seconds = 0
+                    interval.save(update_fields=["accumulated_seconds"])
                 self._credit(session, interval)
 
             session.status = status
@@ -369,6 +410,11 @@ class PomodoroService:
                     duration_seconds=session.total_focus_seconds,
                     occurred_at=session.started_at,
                     client_event_id=session.uuid,
+                    course_uuid=session.course_uuid,
+                    source_type=session.source_type or ("SCHEDULE" if item else "UNSCHEDULED"),
+                    source_id=session.source_id or (str(item.uuid) if item else None),
+                    subject=session.subject,
+                    is_scheduled=session.is_scheduled,
                     metadata={
                         "session": str(session.uuid),
                         "schedule_item": str(item.uuid) if item else None,
@@ -376,6 +422,10 @@ class PomodoroService:
                         "subject": session.subject,
                         "completed_pomodoros": session.completed_pomodoros,
                         "focus_score": session.focus_score,
+                        "source_type": session.source_type,
+                        "source_id": session.source_id,
+                        "course": str(session.course_uuid) if session.course_uuid else None,
+                        "is_scheduled": session.is_scheduled,
                     },
                 )
         except Exception:  # pragma: no cover - never break the timer
