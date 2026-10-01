@@ -130,7 +130,7 @@ class StudyGoal(UUIDModel):
         ]
         constraints = [
             models.CheckConstraint(
-                condition=models.Q(target__gte=1),
+                check=models.Q(target__gte=1),
                 name="goal_target_gte_1",
             ),
             # At most one active goal per (user, metric, period) when the goal
