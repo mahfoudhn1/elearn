@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from core.views import UUIDLookupMixin
+from core.views import UUIDLookupMixin
 
 from .models import PersonalScheduleItem, PomodoroSettings, StudySession
 from .serializers import (
@@ -216,7 +217,10 @@ class PomodoroSettingsView(generics.RetrieveUpdateAPIView):
 
 
 class StudySessionViewSet(
-    mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+    UUIDLookupMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
 ):
     """The pomodoro timer.
 

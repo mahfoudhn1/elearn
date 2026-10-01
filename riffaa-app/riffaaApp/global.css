@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Default token values (dark theme). The root layout overrides these per theme
+ * with NativeWind `vars()`, but these fallbacks keep colours valid for anything
+ * rendered outside that tree on web (portals, static rendering).
+ */
+:root {
+  --c-bg: 39 52 68;
+  --c-surface: 47 62 80;
+  --c-surface-2: 56 74 95;
+  --c-line: 68 84 104;
+  --c-ink: 248 250 252;
+  --c-ink-muted: 180 192 207;
+  --c-ink-subtle: 132 148 168;
+  --c-brand: 255 120 73;
+  --c-on-brand: 31 17 8;
+  --c-ghost: 74 92 114;
+  --c-hairline: 90 107 128;
+  --c-success: 52 211 153;
+  --c-danger: 248 113 113;
+  --c-info: 56 189 248;
+}
