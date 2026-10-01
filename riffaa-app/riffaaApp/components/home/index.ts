@@ -5,3 +5,6 @@ export { PromoPill } from './PromoPill';
 export type { PromoPillProps } from './PromoPill';
 export { QuickActionRow } from './QuickActionRow';
 export type { QuickAction, QuickActionRowProps } from './QuickActionRow';
+export { TrackingCard } from './TrackingCard';
+export { GroupCard } from './GroupCard';
+export { CourseCardHorizontal } from './CourseCardHorizontal';

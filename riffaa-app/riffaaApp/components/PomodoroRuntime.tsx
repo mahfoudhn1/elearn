@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
-import * as Notifications from 'expo-notifications';
 import { useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -9,15 +8,7 @@ import { AppText } from './ui';
 import { usePomodoroStore, attachPomodoroNetworkRetry } from '../store/pomodoroStore';
 import { useTheme } from '../hooks/useTheme';
 import { useTranslation } from '../hooks/useTranslation';
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+import { loadNotifications } from '../services/notifications';
 
 export function PomodoroRuntime() {
   const router = useRouter();
@@ -44,6 +35,19 @@ export function PomodoroRuntime() {
   }, [hydrated, reconcile]);
 
   useEffect(() => {
+    void loadNotifications().then((Notifications) => {
+      Notifications?.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowBanner: true,
+          shouldShowList: true,
+          shouldPlaySound: true,
+          shouldSetBadge: false,
+        }),
+      });
+    });
+  }, []);
+
+  useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
@@ -53,39 +57,42 @@ export function PomodoroRuntime() {
     notifiedEndRef.current = endsAt;
     let cancelled = false;
     let scheduledNotificationId: string | null = null;
+    let api: Awaited<ReturnType<typeof loadNotifications>> = null;
     void (async () => {
-      const settings = await Notifications.getPermissionsAsync();
+      api = await loadNotifications();
+      if (!api) return;
+      const settings = await api.getPermissionsAsync();
       if (settings.status !== 'granted') {
-        const permission = await Notifications.requestPermissionsAsync();
+        const permission = await api.requestPermissionsAsync();
         if (permission.status !== 'granted') return;
       }
-      await Notifications.setNotificationChannelAsync('pomodoro', {
+      await api.setNotificationChannelAsync('pomodoro', {
         name: t('focusSession'),
-        importance: Notifications.AndroidImportance.DEFAULT,
+        importance: api.AndroidImportance.DEFAULT,
         sound: 'default',
       });
-      const notificationId = await Notifications.scheduleNotificationAsync({
+      const notificationId = await api.scheduleNotificationAsync({
         content: {
           title: t('pomodoroPhaseDone'),
           body: phase === 'focus' ? t('pomodoroBreakReady') : t('pomodoroFocusReady'),
           sound: true,
         },
         trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          type: api.SchedulableTriggerInputTypes.DATE,
           date: new Date(endsAt),
           channelId: 'pomodoro',
         },
       });
       if (cancelled) {
-        await Notifications.cancelScheduledNotificationAsync(notificationId);
+        await api.cancelScheduledNotificationAsync(notificationId);
       } else {
         scheduledNotificationId = notificationId;
       }
     })().catch(() => {});
     return () => {
       cancelled = true;
-      if (scheduledNotificationId) {
-        void Notifications.cancelScheduledNotificationAsync(scheduledNotificationId).catch(() => {});
+      if (scheduledNotificationId && api) {
+        void api.cancelScheduledNotificationAsync(scheduledNotificationId).catch(() => {});
       }
     };
   }, [activeSession, endsAt, phase, t]);

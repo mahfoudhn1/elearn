@@ -3,19 +3,19 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
-import { CourseCard } from '../../components/CourseCard';
 import { StudyTracker } from '../../components/StudyTracker';
 import {
-  ContinueStudyCard,
+  CourseCardHorizontal,
+  GroupCard,
   HeroCarousel,
   PromoPill,
   QuickActionRow,
+  TrackingCard,
   type QuickAction,
 } from '../../components/home';
 import {
   AppText,
   Avatar,
-  Badge,
   Button,
   Card,
   ErrorState,
@@ -278,7 +278,7 @@ export default function HomeScreen() {
     : null;
 
   const continueStudySlide = (
-    <ContinueStudyCard
+    <TrackingCard
       todayFocusMinutes={stats?.todayFocusMinutes ?? 0}
       loading={statsLoading && !stats}
     />
@@ -476,7 +476,7 @@ export default function HomeScreen() {
       </View>
 
       {/* My groups */}
-      <View className="px-5">
+      <View className="mt-8 px-5">
         <SectionHeader
           title={t('yourLearningGroups')}
           action={{ label: t('seeAll'), onPress: () => router.push('/groups') }}
@@ -496,39 +496,15 @@ export default function HomeScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ gap: 12, paddingHorizontal: 20 }}
         >
-          {groups.map((group) => {
-            const tint = subjectTint(
-              group.language ?? group.grade ?? group.school_level ?? group.name,
-            );
-            return (
-              <Card
-                key={group.id}
-                subject={group.name}
-                onPress={() =>
-                  router.push({ pathname: '/groups/[id]', params: { id: group.id } })
-                }
-                className="w-60"
-              >
-                <Row gap={10} align="center" className="mb-2">
-                  <Row
-                    justify="center"
-                    align="center"
-                    className="h-9 w-9 rounded-full"
-                    style={{ backgroundColor: `${tint.color}26` }}
-                  >
-                    <Ionicons name={tint.icon} size={18} color={tint.color} />
-                  </Row>
-                  {group.active_live ? <Badge label={t('liveNow')} tone="success" /> : null}
-                </Row>
-                <AppText variant="title" numberOfLines={1}>
-                  {group.name}
-                </AppText>
-                <AppText variant="bodySm" tone="muted" numberOfLines={1}>
-                  {group.teacher_name}
-                </AppText>
-              </Card>
-            );
-          })}
+          {groups.map((group) => (
+            <GroupCard
+              key={group.id}
+              group={group}
+              onPress={() =>
+                router.push({ pathname: '/groups/[id]', params: { id: group.id } })
+              }
+            />
+          ))}
         </ScrollView>
       )}
 
@@ -554,15 +530,14 @@ export default function HomeScreen() {
           contentContainerStyle={{ gap: 12, paddingHorizontal: 20 }}
         >
           {courses.slice(0, 5).map((course) => (
-            <View key={course.id} style={{ width: 288 }}>
-              <CourseCard
-                course={course}
-                subject={course.teacher?.teaching_subjects ?? null}
-                onPress={() =>
-                  router.push({ pathname: '/course/[id]', params: { id: String(course.id) } })
-                }
-              />
-            </View>
+            <CourseCardHorizontal
+              key={course.id}
+              course={course}
+              subject={course.teacher?.teaching_subjects ?? null}
+              onPress={() =>
+                router.push({ pathname: '/course/[id]', params: { id: String(course.id) } })
+              }
+            />
           ))}
         </ScrollView>
       )}
