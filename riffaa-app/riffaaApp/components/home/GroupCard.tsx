@@ -24,17 +24,18 @@ export function GroupCard({ group, onPress }: GroupCardProps) {
 
   return (
     <Card
-      variant="default"
+      variant="raised"
       subject={group.name}
       onPress={onPress}
-      className="w-72 flex-shrink-0"
+      className="w-72 flex-shrink-0 overflow-hidden"
+      style={{ borderTopWidth: 3, borderTopColor: tint.color }}
     >
       <Row justify="space-between" align="center" className="mb-3">
         <Row
           justify="center"
           align="center"
-          className="h-9 w-9 rounded-full"
-          style={{ backgroundColor: `${tint.color}26` }}
+          className="h-10 w-10 rounded-xl"
+          style={{ backgroundColor: `${tint.color}35` }}
         >
           <Ionicons name={tint.icon} size={18} color={tint.color} />
         </Row>
@@ -55,11 +56,11 @@ export function GroupCard({ group, onPress }: GroupCardProps) {
         </Row>
       </Row>
 
-      <AppText variant="title" numberOfLines={1} className="mb-1">
+      <AppText variant="heading" numberOfLines={1} className="mb-1">
         {group.name}
       </AppText>
 
-      <AppText variant="bodySm" tone="muted" numberOfLines={1}>
+      <AppText variant="bodySm" tone="ink" numberOfLines={1}>
         {group.teacher_name}
       </AppText>
     </Card>

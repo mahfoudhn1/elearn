@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
+  LayoutAnimation,
   ScrollView,
   View,
   type LayoutChangeEvent,
@@ -26,6 +27,7 @@ export function HeroCarousel({ slides, className, onIndexChange }: HeroCarouselP
   const { isRTL } = useDirection();
   const [width, setWidth] = useState(0);
   const [displayIndex, setDisplayIndex] = useState(0);
+  const [slideHeights, setSlideHeights] = useState<number[]>([]);
   const scrollRef = useRef<ScrollView | null>(null);
 
   const ordered = useMemo(
@@ -37,15 +39,28 @@ export function HeroCarousel({ slides, className, onIndexChange }: HeroCarouselP
     setWidth(event.nativeEvent.layout.width);
   }, []);
 
+  const handleSlideLayout = useCallback((index: number, event: LayoutChangeEvent) => {
+    const height = Math.ceil(event.nativeEvent.layout.height);
+    setSlideHeights((current) => {
+      if (current[index] === height) return current;
+      const next = [...current];
+      next[index] = height;
+      return next;
+    });
+  }, []);
+
   const handleMomentumEnd = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       if (width <= 0) return;
       const next = Math.round(event.nativeEvent.contentOffset.x / width);
+      if (next !== displayIndex) {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      }
       setDisplayIndex(next);
       const authored = isRTL ? slides.length - 1 - next : next;
       onIndexChange?.(authored);
     },
-    [width, isRTL, slides.length, onIndexChange],
+    [width, displayIndex, isRTL, slides.length, onIndexChange],
   );
 
   return (
@@ -56,11 +71,16 @@ export function HeroCarousel({ slides, className, onIndexChange }: HeroCarouselP
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
+          style={slideHeights[displayIndex] ? { height: slideHeights[displayIndex] } : undefined}
           onMomentumScrollEnd={handleMomentumEnd}
           keyboardShouldPersistTaps="handled"
         >
           {ordered.map((slide, index) => (
-            <View key={index} style={{ width }}>
+            <View
+              key={index}
+              onLayout={(event) => handleSlideLayout(index, event)}
+              style={{ width, alignSelf: 'flex-start' }}
+            >
               {slide}
             </View>
           ))}

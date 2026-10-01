@@ -94,12 +94,11 @@ export const StudyTracker: React.FC<StudyTrackerProps> = ({
   const remaining = Math.max(goalMinutes - todayMinutes, 0);
 
   return (
-    <Card variant="hero" tone="brand" className="mb-6 overflow-hidden">
-      {/* Header */}
+    <Card variant="default" className="mb-6">
       <Row justify="space-between" align="center">
         <Row gap={10} align="center">
-          <View className="h-9 w-9 items-center justify-center rounded-full bg-brand/15">
-            <Ionicons name="stats-chart" size={17} color={tokens.brand} />
+          <View className="h-9 w-9 items-center justify-center rounded-xl bg-brand/15">
+            <Ionicons name="bar-chart" size={17} color={tokens.brand} />
           </View>
           <Stack gap={1}>
             <AppText
@@ -133,43 +132,49 @@ export const StudyTracker: React.FC<StudyTrackerProps> = ({
         </Pressable>
       </Row>
 
-      {/* Hero number */}
-      <View className="mt-4">
-        <AppText variant="displayLg" numberOfLines={1}>
-          {formatDurationLong(weekMinutes)}
-        </AppText>
-      </View>
-
-      {/* Today vs daily goal */}
-      <Stack gap={6} className="mt-3">
-        <Row justify="space-between" align="center">
+      <Row justify="space-between" align="flex-end" className="mt-5">
+        <Stack gap={2}>
+          <AppText variant="micro" tone="subtle" className="uppercase tracking-widest">
+            {t('thisWeek')}
+          </AppText>
+          <AppText variant="displayLg" numberOfLines={1}>
+            {formatDurationLong(weekMinutes)}
+          </AppText>
+        </Stack>
+        <Stack gap={2} align="flex-end" className="pb-1">
           <AppText variant="caption" tone="muted">
             {goalMetToday ? t('goalMet') : t('remainingToday')}
           </AppText>
           <AppText
-            variant="caption"
-            weight="medium"
+            variant="bodySm"
+            weight="semibold"
             tone={goalMetToday ? 'success' : 'ink'}
           >
             {goalMetToday ? '✓' : formatDurationLong(remaining)}
+          </AppText>
+        </Stack>
+      </Row>
+
+      <Stack gap={6} className="mt-4">
+        <Row justify="space-between" align="center">
+          <AppText variant="caption" tone="muted">{t('todayFocus')}</AppText>
+          <AppText variant="caption" weight="medium">
+            {formatDurationLong(todayMinutes)}{goalMinutes > 0 ? ` / ${formatDurationLong(goalMinutes)}` : ''}
           </AppText>
         </Row>
         <ProgressBar value={goalProgress} />
       </Stack>
 
-      {/* Week rhythm */}
-      <View className="mt-4">
+      <View className="mt-5 rounded-xl bg-surface-2 px-3 py-3">
         {hasWeek ? (
           <WeeklyBarChart
             data={series}
             goalMinutes={goalMinutes > 0 ? goalMinutes : null}
-            height={112}
+            height={76}
           />
         ) : (
-          <View className="items-center justify-center py-8">
-            <AppText variant="bodySm" tone="muted">
-              {t('noDataYet')}
-            </AppText>
+          <View className="items-center justify-center py-5">
+            <AppText variant="bodySm" tone="muted">{t('noDataYet')}</AppText>
           </View>
         )}
       </View>
@@ -178,10 +183,7 @@ export const StudyTracker: React.FC<StudyTrackerProps> = ({
 
       <Row gap={12}>
         <StatCell label={t('dayStreak')} value={String(stats?.currentStreak ?? 0)} />
-        <StatCell
-          label={t('focusSessions')}
-          value={String(stats?.completedSessions ?? 0)}
-        />
+        <StatCell label={t('focusSessions')} value={String(stats?.completedSessions ?? 0)} />
         <StatCell label={t('daysGoalMet')} value={String(stats?.daysGoalMet ?? 0)} />
       </Row>
 

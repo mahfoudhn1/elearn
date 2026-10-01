@@ -2,6 +2,7 @@ from core.views import UUIDLookupMixin
 # groups/views.py
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from groups.models import Video
@@ -33,6 +34,11 @@ class VideoViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
     permission_classes = [permissions.IsAuthenticated, IsTeacher]
+
+    def get_permissions(self):
+        if self.action == "by_group":
+            return [permissions.IsAuthenticated()]
+        return super().get_permissions()
 
     @action(detail=False, methods=["post"], url_path="start")
     def start_upload(self, request):
@@ -117,6 +123,12 @@ class VideoViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
     def by_group(self, request, group_id=None):
         """Retrieve videos for a specific group and generate signed URLs"""
         group = get_object_or_404(Group, uuid=group_id)
+        user = request.user
+        is_teacher = group.admin.user_id == user.id
+        is_student = group.students.filter(user=user).exists()
+        if not (is_teacher or is_student):
+            raise PermissionDenied("You are not a member of this group.")
+
         videos = Video.objects.filter(group=group, upload_status=Video.UploadStatus.COMPLETED)
 
         result = []

@@ -137,7 +137,7 @@ export const usePomodoroStore = create<PomodoroState>()(
           schedule_item: source.scheduleItemId ?? null,
           group: source.groupId ?? null,
           source_type: source.type,
-          source_id: source.id ?? source.scheduleItemId ?? null,
+          source_id: source.id ?? source.scheduleItemId ?? requestId,
           course_uuid: source.courseUuid ?? null,
           is_scheduled: source.isScheduled ?? Boolean(source.scheduleItemId),
           request_id: requestId,

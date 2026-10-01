@@ -1,9 +1,11 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { Alert } from 'react-native';
 import { Button } from './ui';
 import { usePomodoro } from '../hooks/usePomodoro';
 import type { PomodoroSource } from '../store/pomodoroStore';
 import { useTranslation } from '../hooks/useTranslation';
+import { describeApiError } from '../services/api/client';
 
 export function StartStudyButton({ source }: { source: PomodoroSource }) {
   const router = useRouter();
@@ -17,6 +19,8 @@ export function StartStudyButton({ source }: { source: PomodoroSource }) {
     try {
       if (!activeSession) await start(source);
       router.push('/study-session');
+    } catch (error) {
+      Alert.alert(t('error'), describeApiError(error));
     } finally {
       setBusy(false);
     }

@@ -40,13 +40,9 @@ export async function getProfileGroups<T = unknown>(
   return response.data;
 }
 
-// NOTE: If videos, quizzes, and messages live in separate Django apps (e.g., videos/ or quiz/),
-// your endpoints should point directly to those base apps, filtering by group_id:
+/** Completed videos for one group, with short-lived playback URLs. */
 export async function getGroupVideos<T = unknown>(groupId: string | number) {
-  // Update this to match your actual Django video app routing if different
-  const response = await apiClient.get<T>(`videos/`, {
-    params: { group_id: groupId },
-  });
+  const response = await apiClient.get<T>(`groups/videos/by-group/${groupId}/`);
   return response.data;
 }
 

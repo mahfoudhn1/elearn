@@ -1,20 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, View } from 'react-native';
-import { useRouter, useSegments } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { Ionicons } from '@expo/vector-icons';
 
-import { AppText } from './ui';
 import { usePomodoroStore, attachPomodoroNetworkRetry } from '../store/pomodoroStore';
-import { useTheme } from '../hooks/useTheme';
 import { useTranslation } from '../hooks/useTranslation';
 import { loadNotifications } from '../services/notifications';
 
 export function PomodoroRuntime() {
-  const router = useRouter();
   const queryClient = useQueryClient();
-  const segments = useSegments();
-  const { tokens } = useTheme();
   const { t } = useTranslation();
   const [now, setNow] = useState(() => Date.now());
   const activeSession = usePomodoroStore((state) => state.activeSession);
@@ -26,7 +18,6 @@ export function PomodoroRuntime() {
   const notifiedEndRef = useRef<number | null>(null);
   const advancingRef = useRef(false);
   const lastSessionIdRef = useRef<string | null>(null);
-  const onTimerScreen = String(segments[0]) === 'study-session';
 
   useEffect(() => {
     if (!hydrated) return;
@@ -118,39 +109,5 @@ export function PomodoroRuntime() {
     void queryClient.invalidateQueries({ queryKey: ['goals'] });
   }, [activeSession, queryClient]);
 
-  if (!activeSession || onTimerScreen) return null;
-  const remaining = Math.max(Math.ceil(((endsAt ?? now) - now) / 1000), 0);
-  const time = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`;
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={t('openPomodoro')}
-      onPress={() => router.push('/study-session')}
-      style={{
-        position: 'absolute',
-        zIndex: 20,
-        bottom: 20,
-        right: 16,
-        minWidth: 132,
-        height: 54,
-        paddingHorizontal: 14,
-        borderRadius: 27,
-        backgroundColor: tokens.surface,
-        borderWidth: 1,
-        borderColor: tokens.line,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 9,
-        elevation: 8,
-      }}
-    >
-      <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: phase === 'focus' ? tokens.brand : tokens.success }} />
-      <Ionicons name="timer-outline" size={18} color={tokens.brand} />
-      <View>
-        <AppText variant="bodySm" weight="semibold">{time}</AppText>
-        <AppText variant="micro" tone="muted">{phase === 'focus' ? t('focusSession') : t('breakLabel')}</AppText>
-      </View>
-    </Pressable>
-  );
+  return null;
 }

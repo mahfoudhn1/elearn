@@ -31,14 +31,15 @@ export function CourseCardHorizontal({ course, onPress, subject }: CourseCardHor
 
   return (
     <Card
-      variant="list"
+      variant="raised"
       subject={subject ?? course.teacher?.teaching_subjects}
       onPress={onPress}
       className="w-80 flex-shrink-0"
+      style={{ borderTopWidth: 3, borderTopColor: tint.color }}
     >
       <Row gap={12} align="flex-start">
         <View className="relative flex-shrink-0">
-          <View className="h-20 w-20 overflow-hidden rounded-xl bg-surface-2">
+          <View className="h-20 w-20 overflow-hidden rounded-lg bg-surface-2">
             {course.thumbnail ? (
               <Image
                 source={{ uri: course.thumbnail }}
@@ -64,8 +65,8 @@ export function CourseCardHorizontal({ course, onPress, subject }: CourseCardHor
         <View className="min-w-0 flex-1">
           <Row gap={8} align="center" className="mb-1">
             <View
-              className="h-7 w-7 flex-shrink-0 items-center justify-center rounded-full"
-              style={{ backgroundColor: `${tint.color}26` }}
+              className="h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg"
+              style={{ backgroundColor: `${tint.color}35` }}
             >
               <Ionicons name={tint.icon} size={15} color={tint.color} />
             </View>
@@ -74,7 +75,7 @@ export function CourseCardHorizontal({ course, onPress, subject }: CourseCardHor
             </AppText>
           </Row>
 
-          <AppText variant="bodySm" tone="muted" numberOfLines={1} className="mb-2">
+            <AppText variant="bodySm" tone="ink" numberOfLines={1} className="mb-2">
             {course.teacher_name}
           </AppText>
 
