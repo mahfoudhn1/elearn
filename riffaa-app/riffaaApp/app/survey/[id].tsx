@@ -126,13 +126,6 @@ export default function SurveyScreen() {
         onSuccess: (data) => {
           setResult(data);
           setStartInfo(null);
-          if (courseId) {
-            void trackActivity({
-              event_type: 'QUIZ_SUBMITTED',
-              object_uuid: id,
-              metadata: { course: courseId, score: data.score, total: data.total },
-            });
-          }
         },
       },
     );

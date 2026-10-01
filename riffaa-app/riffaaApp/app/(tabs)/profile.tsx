@@ -10,6 +10,7 @@ import {
   Card,
   GhostNumber,
   IconButton,
+  ListItem,
   Row,
   Screen,
   ScreenHeader,
@@ -197,6 +198,24 @@ export default function ProfileScreen() {
                 );
               })}
             </Row>
+          </Card>
+
+          {/* Progress shortcuts */}
+          <Card variant="list" className="mb-4">
+            <Stack gap={2}>
+              <ListItem
+                title={translate('studyGoals')}
+                icon="flag-outline"
+                showChevron
+                onPress={() => router.push('/goals')}
+              />
+              <ListItem
+                title={translate('myProgress')}
+                icon="stats-chart-outline"
+                showChevron
+                onPress={() => router.push('/analytics')}
+              />
+            </Stack>
           </Card>
 
           {/* Completed courses */}

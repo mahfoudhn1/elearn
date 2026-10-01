@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
 import { AppText, Badge, Button, Card, EmptyState, Row, Screen, Stack } from './ui';
@@ -15,7 +14,7 @@ export interface MeetingInfo {
   day_of_week: string;
   color?: string;
   Meeting?: {
-    id: number;
+    id: string;
     room_name: string;
     is_active: boolean;
   };
@@ -28,27 +27,7 @@ export interface MeetingInfo {
 export default function LiveTab({ schedules }: { schedules: MeetingInfo[] }) {
   const { tokens } = useTheme();
   const { t } = useTranslation();
-  const [activeSession, setActiveSession] = useState<MeetingInfo | null>(null);
-
-  useEffect(() => {
-    const check = () => {
-      const now = new Date();
-      const currentTime = now.toTimeString().slice(0, 5);
-      const currentDate = now.toISOString().split('T')[0];
-      const live = schedules.find(
-        (item) =>
-          (item.scheduled_date === currentDate &&
-            currentTime >= item.start_time &&
-            currentTime <= item.end_time) ||
-          Boolean(item.Meeting?.is_active),
-      );
-      setActiveSession(live ?? null);
-    };
-
-    check();
-    const interval = setInterval(check, 60_000);
-    return () => clearInterval(interval);
-  }, [schedules]);
+  const activeSession = schedules.find((item) => item.Meeting?.is_active === true) ?? null;
 
   return (
     <Screen scroll>

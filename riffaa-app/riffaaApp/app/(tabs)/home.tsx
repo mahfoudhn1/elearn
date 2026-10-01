@@ -5,6 +5,7 @@ import { ScrollView, View } from 'react-native';
 
 import { CourseCard } from '../../components/CourseCard';
 import { StudyTracker } from '../../components/StudyTracker';
+import { TodayGoalSection } from '../../components/analytics';
 import { HeroCarousel, PromoPill, QuickActionRow, type QuickAction } from '../../components/home';
 import {
   AppText,
@@ -512,6 +513,9 @@ export default function HomeScreen() {
           </View>
         </Row>
       </View>
+
+      {/* Today's goal */}
+      <TodayGoalSection />
 
       {/* Quick actions */}
       <View className="mt-5">

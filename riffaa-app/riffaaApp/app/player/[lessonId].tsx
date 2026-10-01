@@ -127,11 +127,6 @@ export default function PlayerScreen() {
         positionSeconds: player.currentTime ?? lesson.last_position_seconds ?? 0,
         isFinished: true,
       });
-      void trackActivity({
-        event_type: 'LESSON_COMPLETED',
-        object_uuid: lesson.id,
-        metadata: { course: lesson.course },
-      });
       complete.mutate(lesson.id, {
         onSuccess: () => {
           void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

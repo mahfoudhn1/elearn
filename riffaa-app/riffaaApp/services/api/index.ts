@@ -25,6 +25,7 @@ export {
 } from "./courses";
 export type { SurveyAnswerInput } from "./courses";
 export * from "./activity";
+export * from "./goals";
 // Exported by name rather than `export *`: groups.ts also carries a deprecated
 // getSchedules() aimed at a route the backend does not serve, and the personal
 // study schedule below owns that name now.

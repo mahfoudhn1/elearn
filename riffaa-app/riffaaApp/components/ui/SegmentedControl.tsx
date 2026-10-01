@@ -80,7 +80,7 @@ export function SegmentedControl<T extends string = string>({
           <GlassSurface level="glass-2" tone="brand" radius={12} className="flex-1" />
         </Animated.View>
       ) : null}
-      <Row gap={0}>
+      <Row gap={0} style={{ direction: 'ltr' }}>
         {options.map((option) => {
           const selected = option.value === value;
           return (

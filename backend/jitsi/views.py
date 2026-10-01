@@ -60,6 +60,8 @@ class MeetingViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
         teacher = user.teacher
         group_id = data.get('group_id')
         group = get_object_or_404(Group, uuid=group_id)
+        if group.admin != teacher:
+            raise PermissionDenied("You can only create meetings for your own groups.")
 
         room_name = f"room_{teacher.uuid.hex[:12]}_{uuid.uuid4().hex[:6]}"
 
@@ -69,7 +71,7 @@ class MeetingViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
             group=group,
             start_time=data.get('start_time'),
             end_time=data.get('end_time'),
-            is_active=True  # Meeting is active when created
+            is_active=False
         )
 
         meeting.students.set(group.students.all())

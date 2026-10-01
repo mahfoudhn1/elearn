@@ -1,9 +1,29 @@
+from django.utils import timezone
 from rest_framework import serializers
 
-from .models import ActivityEvent
+from courses.access import is_course_accessible
+from courses.models import Course
+from courses.permissions import get_student, get_teacher
+from core.serializers import UUIDModelSerializer
+
+from .constants import (
+    CLIENT_EVENT_TYPES,
+    MAX_ACTIVE_GOALS,
+    MAX_BACKDATE_DAYS,
+    MAX_DURATION_SECONDS,
+    MAX_FUTURE_SKEW_MINUTES,
+    max_target_for,
+)
+from .models import ActivityEvent, GoalPeriodResult, StudyGoal
 
 
 class ActivityEventSerializer(serializers.ModelSerializer):
+    # Clients may backdate (their queue is flushed later), so occurred_at is
+    # writable but bounded below.
+    occurred_at = serializers.DateTimeField(required=False)
+    client_event_id = serializers.UUIDField(required=False, allow_null=True)
+    course_uuid = serializers.UUIDField(required=False, allow_null=True)
+
     class Meta:
         model = ActivityEvent
         fields = [
@@ -11,8 +31,163 @@ class ActivityEventSerializer(serializers.ModelSerializer):
             "user",
             "event_type",
             "object_uuid",
+            "course_uuid",
             "duration_seconds",
             "metadata",
             "occurred_at",
+            "client_event_id",
         ]
-        read_only_fields = ["id", "user", "occurred_at"]
+        read_only_fields = ["id", "user"]
+
+    def validate_event_type(self, value):
+        if value not in CLIENT_EVENT_TYPES:
+            allowed = ", ".join(sorted(CLIENT_EVENT_TYPES))
+            raise serializers.ValidationError(
+                f"'{value}' cannot be recorded by a client. Allowed: {allowed}."
+            )
+        return value
+
+    def validate_duration_seconds(self, value):
+        if value > MAX_DURATION_SECONDS:
+            raise serializers.ValidationError(
+                f"duration_seconds cannot exceed {MAX_DURATION_SECONDS}."
+            )
+        return value
+
+    def validate_occurred_at(self, value):
+        now = timezone.now()
+        future_limit = now + timezone.timedelta(minutes=MAX_FUTURE_SKEW_MINUTES)
+        past_limit = now - timezone.timedelta(days=MAX_BACKDATE_DAYS)
+        if value > future_limit:
+            raise serializers.ValidationError(
+                "occurred_at cannot be in the future."
+            )
+        if value < past_limit:
+            raise serializers.ValidationError(
+                f"occurred_at cannot be more than {MAX_BACKDATE_DAYS} days old."
+            )
+        return value
+
+
+class StudyGoalSerializer(UUIDModelSerializer):
+    course = serializers.SlugRelatedField(
+        slug_field="uuid",
+        queryset=Course.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+    target = serializers.IntegerField(min_value=1)
+
+    class Meta:
+        model = StudyGoal
+        fields = [
+            "id",
+            "metric",
+            "period",
+            "target",
+            "course",
+            "is_active",
+            "effective_from",
+            "created_at",
+            "updated_at",
+        ]
+        # effective_from is set by the server (today on create, start of the
+        # next period on an edit) so clients cannot backdate a target change.
+        read_only_fields = ["id", "effective_from", "created_at", "updated_at"]
+
+    @staticmethod
+    def _check_course_access(user, course):
+        student = get_student(user)
+        if student and is_course_accessible(student, course):
+            return
+        teacher = get_teacher(user)
+        if teacher and course.teacher_id == teacher.id:
+            return
+        raise serializers.ValidationError(
+            {"course": "You do not have access to this course."}
+        )
+
+    def validate(self, attrs):
+        user = self.context["request"].user
+        instance = self.instance
+
+        metric = attrs.get("metric", instance.metric if instance else None)
+        period = attrs.get("period", instance.period if instance else None)
+        if "course" in attrs:
+            course = attrs["course"]
+        else:
+            course = instance.course if instance else None
+        target = attrs.get("target", instance.target if instance else None)
+        is_active = attrs.get(
+            "is_active", instance.is_active if instance else True
+        )
+
+        if target is not None and metric and period:
+            maximum = max_target_for(metric, period)
+            if target > maximum:
+                raise serializers.ValidationError(
+                    {
+                        "target": (
+                            f"The maximum {metric} goal for a {period.lower()} "
+                            f"period is {maximum}."
+                        )
+                    }
+                )
+
+        if course is not None:
+            self._check_course_access(user, course)
+
+        if is_active:
+            siblings = StudyGoal.objects.filter(
+                user=user,
+                metric=metric,
+                period=period,
+                is_active=True,
+            )
+            if course is None:
+                siblings = siblings.filter(course__isnull=True)
+            else:
+                siblings = siblings.filter(course=course)
+            if instance is not None:
+                siblings = siblings.exclude(pk=instance.pk)
+            if siblings.exists():
+                raise serializers.ValidationError(
+                    {
+                        "detail": (
+                            "An active goal with this metric, period and "
+                            "course already exists."
+                        )
+                    }
+                )
+
+            active = StudyGoal.objects.filter(user=user, is_active=True)
+            if instance is not None:
+                active = active.exclude(pk=instance.pk)
+            if active.count() >= MAX_ACTIVE_GOALS:
+                raise serializers.ValidationError(
+                    {
+                        "detail": (
+                            f"You can have at most {MAX_ACTIVE_GOALS} active "
+                            "goals."
+                        )
+                    }
+                )
+        return attrs
+
+
+class GoalPeriodResultSerializer(UUIDModelSerializer):
+    goal = serializers.SlugRelatedField(slug_field="uuid", read_only=True)
+
+    class Meta:
+        model = GoalPeriodResult
+        fields = [
+            "id",
+            "goal",
+            "period_start",
+            "period_end",
+            "target",
+            "achieved",
+            "met",
+            "created_at",
+        ]
+        read_only_fields = fields

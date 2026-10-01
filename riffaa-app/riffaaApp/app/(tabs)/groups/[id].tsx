@@ -23,6 +23,7 @@ import { useDirection } from '../../../hooks/useDirection';
 import { useTheme } from '../../../hooks/useTheme';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { describeApiError } from '../../../services/api/client';
+import { getGroupAnnouncements } from '../../../services/api/chat';
 import { getGroupById, getGroupSchedules, getGroupVideos } from '../../../services/api';
 import { formatTime } from '../../../utils/format';
 import { normalizeGroup, type NormalizedGroup } from '../../../utils/realData';
@@ -74,13 +75,17 @@ export default function GroupDetailsScreen() {
     setLoading(true);
     setError(null);
     try {
-      const [groupPayload, schedulesData, videosData] = await Promise.all([
+      const [groupPayload, schedulesData, videosData, announcements] = await Promise.all([
         getGroupById(id),
         getGroupSchedules(id).catch(() => []),
         getGroupVideos(id).catch(() => []),
+        getGroupAnnouncements(id),
       ]);
       const scheduleList = Array.isArray(schedulesData) ? (schedulesData as MeetingInfo[]) : [];
-      setGroup(normalizeGroup(groupPayload as Record<string, unknown>));
+      setGroup({
+        ...normalizeGroup(groupPayload as Record<string, unknown>),
+        announcements,
+      });
       setSchedules(scheduleList);
       setNextSessionLabel(computeNextSessionLabel(scheduleList));
       setVideos(Array.isArray(videosData) ? (videosData as Record<string, unknown>[]) : []);
@@ -94,6 +99,26 @@ export default function GroupDetailsScreen() {
   useEffect(() => {
     void loadWorkspace();
   }, [loadWorkspace]);
+
+  useEffect(() => {
+    if (!id) return;
+    let mounted = true;
+    const refreshSchedules = async () => {
+      try {
+        const payload = await getGroupSchedules(id);
+        if (mounted) {
+          setSchedules(Array.isArray(payload) ? (payload as MeetingInfo[]) : []);
+        }
+      } catch {
+        // Keep the last server-confirmed meeting state if a refresh fails.
+      }
+    };
+    const interval = setInterval(() => void refreshSchedules(), 30_000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, [id]);
 
   if (loading) {
     return (
@@ -121,6 +146,7 @@ export default function GroupDetailsScreen() {
   }
 
   const isAcademic = group.group_type === 'ACADEMIC';
+  const activeLive = schedules.some((schedule) => schedule.Meeting?.is_active === true);
 
   return (
     <View className="flex-1">
@@ -128,7 +154,7 @@ export default function GroupDetailsScreen() {
         title={group.name}
         subtitle={group.teacher_name}
         right={
-          group.active_live ? (
+          activeLive ? (
             <Badge label={t('liveNow')} tone="success" />
           ) : (
             <Ionicons
@@ -143,7 +169,7 @@ export default function GroupDetailsScreen() {
       <View className="px-4 pb-3">
         <Card
           variant="hero"
-          tone={group.active_live ? 'success' : 'brand'}
+          tone={activeLive ? 'success' : 'brand'}
           className="overflow-hidden"
         >
           <GhostNumber

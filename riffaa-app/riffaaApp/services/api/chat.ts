@@ -1,8 +1,8 @@
 import { apiClient } from "./client";
 
 export interface ChatMessageResponse {
-  id: number;
-  group: number;
+  id: string;
+  group: string;
   sender: {
     id: number;
     username: string;
@@ -20,6 +20,18 @@ export interface ChatMessageResponse {
   file_url: string | null;
   is_pinned: boolean;
   created: string;
+}
+
+export async function getGroupAnnouncements(groupId: string) {
+  const response = await apiClient.get<{
+    results?: { pinned_messages?: ChatMessageResponse[] };
+  }>("chat/", { params: { group_id: groupId } });
+
+  return (response.data.results?.pinned_messages ?? []).map((message) => ({
+    id: message.id,
+    content: message.message ?? "",
+    created_at: message.created,
+  }));
 }
 
 export async function getChatMessages(groupId?: string | number) {

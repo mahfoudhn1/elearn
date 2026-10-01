@@ -30,4 +30,19 @@ export const queryKeys = {
 
   studyStats: (days: number) => ['study-stats', days] as const,
   coursesList: () => ['courses'] as const,
+
+  goals: (includeInactive: boolean = false) =>
+    ['goals', includeInactive ? 'all' : 'active'] as const,
+  goal: (id: string) => ['goals', 'detail', String(id)] as const,
+  goalProgress: () => ['goals', 'progress'] as const,
+  goalHistory: (goalId: string, limit: number) =>
+    ['goals', 'history', String(goalId), limit] as const,
+  goalSuggestion: (metric: string, period: string) =>
+    ['goals', 'suggestion', metric, period] as const,
+
+  analyticsSummary: (range: string) =>
+    ['analytics', 'summary', range] as const,
+  weeklyPattern: (range?: string) =>
+    ['analytics', 'weekly-pattern', range ?? 'all'] as const,
+  studentCourseProgress: () => ['analytics', 'courses'] as const,
 } as const;

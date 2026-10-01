@@ -152,6 +152,14 @@ export default function RootLayout() {
           name="survey/[id]"
           options={{ presentation: 'modal', animation: 'slide_from_bottom', animationDuration: 280 }}
         />
+        <Stack.Screen
+          name="goals/edit"
+          options={{ presentation: 'modal', animation: 'slide_from_bottom', animationDuration: 280 }}
+        />
+        <Stack.Screen
+          name="analytics"
+          options={{ animation: 'fade', animationDuration: 240 }}
+        />
         {/* Fade transitions for detail screens for a softer feel. */}
         <Stack.Screen
           name="player/[lessonId]"
