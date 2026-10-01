@@ -5,8 +5,13 @@ import { ScrollView, View } from 'react-native';
 
 import { CourseCard } from '../../components/CourseCard';
 import { StudyTracker } from '../../components/StudyTracker';
-import { TodayGoalSection } from '../../components/analytics';
-import { HeroCarousel, PromoPill, QuickActionRow, type QuickAction } from '../../components/home';
+import {
+  ContinueStudyCard,
+  HeroCarousel,
+  PromoPill,
+  QuickActionRow,
+  type QuickAction,
+} from '../../components/home';
 import {
   AppText,
   Avatar,
@@ -14,20 +19,16 @@ import {
   Button,
   Card,
   ErrorState,
-  GhostNumber,
   IconButton,
   ProgressBar,
   Row,
   Screen,
   SectionHeader,
   Skeleton,
-  Sparkline,
   Stack,
-  TwoToneNumber,
 } from '../../components/ui';
 import type { IoniconName } from '../../components/ui';
 import { subjectTint } from '../../constants/subjects';
-import { useDirection } from '../../hooks/useDirection';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useUnreadNotificationsCount } from '../../hooks/useUnreadCounts';
 import { useCourses } from '../../hooks/useCourses';
@@ -79,7 +80,6 @@ interface UpNext {
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isRTL } = useDirection();
   const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
   const unreadNotifications = useUnreadNotificationsCount();
@@ -272,84 +272,16 @@ export default function HomeScreen() {
   const promoIcon: IoniconName =
     upNext.kind === 'live' ? 'radio' : hasStreak ? 'flame' : 'sparkles';
 
-  const weeklyHours = Math.round((stats?.windowFocusMinutes ?? 0) / 60);
-  const goalHours =
-    stats && stats.dailyGoalMinutes > 0
-      ? Math.round((stats.dailyGoalMinutes * 7) / 60)
-      : null;
-  const trend = stats?.daily?.map((day) => day.focus_minutes) ?? [];
-  const ghostScore =
-    stats?.avgFocusScore != null
-      ? String(Math.round(stats.avgFocusScore))
-      : hasStreak
-        ? String(stats?.currentStreak)
-        : '—';
-
   const heroCourse = courses[0];
   const heroCourseTint = heroCourse
     ? subjectTint(heroCourse.teacher?.teaching_subjects ?? heroCourse.title)
     : null;
 
-  const focusSlide = statsLoading && !stats ? (
-    <Card variant="hero" tone="brand" className="mx-5">
-      <Skeleton width="40%" height={12} />
-      <View className="mt-4">
-        <Skeleton width="55%" height={38} radius={12} />
-      </View>
-      <View className="mt-6">
-        <Skeleton height={36} />
-      </View>
-      <View className="mt-6">
-        <Skeleton height={44} radius={22} />
-      </View>
-    </Card>
-  ) : (
-    <Card variant="hero" tone="brand" className="mx-5 overflow-hidden">
-      <GhostNumber
-        value={ghostScore}
-        size={120}
-        style={{
-          position: 'absolute',
-          top: -18,
-          ...(isRTL ? { left: -8 } : { right: -8 }),
-        }}
-      />
-      <AppText variant="micro" weight="medium" tone="muted" className="uppercase tracking-widest">
-        {t('focusSession')}
-      </AppText>
-      <View className="mt-2">
-        <TwoToneNumber
-          value={`${weeklyHours}${t('hourShort')}`}
-          secondary={goalHours !== null ? `/ ${goalHours}${t('hourShort')}` : undefined}
-          variant="displayLg"
-        />
-      </View>
-      <AppText variant="micro" tone="subtle" className="mt-1 uppercase tracking-widest">
-        {t('weekHours')}
-      </AppText>
-      <Row justify="space-between" align="flex-end" className="mt-5">
-        {trend.length >= 2 ? (
-          <Sparkline data={trend} width={120} height={36} />
-        ) : (
-          <View />
-        )}
-        <Stack gap={0} align="flex-end">
-          <AppText variant="micro" tone="subtle">
-            {t('avgFocus')}
-          </AppText>
-          <AppText variant="bodySm" weight="medium">
-            {stats?.avgFocusScore != null ? `${Math.round(stats.avgFocusScore)}%` : '—'}
-          </AppText>
-        </Stack>
-      </Row>
-      <Button
-        label={t('startFocus')}
-        icon="timer-outline"
-        fullWidth
-        className="mt-6"
-        onPress={() => router.push('/study-session')}
-      />
-    </Card>
+  const continueStudySlide = (
+    <ContinueStudyCard
+      todayFocusMinutes={stats?.todayFocusMinutes ?? 0}
+      loading={statsLoading && !stats}
+    />
   );
 
   const scheduleSlide =
@@ -514,9 +446,6 @@ export default function HomeScreen() {
         </Row>
       </View>
 
-      {/* Today's goal */}
-      <TodayGoalSection />
-
       {/* Quick actions */}
       <View className="mt-5">
         <QuickActionRow
@@ -528,12 +457,16 @@ export default function HomeScreen() {
 
       {/* Hero carousel */}
       <View className="mt-6">
-        <HeroCarousel slides={[focusSlide, scheduleSlide, continueSlide]} />
+        <HeroCarousel slides={[continueStudySlide, scheduleSlide, continueSlide]} />
       </View>
 
       {/* Study today */}
       <View className="mt-8 px-5">
-        <SectionHeader label={t('yourProgress')} title={t('studyToday')} />
+        <SectionHeader
+          label={t('yourProgress')}
+          title={t('studyToday')}
+          action={{ label: t('viewAnalytics'), onPress: () => router.push('/analytics') }}
+        />
         <StudyTracker
           stats={stats}
           loading={statsLoading}

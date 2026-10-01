@@ -34,8 +34,10 @@ const PHASE_LABELS: Record<string, string> = {
 interface PomodoroClockProps {
   /** Recorded on the session, and used for per-subject stats. */
   subject?: string | null;
-  /** Attributes the time to a schedule item -- this is what exam readiness counts. */
-  scheduleItemId?: number | null;
+  /** UUID of the schedule item to attribute the time to (exam readiness). */
+  scheduleItemId?: string | null;
+  /** Human label for the linked item, shown so the student knows what's timed. */
+  scheduleItemTitle?: string | null;
   plannedPomodoros?: number | null;
   /** Fired when a session closes and the daily rollup has moved. */
   onSessionRecorded?: () => void;
@@ -63,6 +65,7 @@ function formatClock(totalSeconds: number): string {
 export const PomodoroClock: React.FC<PomodoroClockProps> = ({
   subject = null,
   scheduleItemId = null,
+  scheduleItemTitle = null,
   plannedPomodoros = null,
   onSessionRecorded,
   onPomodoroComplete,
@@ -262,6 +265,19 @@ export const PomodoroClock: React.FC<PomodoroClockProps> = ({
           />
         ) : null}
       </Row>
+
+      {scheduleItemTitle ? (
+        <Row
+          gap={6}
+          align="center"
+          className="mt-3 self-start rounded-card border border-hairline bg-surface-2 px-3 py-2"
+        >
+          <Ionicons name="bookmark-outline" size={14} color={tokens.brand} />
+          <AppText variant="caption" tone="muted" numberOfLines={1} className="flex-1">
+            {scheduleItemTitle}
+          </AppText>
+        </Row>
+      ) : null}
 
       {/* Collapsed summary keeps the live state visible without the ring. */}
       {collapsed ? (

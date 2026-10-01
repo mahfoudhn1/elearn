@@ -7,6 +7,7 @@ whoever asks next gets the same answer.
 
 from __future__ import annotations
 
+import logging
 from datetime import timedelta
 
 from django.db import IntegrityError, transaction
@@ -16,6 +17,8 @@ from django.utils import timezone
 from ..models import PersonalScheduleItem, PomodoroInterval, PomodoroSettings, StudySession
 from .localtime import local_date_for
 from .productivity import ProductivityService
+
+logger = logging.getLogger(__name__)
 
 #: Each interruption costs this many points of focus score, up to the cap.
 INTERRUPTION_PENALTY = 5
@@ -332,7 +335,53 @@ class PomodoroService:
             productivity = ProductivityService(self.user, preferences=self.preferences)
             for day in self._affected_local_dates(session):
                 productivity.recompute_daily(day)
+
+            self._record_tracking_activity(session)
         return session
+
+    def _record_tracking_activity(self, session: StudySession) -> None:
+        """Mirror a finished session into the tracking activity layer.
+
+        This is what makes study time show up in the learner's goals, streaks
+        and analytics, and what attributes it to a specific schedule item.
+
+        Best-effort: the schedule app owns the timer, so a tracking problem
+        (including its tables not being migrated yet) must never stop a session
+        from closing. The session's uuid doubles as the idempotency key, so a
+        retried close cannot double-count.
+        """
+        if session.total_focus_seconds <= 0:
+            return
+
+        try:
+            from tracking.constants import STUDY_SESSION
+            from tracking.services import record_activity
+        except Exception:  # pragma: no cover - defensive import guard
+            logger.exception("tracking app unavailable; skipping study mirror")
+            return
+
+        item = session.schedule_item
+        try:
+            with transaction.atomic():
+                record_activity(
+                    self.user,
+                    STUDY_SESSION,
+                    duration_seconds=session.total_focus_seconds,
+                    occurred_at=session.started_at,
+                    client_event_id=session.uuid,
+                    metadata={
+                        "session": str(session.uuid),
+                        "schedule_item": str(item.uuid) if item else None,
+                        "schedule_item_title": getattr(item, "title", None),
+                        "subject": session.subject,
+                        "completed_pomodoros": session.completed_pomodoros,
+                        "focus_score": session.focus_score,
+                    },
+                )
+        except Exception:  # pragma: no cover - never break the timer
+            logger.exception(
+                "failed to mirror study session %s into tracking", session.uuid
+            )
 
     def _focus_score(self, session: StudySession) -> int:
         """Adherence to the planned focus time, less a penalty for interruptions."""

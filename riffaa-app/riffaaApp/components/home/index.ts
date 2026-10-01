@@ -1,3 +1,4 @@
+export { ContinueStudyCard } from './ContinueStudyCard';
 export { HeroCarousel } from './HeroCarousel';
 export type { HeroCarouselProps } from './HeroCarousel';
 export { PromoPill } from './PromoPill';

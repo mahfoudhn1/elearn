@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 
 import {
@@ -28,11 +28,23 @@ import { useTranslation } from '../hooks/useTranslation';
 import {
   useAnalytics,
   useCourseProgress,
-  useGoalProgress,
   useGoalsRefreshOnFlush,
   useWeeklyPattern,
 } from '../hooks/queries';
-import type { AnalyticsRange } from '../services/api/goals';
+import type { AnalyticsRange, AnalyticsSeriesPoint } from '../services/api/goals';
+
+/** Fold study-session and video minutes into one "time studied" series. */
+function combinedMinutes(points: AnalyticsSeriesPoint[]): AnalyticsSeriesPoint[] {
+  return points.map((point) => ({
+    ...point,
+    watch_minutes: point.watch_minutes + point.study_minutes,
+  }));
+}
+
+function percentChange(current: number, previous: number): number | null {
+  if (!previous) return null;
+  return Math.round(((current - previous) / previous) * 1000) / 10;
+}
 
 export default function AnalyticsScreen() {
   const router = useRouter();
@@ -46,7 +58,6 @@ export default function AnalyticsScreen() {
   const heatmap = useAnalytics('90d');
   const pattern = useWeeklyPattern();
   const courses = useCourseProgress();
-  const goalProgress = useGoalProgress();
 
   const data = summary.data;
   const refreshing =
@@ -62,10 +73,16 @@ export default function AnalyticsScreen() {
     heatmap.refetch();
   };
 
-  const watchGoal = (goalProgress.data ?? []).find(
-    (goal) => goal.metric === 'WATCH_MINUTES' && goal.period === 'DAILY',
+  const series = useMemo(() => combinedMinutes(data?.series ?? []), [data]);
+  const heatmapSeries = useMemo(
+    () => combinedMinutes(heatmap.data?.series ?? []),
+    [heatmap.data],
   );
-  const goalMinutes = watchGoal?.progress.target ?? null;
+
+  const previousTotal = data
+    ? data.previous.watch_minutes + data.previous.study_minutes
+    : 0;
+  const totalChange = data ? percentChange(data.total_minutes, previousTotal) : null;
 
   const showInitialError =
     summary.isError && !data && !summary.fromCache && !summary.isLoading;
@@ -107,9 +124,9 @@ export default function AnalyticsScreen() {
             <Stack gap={12}>
               <Row gap={12}>
                 <StatTile
-                  label={t('watchTime')}
-                  value={`${data.total_watch_minutes} ${t('unitMinutes')}`}
-                  change={data.change_percent.watch_minutes}
+                  label={t('studyTime')}
+                  value={`${data.total_minutes} ${t('unitMinutes')}`}
+                  change={totalChange}
                 />
                 <StatTile
                   label={t('lessonsCompleted')}
@@ -130,15 +147,15 @@ export default function AnalyticsScreen() {
 
           {/* Main chart */}
           <Stack gap={12}>
-            <SectionHeader title={t('watchTime')} />
+            <SectionHeader title={t('studyTime')} />
             {summary.isLoading && !data ? (
               <ChartSkeleton />
             ) : data ? (
               <Card>
                 {range === '7d' ? (
-                  <WeeklyBarChart data={data.series} goalMinutes={goalMinutes} />
+                  <WeeklyBarChart data={series} />
                 ) : (
-                  <TrendChart data={data.series} />
+                  <TrendChart data={series} />
                 )}
               </Card>
             ) : null}
@@ -152,7 +169,7 @@ export default function AnalyticsScreen() {
               <ChartSkeleton height={100} />
             ) : (
               <Card>
-                <ActivityHeatmap data={heatmap.data?.series ?? []} />
+                <ActivityHeatmap data={heatmapSeries} />
               </Card>
             )}
           </Stack>
@@ -173,7 +190,9 @@ export default function AnalyticsScreen() {
 
           {data && data.best_day ? (
             <AppText variant="caption" tone="subtle">
-              {`${t('bestDay')}: ${data.best_day.date} · ${data.best_day.watch_minutes} ${t('unitMinutes')}`}
+              {`${t('bestDay')}: ${data.best_day.date} · ${
+                data.best_day.watch_minutes + data.best_day.study_minutes
+              } ${t('unitMinutes')}`}
             </AppText>
           ) : null}
         </Stack>

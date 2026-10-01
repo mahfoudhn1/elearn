@@ -11,6 +11,7 @@ import {
   ErrorState,
   GhostNumber,
   IconButton,
+  ProgressBar,
   Row,
   Screen,
   ScreenHeader,
@@ -89,11 +90,32 @@ export default function ScheduleScreen() {
     remove.mutate(item.id);
   };
 
+  // Open the focus timer attributed to this specific task or exam.
+  const startStudying = (item: ScheduleItem) => {
+    const params: Record<string, string> = {
+      scheduleItemId: String(item.id),
+      title: item.title,
+    };
+    if (item.subject) params.subject = item.subject;
+    if (item.estimated_duration_minutes) {
+      params.plannedPomodoros = String(
+        Math.max(1, Math.round(item.estimated_duration_minutes / 25)),
+      );
+    }
+    router.push({ pathname: '/study-session', params });
+  };
+
   const renderItem = (item: ScheduleItem, showMarker: boolean) => {
     const start = new Date(item.start_datetime);
     const end = new Date(item.end_datetime);
     const done = item.status === 'COMPLETED';
     const live = showMarker && start <= new Date() && end >= new Date();
+    const targetMinutes =
+      item.target_prep_minutes ?? item.estimated_duration_minutes ?? null;
+    const trackedMinutes = item.actual_duration_minutes ?? 0;
+    const trackedPercent = targetMinutes
+      ? Math.min(100, Math.round((trackedMinutes / targetMinutes) * 100))
+      : null;
 
     return (
       <Card key={item.id} variant="list" subject={item.subject}>
@@ -138,6 +160,34 @@ export default function ScheduleScreen() {
             />
           </Stack>
         </Row>
+
+        {!done ? (
+          <Stack gap={8} className="mt-3">
+            {targetMinutes ? (
+              <Stack gap={6}>
+                <Row justify="space-between" align="center">
+                  <AppText variant="micro" tone="subtle">
+                    {t('trackedProgress')}
+                  </AppText>
+                  <AppText variant="micro" weight="medium" tone="brand">
+                    {trackedMinutes} / {targetMinutes} {t('unitMinutes')}
+                  </AppText>
+                </Row>
+                <ProgressBar value={trackedPercent ?? 0} />
+              </Stack>
+            ) : null}
+            <Row justify="space-between" align="center">
+              <Badge label={`${item.progress_percentage}%`} tone="neutral" />
+              <Button
+                label={t('startStudying')}
+                icon="play"
+                size="sm"
+                variant="secondary"
+                onPress={() => startStudying(item)}
+              />
+            </Row>
+          </Stack>
+        ) : null}
       </Card>
     );
   };

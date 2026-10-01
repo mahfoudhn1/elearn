@@ -152,6 +152,21 @@ class TrackingAPITests(APITestCase):
         )
         self.assertEqual(event.duration_seconds, MAX_DURATION_SECONDS)
 
+    def test_study_session_minutes_roll_up(self):
+        record_activity(self.user, "STUDY_SESSION", duration_seconds=1800)
+        row = DailyActivity.objects.get(user=self.user, date=local_today(self.user))
+        self.assertEqual(row.study_minutes, 30)
+        self.assertEqual(row.event_count, 1)
+
+    def test_server_study_session_is_not_capped(self):
+        # Only client event types are clamped; a long study session is trusted.
+        event = record_activity(
+            self.user, "STUDY_SESSION", duration_seconds=5 * 3600
+        )
+        self.assertEqual(event.duration_seconds, 5 * 3600)
+        row = DailyActivity.objects.get(user=self.user, date=local_today(self.user))
+        self.assertEqual(row.study_minutes, 300)
+
     # --- Local day handling ------------------------------------------------
 
     def test_algeria_boundary_event_counts_on_next_local_day(self):

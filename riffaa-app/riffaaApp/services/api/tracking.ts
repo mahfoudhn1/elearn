@@ -183,9 +183,9 @@ export async function getStudyStats(days = 7): Promise<StudyStats> {
 
 export interface StartStudySessionPayload {
   subject?: string | null;
-  /** Attributes the time to a schedule item, which is what exam readiness counts. */
-  schedule_item?: number | null;
-  group?: number | null;
+  /** UUID of the linked schedule item; attributes the time to that task/exam. */
+  schedule_item?: string | null;
+  group?: string | null;
   planned_pomodoros?: number | null;
   notes?: string | null;
 }
@@ -295,7 +295,7 @@ export async function updatePomodoroSettings(payload: Partial<PomodoroSettings>)
 }
 
 export interface ExamReadiness {
-  id: number;
+  id: string;
   title: string;
   subject: string | null;
   priority: string;

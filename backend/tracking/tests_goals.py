@@ -324,3 +324,11 @@ class AnalyticsTests(TestCase):
         self.assertEqual(data["change_percent"]["watch_minutes"], -100.0)
         self.assertEqual(len(data["series"]), 7)
 
+    def test_summary_includes_study_session_minutes(self):
+        record_activity(self.user, "STUDY_SESSION", duration_seconds=1800)
+        data = summary(self.user, "7d")
+        self.assertEqual(data["total_study_minutes"], 30)
+        self.assertEqual(data["total_minutes"], 30)
+        self.assertEqual(data["series"][-1]["study_minutes"], 30)
+        self.assertEqual(data["active_days"], 1)
+

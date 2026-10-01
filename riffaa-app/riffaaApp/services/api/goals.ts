@@ -77,12 +77,15 @@ export type AnalyticsRange = '7d' | '30d' | '90d';
 export interface AnalyticsSeriesPoint {
   date: string;
   watch_minutes: number;
+  /** Focus minutes from closed study sessions. */
+  study_minutes: number;
   lesson_count: number;
   quiz_count: number;
 }
 
 export interface AnalyticsTotals {
   watch_minutes: number;
+  study_minutes: number;
   lessons_completed: number;
   quizzes_submitted: number;
 }
@@ -90,6 +93,7 @@ export interface AnalyticsTotals {
 export interface AnalyticsBestDay {
   date: string;
   watch_minutes: number;
+  study_minutes: number;
   lesson_count: number;
   quiz_count: number;
 }
@@ -99,6 +103,9 @@ export interface AnalyticsSummary {
   start: string;
   end: string;
   total_watch_minutes: number;
+  total_study_minutes: number;
+  /** watch + study combined. */
+  total_minutes: number;
   lessons_completed: number;
   quizzes_submitted: number;
   active_days: number;
@@ -108,6 +115,7 @@ export interface AnalyticsSummary {
   previous: AnalyticsTotals;
   change_percent: {
     watch_minutes: number | null;
+    study_minutes: number | null;
     lessons_completed: number | null;
     quizzes_submitted: number | null;
   };

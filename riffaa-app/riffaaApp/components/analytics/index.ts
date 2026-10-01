@@ -27,7 +27,6 @@ export { StreakBadge } from './StreakBadge';
 export type { StreakBadgeProps } from './StreakBadge';
 export { TargetStepper } from './TargetStepper';
 export type { TargetStepperProps } from './TargetStepper';
-export { TodayGoalSection } from './TodayGoalSection';
 export { useGoalMetCelebration } from './useGoalMetCelebration';
 export { WeekdayInsight } from './WeekdayInsight';
 export type { WeekdayInsightProps } from './WeekdayInsight';

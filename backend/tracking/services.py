@@ -15,10 +15,12 @@ from django.utils import timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from .constants import (
+    CLIENT_EVENT_TYPES,
     DEFAULT_TIMEZONE,
     LESSON_COMPLETED,
     MAX_DURATION_SECONDS,
     QUIZ_SUBMITTED,
+    STUDY_SESSION,
     VIDEO_WATCH,
 )
 from .models import ActivityEvent, DailyActivity
@@ -74,6 +76,7 @@ def _recompute_daily(user, local_date, row):
     ).aggregate(
         event_count=Count("id"),
         watch_seconds=Sum("duration_seconds", filter=Q(event_type=VIDEO_WATCH)),
+        study_seconds=Sum("duration_seconds", filter=Q(event_type=STUDY_SESSION)),
         lesson_count=Count("id", filter=Q(event_type=LESSON_COMPLETED)),
         quiz_count=Count("id", filter=Q(event_type=QUIZ_SUBMITTED)),
     )
@@ -82,8 +85,15 @@ def _recompute_daily(user, local_date, row):
     row.lesson_count = aggregate["lesson_count"] or 0
     row.quiz_count = aggregate["quiz_count"] or 0
     row.watch_minutes = int((aggregate["watch_seconds"] or 0) / 60)
+    row.study_minutes = int((aggregate["study_seconds"] or 0) / 60)
     row.save(
-        update_fields=["event_count", "lesson_count", "quiz_count", "watch_minutes"]
+        update_fields=[
+            "event_count",
+            "lesson_count",
+            "quiz_count",
+            "watch_minutes",
+            "study_minutes",
+        ]
     )
 
 
@@ -113,7 +123,9 @@ def record_activity(
     existing event without creating a second row or double-counting.
     """
     duration_seconds = max(0, int(duration_seconds or 0))
-    if duration_seconds > MAX_DURATION_SECONDS:
+    # Only clamp what a client reports. Server-derived events (a closed study
+    # session) are trusted and may legitimately exceed the client cap.
+    if event_type in CLIENT_EVENT_TYPES and duration_seconds > MAX_DURATION_SECONDS:
         duration_seconds = MAX_DURATION_SECONDS
     occurred_at = occurred_at or timezone.now()
     metadata = metadata or {}

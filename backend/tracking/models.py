@@ -78,6 +78,8 @@ class DailyActivity(UUIDModel):
     lesson_count = models.PositiveIntegerField(default=0)
     quiz_count = models.PositiveIntegerField(default=0)
     watch_minutes = models.PositiveIntegerField(default=0)
+    # Focus minutes from closed Pomodoro/study sessions (STUDY_SESSION events).
+    study_minutes = models.PositiveIntegerField(default=0)
 
     class Meta:
         unique_together = ("user", "date")

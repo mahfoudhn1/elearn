@@ -72,6 +72,7 @@ def longest_streak(user):
 def _totals(rows):
     return {
         "watch_minutes": sum(row.watch_minutes for row in rows),
+        "study_minutes": sum(row.study_minutes for row in rows),
         "lessons_completed": sum(row.lesson_count for row in rows),
         "quizzes_submitted": sum(row.quiz_count for row in rows),
     }
@@ -103,11 +104,14 @@ def summary(user, range_key="7d"):
     current = _totals(rows)
     previous = _totals(previous_rows)
 
-    best = max(rows, key=lambda r: (r.watch_minutes, r.lesson_count), default=None)
+    best = max(
+        rows, key=lambda r: (r.watch_minutes + r.study_minutes, r.lesson_count), default=None
+    )
     best_day = (
         {
             "date": best.date.isoformat(),
             "watch_minutes": best.watch_minutes,
+            "study_minutes": best.study_minutes,
             "lesson_count": best.lesson_count,
             "quiz_count": best.quiz_count,
         }
@@ -123,6 +127,7 @@ def summary(user, range_key="7d"):
             {
                 "date": day.isoformat(),
                 "watch_minutes": row.watch_minutes if row else 0,
+                "study_minutes": row.study_minutes if row else 0,
                 "lesson_count": row.lesson_count if row else 0,
                 "quiz_count": row.quiz_count if row else 0,
             }
@@ -133,6 +138,8 @@ def summary(user, range_key="7d"):
         "start": start.isoformat(),
         "end": today.isoformat(),
         "total_watch_minutes": current["watch_minutes"],
+        "total_study_minutes": current["study_minutes"],
+        "total_minutes": current["watch_minutes"] + current["study_minutes"],
         "lessons_completed": current["lessons_completed"],
         "quizzes_submitted": current["quizzes_submitted"],
         "active_days": sum(1 for row in rows if row.event_count > 0),
@@ -143,6 +150,9 @@ def summary(user, range_key="7d"):
         "change_percent": {
             "watch_minutes": _pct_change(
                 current["watch_minutes"], previous["watch_minutes"]
+            ),
+            "study_minutes": _pct_change(
+                current["study_minutes"], previous["study_minutes"]
             ),
             "lessons_completed": _pct_change(
                 current["lessons_completed"], previous["lessons_completed"]
@@ -170,9 +180,11 @@ def weekly_pattern(user, range_key=None):
     buckets = {
         index: {"total_minutes": 0, "active_days": 0} for index in range(7)
     }
-    for day, minutes in rows.values_list("date", "watch_minutes"):
+    for day, watch_minutes, study_minutes in rows.values_list(
+        "date", "watch_minutes", "study_minutes"
+    ):
         bucket = buckets[day.weekday()]
-        bucket["total_minutes"] += minutes
+        bucket["total_minutes"] += watch_minutes + study_minutes
         bucket["active_days"] += 1
 
     pattern = []
