@@ -5,8 +5,10 @@ from .views import (
     ActivityEventViewSet,
     AnalyticsSummaryView,
     DailyActivityView,
+    DailyGoalView,
     StudentCoursesProgressView,
     StudyGoalViewSet,
+    StudyTimeView,
     TeacherStudentsProgressView,
     TrackingOverviewView,
     WeeklyPatternView,
@@ -19,6 +21,8 @@ router.register(r"goals", StudyGoalViewSet, basename="tracking-goal")
 urlpatterns = [
     path("overview/", TrackingOverviewView.as_view(), name="tracking-overview"),
     path("daily/", DailyActivityView.as_view(), name="tracking-daily"),
+    path("daily-goal/", DailyGoalView.as_view(), name="tracking-daily-goal"),
+    path("study-time/", StudyTimeView.as_view(), name="tracking-study-time"),
     path(
         "analytics/summary/",
         AnalyticsSummaryView.as_view(),

@@ -10,7 +10,6 @@ import {
   AppText,
   Badge,
   Button,
-  Card,
   GhostNumber,
   ProgressBar,
   Row,
@@ -18,6 +17,7 @@ import {
   Stack,
   TwoToneNumber,
 } from '../ui';
+import { Glass } from '../ui/Glass';
 
 interface ContinueStudyCardProps {
   /** Today's pomodoro focus minutes, shown when there is no goal yet. */
@@ -26,9 +26,9 @@ interface ContinueStudyCardProps {
 }
 
 /**
- * Orange home hero: continue a study session, and set or edit the learner's
- * primary goal in the same card so home does not need a separate "set a goal"
- * block. Progress comes from the server-owned goals API, not a default target.
+ * Home hero (glass). Keeps the ghost number as the signature, then the
+ * current/target value, one bar, and the two actions. Going past the goal is
+ * positive: the bar stays full and the extra shows in green, never as an error.
  */
 export function ContinueStudyCard({
   todayFocusMinutes = 0,
@@ -42,33 +42,39 @@ export function ContinueStudyCard({
 
   if (loading || (isLoading && !data)) {
     return (
-      <Card variant="hero" tone="brand" className="mx-5">
+      <Glass accent>
         <Skeleton width="40%" height={12} />
         <View className="mt-4">
           <Skeleton width="55%" height={38} radius={12} />
         </View>
         <View className="mt-6">
-          <Skeleton height={36} />
+          <Skeleton height={8} radius={4} />
         </View>
         <View className="mt-6">
           <Skeleton height={44} radius={22} />
         </View>
-      </Card>
+      </Glass>
     );
   }
 
   const unit = goal ? t(metricMeta(goal.metric).unitKey) : t('unitMinutes');
-  const percent = goal?.progress.percent ?? 0;
+  const met = Boolean(goal?.progress.met);
+  const target = goal?.progress.target ?? 0;
+  const current = goal?.progress.current ?? 0;
+  const extra = goal && target > 0 ? Math.max(0, current - target) : 0;
+  const rawPercent = goal?.progress.percent ?? 0;
+  const barPercent = Math.min(100, Math.round(rawPercent)); // bar capped, numbers never
+
   const statusTone = !goal
     ? 'neutral'
-    : goal.progress.met
+    : met
       ? 'success'
       : goal.progress.on_track
         ? 'brand'
-        : 'danger';
+        : 'neutral';
   const statusLabel = !goal
     ? t('noGoalTitle')
-    : goal.progress.met
+    : met
       ? t('goalMetLabel')
       : goal.progress.on_track
         ? t('onTrack')
@@ -82,10 +88,10 @@ export function ContinueStudyCard({
     router.push('/goals/edit');
   };
 
-  const ghostValue = goal ? String(percent) : String(Math.round(todayFocusMinutes));
+  const ghostValue = goal ? String(Math.round(rawPercent)) : String(Math.round(todayFocusMinutes));
 
   return (
-    <Card variant="hero" tone="brand" className="mx-5 overflow-hidden">
+    <Glass accent>
       <GhostNumber
         value={ghostValue}
         size={120}
@@ -95,35 +101,41 @@ export function ContinueStudyCard({
           ...(isRTL ? { left: -8 } : { right: -8 }),
         }}
       />
-      <AppText variant="micro" weight="medium" tone="muted" className="uppercase tracking-widest">
-        {t('continueStudying')}
-      </AppText>
 
       {goal ? (
         <>
+          <Row gap={8} align="center" wrap>
+            <AppText variant="bodySm" tone="muted">
+              {t(metricMeta(goal.metric).labelKey)}
+            </AppText>
+            <Badge label={statusLabel} tone={statusTone} />
+          </Row>
           <View className="mt-2">
             <TwoToneNumber
-              value={goal.progress.current}
-              secondary={`/ ${goal.progress.target} ${unit}`}
+              value={current}
+              secondary={`/ ${target} ${unit}`}
               variant="displayLg"
             />
           </View>
-          <AppText variant="micro" tone="subtle" className="mt-1 uppercase tracking-widest">
-            {t(metricMeta(goal.metric).labelKey)}
-          </AppText>
-          <ProgressBar value={percent} className="mt-4" />
-          <Row gap={8} align="center" wrap className="mt-3">
-            <Badge label={statusLabel} tone={statusTone} />
-            {goal.progress.met ? null : (
+          <ProgressBar value={barPercent} height={8} className="mt-4" />
+          <Row justify="space-between" align="center" className="mt-2">
+            {met ? (
+              <AppText variant="caption" weight="medium" tone="success">
+                {extra > 0 ? `+${extra} ${unit}` : t('goalMetLabel')}
+              </AppText>
+            ) : (
               <AppText variant="caption" tone="muted">
                 {t('remaining', { value: `${goal.progress.remaining} ${unit}` })}
               </AppText>
             )}
-            <StreakBadge count={goal.streak} />
+            {goal.streak > 0 ? <StreakBadge count={goal.streak} /> : null}
           </Row>
         </>
       ) : (
         <>
+          <AppText variant="bodySm" tone="muted">
+            {t('todayFocus')}
+          </AppText>
           <View className="mt-2">
             <TwoToneNumber
               value={Math.round(todayFocusMinutes)}
@@ -131,9 +143,6 @@ export function ContinueStudyCard({
               variant="displayLg"
             />
           </View>
-          <AppText variant="micro" tone="subtle" className="mt-1 uppercase tracking-widest">
-            {t('todayFocus')}
-          </AppText>
           <AppText variant="bodySm" tone="muted" className="mt-2">
             {t('noGoalMessage')}
           </AppText>
@@ -155,6 +164,6 @@ export function ContinueStudyCard({
           onPress={openGoalEditor}
         />
       </Stack>
-    </Card>
+    </Glass>
   );
 }

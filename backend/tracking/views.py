@@ -1,3 +1,5 @@
+from datetime import date as date_cls
+
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Sum
 from django.shortcuts import get_object_or_404
@@ -13,6 +15,7 @@ from courses.permissions import get_student, get_teacher
 from core.views import UUIDLookupMixin
 
 from .analytics import current_streak, summary, weekly_pattern
+from .daily_goal import get_or_create_daily_goal
 from .goals import (
     compute_goal_progress,
     goal_streak,
@@ -23,10 +26,12 @@ from .goals import (
 from .models import ActivityEvent, DailyActivity, GoalPeriodResult, StudyGoal
 from .serializers import (
     ActivityEventSerializer,
+    DailyGoalSerializer,
     GoalPeriodResultSerializer,
     StudyGoalSerializer,
 )
 from .services import local_today, record_activity
+from .study_time import STUDY_RANGES, daily_report, range_report
 
 
 class ActivityEventViewSet(viewsets.ModelViewSet):
@@ -190,6 +195,70 @@ class StudyGoalViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return Response(suggest_target(request.user, metric, period))
+
+
+class DailyGoalView(generics.GenericAPIView):
+    """The user's single daily study goal and today's resolved report.
+
+    GET returns the editable goal plus ``today`` (the same shape as
+    ``study-time/`` for one day), so the goal card and the analytics screens
+    read the same numbers. PATCH edits the target and per-day/weekday
+    overrides; the singleton row is created on first access.
+    """
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = DailyGoalSerializer
+
+    def _payload(self, request, goal):
+        return {
+            "goal": self.get_serializer(goal).data,
+            "today": daily_report(request.user, local_today(request.user)),
+        }
+
+    def get(self, request, *args, **kwargs):
+        goal = get_or_create_daily_goal(request.user)
+        return Response(self._payload(request, goal))
+
+    def patch(self, request, *args, **kwargs):
+        goal = get_or_create_daily_goal(request.user)
+        serializer = self.get_serializer(goal, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(self._payload(request, goal))
+
+
+class StudyTimeView(generics.GenericAPIView):
+    """Unified study time for one day or a ``day``/``week``/``month`` range.
+
+    ``?range=day`` (the default) accepts an optional ``?date=YYYY-MM-DD``;
+    ``week`` and ``month`` cover the 7/30 days ending today. The numbers come
+    from credited focus intervals, so every screen agrees.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        range_key = request.query_params.get("range", "day")
+        if range_key not in STUDY_RANGES:
+            allowed = ", ".join(STUDY_RANGES)
+            return Response(
+                {"range": [f"range must be one of: {allowed}."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if range_key == "day":
+            date_param = request.query_params.get("date")
+            if date_param:
+                try:
+                    day = date_cls.fromisoformat(date_param)
+                except ValueError:
+                    return Response(
+                        {"date": ["date must be an ISO date (YYYY-MM-DD)."]},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+            else:
+                day = local_today(request.user)
+            return Response(daily_report(request.user, day))
+        return Response(range_report(request.user, range_key))
 
 
 def _streak_days(user):

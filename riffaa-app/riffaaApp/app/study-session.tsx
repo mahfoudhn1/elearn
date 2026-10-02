@@ -39,7 +39,9 @@ export default function StudySessionScreen() {
     title?: string;
     plannedPomodoros?: string;
   }>();
-  const scheduleItemId = params.scheduleItemId ?? null;
+  // Once a session is running, the server is the source of truth for what is
+  // being studied; route params only fill in the gap before it starts.
+  const scheduleItemId = activeSession?.schedule_item ?? params.scheduleItemId ?? null;
 
   // Fresh item data so tracked minutes update the moment a session is recorded.
   const { data: schedule } = useSchedule();
@@ -48,8 +50,8 @@ export default function StudySessionScreen() {
     return items.find((entry) => String(entry.id) === scheduleItemId);
   }, [schedule, scheduleItemId]);
 
-  const title = item?.title ?? params.title ?? null;
-  const subject = item?.subject ?? params.subject ?? null;
+  const title = item?.title ?? activeSession?.schedule_item_title ?? params.title ?? null;
+  const subject = item?.subject ?? activeSession?.subject ?? params.subject ?? null;
   const targetMinutes =
     item?.target_prep_minutes ?? item?.estimated_duration_minutes ?? null;
   const actualMinutes = item?.actual_duration_minutes ?? 0;

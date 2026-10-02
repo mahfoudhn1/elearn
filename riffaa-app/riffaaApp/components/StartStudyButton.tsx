@@ -18,7 +18,11 @@ export function StartStudyButton({ source }: { source: PomodoroSource }) {
     setBusy(true);
     try {
       if (!activeSession) await start(source);
-      router.push('/study-session');
+      const params: Record<string, string> = {};
+      if (source.scheduleItemId) params.scheduleItemId = source.scheduleItemId;
+      if (source.subject) params.subject = source.subject;
+      if (source.title) params.title = source.title;
+      router.push({ pathname: '/study-session', params });
     } catch (error) {
       Alert.alert(t('error'), describeApiError(error));
     } finally {

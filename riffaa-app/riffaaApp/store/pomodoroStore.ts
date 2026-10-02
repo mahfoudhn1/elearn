@@ -88,6 +88,7 @@ function withSession(session: StudySession | null) {
           type: open.source_type ?? (open.schedule_item ? 'SCHEDULE' : 'UNSCHEDULED'),
           id: open.source_id ?? open.schedule_item,
           subject: open.subject,
+          title: open.schedule_item_title,
           courseUuid: open.course_uuid,
           isScheduled: open.is_scheduled,
           scheduleItemId: open.schedule_item,

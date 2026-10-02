@@ -14,11 +14,16 @@ function formatClock(milliseconds: number) {
 export function SharedPomodoroClock({ title }: { title?: string | null }) {
   const { t } = useTranslation();
   const { tokens } = useTheme();
-  const { activeSession, phase, endsAt, cycleCount, settings, pause, resume, skip, stop, updateSettings } = usePomodoro();
+  const { activeSession, source, phase, endsAt, cycleCount, settings, pause, resume, skip, stop, updateSettings } = usePomodoro();
   const [now, setNow] = useState(() => Date.now());
   const [busy, setBusy] = useState(false);
   const isRunning = activeSession?.current_interval?.status === 'RUNNING';
   const interval = activeSession?.current_interval;
+  // Prefer the server-resolved schedule item, then the persisted source, then
+  // whatever route param the caller passed. This is what makes the timer open
+  // pre-labelled with the scheduled session it belongs to.
+  const contextTitle =
+    activeSession?.schedule_item_title ?? source?.title ?? title ?? null;
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
@@ -70,10 +75,15 @@ export function SharedPomodoroClock({ title }: { title?: string | null }) {
         <AppText variant="caption" tone="muted">{t('completedPomodoros')}: {cycleCount}</AppText>
       </Row>
 
-      {title || activeSession.source_id ? (
-        <AppText variant="bodySm" tone="muted" numberOfLines={1} className="mt-3">
-          {title ?? activeSession.subject ?? t('unscheduledStudy')}
-        </AppText>
+      {contextTitle || activeSession.subject || activeSession.source_id ? (
+        <Row gap={6} align="center" className="mt-3">
+          {contextTitle ? (
+            <Ionicons name="bookmark-outline" size={14} color={tokens.brand} />
+          ) : null}
+          <AppText variant="bodySm" tone="muted" numberOfLines={1} className="flex-1">
+            {contextTitle ?? activeSession.subject ?? t('unscheduledStudy')}
+          </AppText>
+        </Row>
       ) : null}
 
       <Stack gap={8} align="center" className="py-7">

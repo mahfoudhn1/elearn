@@ -58,6 +58,14 @@ MAX_DURATION_SECONDS = 4 * 60 * 60
 
 # --- Study goals ----------------------------------------------------------
 
+# Default target of a user's daily study goal, in minutes. Matches the legacy
+# PomodoroSettings.daily_goal_minutes default so a migrated user keeps the
+# same target until they edit it.
+DEFAULT_DAILY_GOAL_MINUTES = 120
+
+# A daily goal can never exceed the minutes in a day.
+MAX_DAILY_GOAL_MINUTES = 24 * 60
+
 MAX_ACTIVE_GOALS = 3
 
 # Sensible per-metric ceilings, keyed by (metric value, period value).

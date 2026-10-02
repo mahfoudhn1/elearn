@@ -1,3 +1,5 @@
+from datetime import date as date_cls
+
 from django.utils import timezone
 from rest_framework import serializers
 
@@ -10,11 +12,12 @@ from .constants import (
     CLIENT_EVENT_TYPES,
     MAX_ACTIVE_GOALS,
     MAX_BACKDATE_DAYS,
+    MAX_DAILY_GOAL_MINUTES,
     MAX_DURATION_SECONDS,
     MAX_FUTURE_SKEW_MINUTES,
     max_target_for,
 )
-from .models import ActivityEvent, GoalPeriodResult, StudyGoal
+from .models import ActivityEvent, Goal, GoalPeriodResult, StudyGoal
 
 
 class ActivityEventSerializer(serializers.ModelSerializer):
@@ -188,6 +191,99 @@ class StudyGoalSerializer(UUIDModelSerializer):
                         )
                     }
                 )
+        return attrs
+
+
+class DailyGoalSerializer(UUIDModelSerializer):
+    """The single daily study goal, including its per-day overrides.
+
+    ``target`` and override values are expressed in the goal's ``metric``
+    (minutes or hours) and may be ``0`` to mean "no goal that day". The
+    per-day keys are ISO dates; weekday keys are ``"0"`` (Monday) .. ``"6"``
+    (Sunday).
+    """
+
+    target = serializers.IntegerField(min_value=0, required=False)
+    period = serializers.ChoiceField(choices=Goal.Period.choices, read_only=True)
+    overrides = serializers.DictField(required=False)
+    weekday_overrides = serializers.DictField(required=False)
+
+    class Meta:
+        model = Goal
+        fields = [
+            "id",
+            "metric",
+            "period",
+            "target",
+            "is_active",
+            "effective_from",
+            "overrides",
+            "weekday_overrides",
+            "created_at",
+            "updated_at",
+        ]
+        # period is fixed to DAILY for this singleton goal; metadata is internal.
+        read_only_fields = ["id", "period", "effective_from", "created_at", "updated_at"]
+
+    @staticmethod
+    def _max_units(metric):
+        if metric == Goal.Metric.HOURS:
+            return MAX_DAILY_GOAL_MINUTES // 60
+        return MAX_DAILY_GOAL_MINUTES
+
+    def _coerce_units(self, metric, value):
+        try:
+            units = int(value)
+        except (TypeError, ValueError):
+            raise serializers.ValidationError("Value must be a whole number.")
+        maximum = self._max_units(metric)
+        if units < 0 or units > maximum:
+            raise serializers.ValidationError(
+                f"Value must be between 0 and {maximum}."
+            )
+        return units
+
+    def _clean_overrides(self, values, metric, *, dates, field):
+        clean = {}
+        for key, raw in values.items():
+            key = str(key)
+            if dates:
+                try:
+                    date_cls.fromisoformat(key)
+                except ValueError:
+                    raise serializers.ValidationError(
+                        {field: f"'{key}' is not an ISO date (YYYY-MM-DD)."}
+                    )
+            elif key not in {str(day) for day in range(7)}:
+                raise serializers.ValidationError(
+                    {field: f"'{key}' is not a weekday (0=Monday .. 6=Sunday)."}
+                )
+            try:
+                clean[key] = self._coerce_units(metric, raw)
+            except serializers.ValidationError as exc:
+                raise serializers.ValidationError({field: exc.detail})
+        return clean
+
+    def validate(self, attrs):
+        # Resolve the metric first so a same-request metric + target change is
+        # validated against the new metric, not the stored one.
+        instance = self.instance
+        metric = attrs.get("metric", instance.metric if instance else Goal.Metric.MINUTES)
+
+        target = attrs.get("target", instance.target if instance else None)
+        if target is not None and target > self._max_units(metric):
+            raise serializers.ValidationError(
+                {"target": f"The daily goal cannot exceed {self._max_units(metric)}."}
+            )
+
+        if "overrides" in attrs:
+            attrs["overrides"] = self._clean_overrides(
+                attrs["overrides"], metric, dates=True, field="overrides"
+            )
+        if "weekday_overrides" in attrs:
+            attrs["weekday_overrides"] = self._clean_overrides(
+                attrs["weekday_overrides"], metric, dates=False, field="weekday_overrides"
+            )
         return attrs
 
 

@@ -5,16 +5,8 @@ import { useGoalProgress } from '../../hooks/queries';
 import { useTranslation } from '../../hooks/useTranslation';
 import { metricMeta } from '../analytics/metricMeta';
 import { StreakBadge } from '../analytics/StreakBadge';
-import {
-  AppText,
-  Badge,
-  Button,
-  Card,
-  ProgressBar,
-  Row,
-  Skeleton,
-  Stack,
-} from '../ui';
+import { AppText, Badge, Button, ProgressBar, Row, Skeleton, Stack } from '../ui';
+import { Glass } from '../ui/Glass';
 
 interface TrackingCardProps {
   /** Today's pomodoro focus minutes, shown when there is no goal yet. */
@@ -23,9 +15,9 @@ interface TrackingCardProps {
 }
 
 /**
- * Home hero: today's study target as a circular progress ring. Groups the
- * current/target metric, the on-track status tag and the streak above a
- * full-width "continue studying" action, with goal editing as a quiet footer.
+ * Home hero (glass). Big current value, target beside it, one progress bar,
+ * status + streak, then the two actions. Going past the goal is a good
+ * thing: the bar stays full and the extra is shown in green, never as an error.
  */
 export function TrackingCard({ todayFocusMinutes = 0, loading = false }: TrackingCardProps) {
   const router = useRouter();
@@ -35,31 +27,41 @@ export function TrackingCard({ todayFocusMinutes = 0, loading = false }: Trackin
 
   if (loading || (isLoading && !data)) {
     return (
-      <Card variant="hero" tone="brand" className="mx-5">
+      <Glass accent>
         <Skeleton width="40%" height={12} />
         <View className="mt-5">
-          <Skeleton width="55%" height={34} radius={10} />
+          <Skeleton width="55%" height={44} radius={12} />
         </View>
         <View className="mt-4">
-          <Skeleton height={6} radius={3} />
+          <Skeleton height={8} radius={4} />
         </View>
-        <View className="mt-5"><Skeleton height={44} radius={22} /></View>
-      </Card>
+        <View className="mt-5">
+          <Skeleton height={44} radius={22} />
+        </View>
+      </Glass>
     );
   }
 
   const unit = goal ? t(metricMeta(goal.metric).unitKey) : t('unitMinutes');
-  const percent = goal?.progress.percent ?? 0;
+  const metricLabel = goal ? t(metricMeta(goal.metric).labelKey) : t('todayFocus');
+  const current = goal ? goal.progress.current : Math.round(todayFocusMinutes);
+  const target = goal ? goal.progress.target : 0;
+
+  const met = Boolean(goal?.progress.met);
+  const extra = goal && target > 0 ? Math.max(0, current - target) : 0;
+  // Bar is capped visually only; the numbers are never capped.
+  const barPercent = goal ? Math.min(100, Math.round(goal.progress.percent)) : 0;
+
   const statusTone = !goal
     ? 'neutral'
-    : goal.progress.met
+    : met
       ? 'success'
       : goal.progress.on_track
         ? 'brand'
-        : 'danger';
+        : 'neutral';
   const statusLabel = !goal
     ? t('noGoalTitle')
-    : goal.progress.met
+    : met
       ? t('goalMetLabel')
       : goal.progress.on_track
         ? t('onTrack')
@@ -73,47 +75,39 @@ export function TrackingCard({ todayFocusMinutes = 0, loading = false }: Trackin
     router.push('/goals/edit');
   };
 
-  const current = goal ? goal.progress.current : Math.round(todayFocusMinutes);
-  const target = goal ? goal.progress.target : 0;
-  const metricLabel = goal ? t(metricMeta(goal.metric).labelKey) : t('todayFocus');
-
   return (
-    <Card variant="hero" tone="brand" className="mx-5">
-      <AppText variant="micro" weight="medium" tone="muted" className="uppercase tracking-widest">
-        {t('continueStudying')}
-      </AppText>
-
-      <Row justify="space-between" align="flex-end" className="mt-4">
-        <Stack gap={2}>
-          <AppText variant="micro" tone="subtle" className="uppercase tracking-widest">
-            {metricLabel}
-          </AppText>
-          <Row gap={6} align="flex-end">
-            <AppText variant="display" weight="light">{current}</AppText>
-            <AppText variant="caption" tone="muted" className="mb-1">{unit}</AppText>
-          </Row>
-        </Stack>
-        <Stack gap={2} align="flex-end">
-          <AppText variant="caption" tone="muted">{t('progress')}</AppText>
-          <AppText variant="bodySm" weight="semibold">
-            {goal ? `${current} / ${target} ${unit}` : t('noGoalTitle')}
-          </AppText>
-        </Stack>
-      </Row>
-
-      <View className="mt-3">
-        <ProgressBar value={percent} height={6} />
-      </View>
-
-      <Row gap={8} align="center" wrap className="mt-4">
+    <Glass accent>
+      <Row justify="space-between" align="center">
+        <AppText variant="bodySm" tone="muted">
+          {metricLabel}
+        </AppText>
         <Badge label={statusLabel} tone={statusTone} />
-        {goal && !goal.progress.met && goal.progress.remaining > 0 ? (
-          <AppText variant="caption" tone="muted">
-            {t('remaining', { value: `${goal.progress.remaining} ${unit}` })}
-          </AppText>
-        ) : null}
-        {goal ? <StreakBadge count={goal.streak} /> : null}
       </Row>
+
+      <Row align="flex-end" gap={8} className="mt-2">
+        <AppText style={{ fontSize: 52, lineHeight: 56, fontWeight: '700' }}>{current}</AppText>
+        <Stack gap={0} className="mb-2">
+          <AppText variant="caption" tone="muted">
+            {goal ? `/ ${target} ${unit}` : unit}
+          </AppText>
+        </Stack>
+      </Row>
+
+      {goal ? (
+        <View className="mt-4">
+          <ProgressBar value={barPercent} height={8} />
+          <Row justify="space-between" align="center" className="mt-2">
+            <AppText variant="caption" tone="muted">
+              {met
+                ? extra > 0
+                  ? `+${extra} ${unit}`
+                  : t('goalMetLabel')
+                : t('remaining', { value: `${goal.progress.remaining} ${unit}` })}
+            </AppText>
+            {goal.streak > 0 ? <StreakBadge count={goal.streak} /> : null}
+          </Row>
+        </View>
+      ) : null}
 
       <Row gap={8} className="mt-5">
         <View className="flex-1">
@@ -131,6 +125,6 @@ export function TrackingCard({ todayFocusMinutes = 0, loading = false }: Trackin
           onPress={openGoalEditor}
         />
       </Row>
-    </Card>
+    </Glass>
   );
 }

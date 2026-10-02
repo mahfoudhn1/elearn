@@ -100,7 +100,38 @@ A closed period's outcome, with the target snapshotted at close time. Unique on
 | `achieved` | PositiveInteger |
 | `met` | Boolean |
 
+### `Goal` (daily study goal)
+
+The user's own daily study-time target, independent of courses and of the
+multi-metric `StudyGoal` above. Every user has exactly one active `DAILY` goal;
+per-day and per-weekday overrides shift individual days without touching the
+default.
+
+| Field | Type | Notes |
+|---|---|---|
+| `user` | FK → `AUTH_USER_MODEL` | One active `DAILY` goal per user (`uniq_active_daily_goal_per_user`). |
+| `metric` | CharField | `MINUTES` or `HOURS`. |
+| `period` | CharField | Always `DAILY` for this singleton goal. |
+| `target` | PositiveInteger | Default value in the goal's metric. `0` means "no goal". |
+| `overrides` | JSON | Per-date values, e.g. `{"2026-10-06": 240, "2026-10-11": 0}`. |
+| `weekday_overrides` | JSON | Per-weekday values, `{"0": …}` (Monday) .. `{"6": …}` (Sunday). |
+| `metadata` | JSON | Internal bookkeeping (migration flags). Never client-writable. |
+| `effective_from` | Date | Informational; edits apply immediately. |
+
+`daily_goal.resolve_goal` applies date override → weekday override → default and
+always returns minutes (converting `HOURS`), with a `source` (`date`, `weekday`,
+`default`, `none`) so the UI can explain a no-goal day.
+
 ## Concepts
+
+* **Unified study time.** `study_time.daily_report` / `range_report` are the
+  single source of truth for "how much did I study?". They use credited focus
+  intervals from `schedule.StudySession` (labelled by `source_type`), merge
+  overlapping spans so shared minutes count once, and clamp to the user's local
+  day. The tracking app's mirrored `STUDY_SESSION` events are *not* added on top,
+  because they repeat the same sessions.
+* **Daily goal resolution.** See `Goal` above; `resolve_goal` is the one place
+  that decides the effective target for a given local date.
 
 * **Week start** is a single constant, `WEEK_START_DAY` in
   `tracking/constants.py` (Python weekday numbering, Sunday = 6). Change it to
@@ -149,6 +180,8 @@ filters to unscheduled study records.
 | GET | `/api/tracking/goals/progress/` | Authenticated | Each active goal with its server progress object and current streak. |
 | GET | `/api/tracking/goals/history/?goal=<uuid>&limit=12` | Authenticated (owner) | Recent `GoalPeriodResult` rows for one goal. |
 | GET | `/api/tracking/goals/suggestions/?metric=&period=` | Authenticated | Suggested target (average of last 4 completed periods +10%, with a floor). |
+| GET/PATCH | `/api/tracking/daily-goal/` | Authenticated (owner) | The singleton daily study goal plus today's resolved report; PATCH edits `target`/`metric`/`overrides`/`weekday_overrides`. |
+| GET | `/api/tracking/study-time/?range=day\|week\|month&date=` | Authenticated | Unified study time: one day (default, optional `date=YYYY-MM-DD`) or the 7/30 days ending today, with goal, source/course breakdown and streak. |
 | GET | `/api/tracking/analytics/summary/?range=7d\|30d\|90d` | Authenticated | Totals (including `total_study_minutes` and combined `total_minutes`), active days, streaks, best day, previous-period % change and a zero-filled per-day series (`watch_minutes`, `study_minutes`, …). |
 | GET | `/api/tracking/analytics/weekly-pattern/?range=` | Authenticated | Average watch minutes per weekday and the best weekday. |
 | GET | `/api/tracking/student/courses/` | Student | Per-course progress for accessible courses. |
