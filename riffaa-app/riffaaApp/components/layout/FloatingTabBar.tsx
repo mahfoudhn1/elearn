@@ -197,10 +197,10 @@ function TabItem({
       accessibilityState={{ selected: focused }}
       accessibilityLabel={tab.title}
       onPressIn={() => {
-        pressed.value = withTiming(1, { duration: 70 });
+        pressed.set(withTiming(1, { duration: 70 }));
       }}
       onPressOut={() => {
-        pressed.value = withSpring(0, FAST_SPRING);
+        pressed.set(withSpring(0, FAST_SPRING));
       }}
       onPress={onPress}
       style={{
