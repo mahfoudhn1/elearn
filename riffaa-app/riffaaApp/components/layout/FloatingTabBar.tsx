@@ -3,7 +3,6 @@ import * as Haptics from 'expo-haptics';
 import { Tabs } from 'expo-router';
 import { useEffect, useMemo, useState, type ComponentProps } from 'react';
 import {
-  Platform,
   Pressable,
   View,
   type LayoutChangeEvent,

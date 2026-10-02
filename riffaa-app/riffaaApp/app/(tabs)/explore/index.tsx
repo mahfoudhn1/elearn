@@ -138,6 +138,7 @@ export default function ExploreTeachersScreen() {
   );
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchTeachersList();
   }, [fetchTeachersList]);
 

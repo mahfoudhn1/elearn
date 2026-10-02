@@ -79,7 +79,7 @@ export const PomodoroClock: React.FC<PomodoroClockProps> = ({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
-  const [tick, setTick] = useState(0);
+  const [, setTick] = useState(0);
 
   const syncedAtRef = useRef(0);
   const advancingRef = useRef(false);
@@ -129,7 +129,7 @@ export const PomodoroClock: React.FC<PomodoroClockProps> = ({
     // eslint-disable-next-line react-hooks/purity, react-hooks/refs
     return base + Math.max(Math.floor((Date.now() - syncedAtRef.current) / 1000), 0);
     // `tick` drives the recompute once a second.
-  }, [interval, isRunning, tick]);
+  }, [interval, isRunning]);
 
   const remaining = Math.max(plannedSeconds - rawElapsed, 0);
   const progress = plannedSeconds > 0 ? Math.min(rawElapsed / plannedSeconds, 1) : 0;

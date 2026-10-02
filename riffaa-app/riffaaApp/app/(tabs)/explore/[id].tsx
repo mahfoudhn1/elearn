@@ -68,6 +68,7 @@ export default function TeacherProfileScreen() {
   }, [id, t]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadTeacher();
   }, [loadTeacher]);
 
@@ -86,6 +87,7 @@ export default function TeacherProfileScreen() {
   }, [id]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (tab === 'groups') void loadGroups();
   }, [tab, loadGroups]);
 

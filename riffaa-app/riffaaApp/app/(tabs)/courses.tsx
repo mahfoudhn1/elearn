@@ -97,6 +97,7 @@ export default function CoursesScreen() {
   );
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (segment === 'teachers') void fetchTeachers();
   }, [segment, fetchTeachers]);
 

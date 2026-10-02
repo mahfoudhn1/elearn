@@ -37,13 +37,6 @@ MEDIA_ROOT = os.getenv(
     'MEDIA_ROOT',
     '/var/www/media/' if IS_PRODUCTION else str(BASE_DIR / 'media'),
 )
-MEDIA_VIDEO_MAX_SIZE_BYTES = int(os.getenv('MEDIA_VIDEO_MAX_SIZE_BYTES', 5 * 1024 * 1024 * 1024))
-
-R2_ENDPOINT_URL = os.getenv('R2_ENDPOINT_URL', '')
-R2_BUCKET_NAME = os.getenv('R2_BUCKET_NAME', '')
-R2_PUBLIC_BASE_URL = os.getenv('R2_PUBLIC_BASE_URL', '')
-R2_ACCESS_KEY_ID = os.getenv('R2_ACCESS_KEY_ID', '')
-R2_SECRET_ACCESS_KEY = os.getenv('R2_SECRET_ACCESS_KEY', '')
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
@@ -66,8 +59,8 @@ INSTALLED_APPS = [
     'users',
     'subscription',
     'livestream',
-    'courses',
     'media_assets',
+    'courses',
     'groups',
     'privetsessions',
     'flashcards',
@@ -77,10 +70,8 @@ INSTALLED_APPS = [
     "chat",
     'languagesteaching', 
     "froms",
-    "studentform",
-    "riffaaAi",
-    "schedule",
-    "tracking",
+    "studentform",    'tracking',    "riffaaAi",
+    "schedule"
 
     ]
 
