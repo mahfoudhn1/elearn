@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Svg, { Circle } from "react-native-svg";
@@ -79,7 +79,7 @@ export const PomodoroClock: React.FC<PomodoroClockProps> = ({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
-  const [tick, setTick] = useState(0);
+  const [, setTick] = useState(0);
 
   const syncedAtRef = useRef(0);
   const advancingRef = useRef(false);
@@ -123,13 +123,12 @@ export const PomodoroClock: React.FC<PomodoroClockProps> = ({
     ? interval.planned_seconds
     : (settings?.focus_minutes ?? 25) * 60;
 
-  const rawElapsed = useMemo(() => {
+  const rawElapsed = (() => {
     const base = interval?.elapsed_seconds ?? 0;
     if (!isRunning) return base;
     // eslint-disable-next-line react-hooks/purity, react-hooks/refs
     return base + Math.max(Math.floor((Date.now() - syncedAtRef.current) / 1000), 0);
-    // `tick` drives the recompute once a second.
-  }, [interval, isRunning, tick]);
+  })();
 
   const remaining = Math.max(plannedSeconds - rawElapsed, 0);
   const progress = plannedSeconds > 0 ? Math.min(rawElapsed / plannedSeconds, 1) : 0;
