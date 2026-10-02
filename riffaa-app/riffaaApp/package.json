@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@amplitude/analytics-react-native": "1.4.13",
-    "@config-plugins/react-native-webrtc": "^14.0.0",
+    "@config-plugins/react-native-webrtc": "^15.0.2",
     "@expo-google-fonts/ibm-plex-sans-arabic": "^0.4.2",
     "@expo/vector-icons": "^15.0.3",
     "@giphy/react-native-sdk": "5.0.1",
