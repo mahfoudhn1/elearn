@@ -206,3 +206,58 @@ class GoalPeriodResult(UUIDModel):
     def __str__(self):
         return f"{self.goal_id} - {self.period_start} ({self.achieved}/{self.target})"
 
+
+class Goal(UUIDModel):
+    """A user's study goal, independent of schedule/courses.
+
+    Every user has exactly one default daily goal (replaces the old
+    PomodoroSettings.daily_goal_minutes).  Per-day and per-weekday
+    overrides let the user shift individual days without touching the
+    default.
+    """
+
+    class Metric(models.TextChoices):
+        MINUTES = "MINUTES", "Study minutes"
+        HOURS = "HOURS", "Study hours"
+
+    class Period(models.TextChoices):
+        DAILY = "DAILY", "Daily"
+        WEEKLY = "WEEKLY", "Weekly"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="goals",
+    )
+    metric = models.CharField(max_length=16, choices=Metric.choices, default=Metric.MINUTES)
+    period = models.CharField(max_length=8, choices=Period.choices, default=Period.DAILY)
+    target = models.PositiveIntegerField()  # minutes (or hours when metric=HOURS)
+    is_active = models.BooleanField(default=True)
+    effective_from = models.DateField(default=timezone.localdate)
+
+    # Per-day overrides: e.g. {"2026-10-02": 240, "2026-10-06": 0}
+    overrides = models.JSONField(default=dict, blank=True)
+    # Internal bookkeeping (e.g. migration backfill flags). Never client-writable.
+    metadata = models.JSONField(default=dict, blank=True)
+    # Weekday overrides: {"5": 240} (0=Monday … 6=Sunday)
+    weekday_overrides = models.JSONField(default=dict, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "is_active"]),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user"],
+                condition=models.Q(period="DAILY", is_active=True),
+                name="uniq_active_daily_goal_per_user",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.user_id} - {self.metric}/{self.period} -> {self.target}"
+

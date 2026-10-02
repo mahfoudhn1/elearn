@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import (
     ActivityEvent,
     DailyActivity,
+    Goal,
     GoalPeriodResult,
     StudyGoal,
     UserTrackingSettings,
@@ -72,3 +73,11 @@ class GoalPeriodResultAdmin(admin.ModelAdmin):
     search_fields = ("goal__user__username", "goal__user__email")
     date_hierarchy = "period_start"
     raw_id_fields = ("goal",)
+
+
+@admin.register(Goal)
+class GoalAdmin(admin.ModelAdmin):
+    list_display = ("user", "metric", "period", "target", "is_active", "effective_from")
+    list_filter = ("metric", "period", "is_active")
+    search_fields = ("user__username", "user__email")
+    raw_id_fields = ("user",)
