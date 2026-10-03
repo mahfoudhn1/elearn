@@ -199,6 +199,11 @@ export async function getCurrentPlan(params: { from?: string; to?: string } = {}
   return response.data;
 }
 
+/** Discard the student's current plan so they can set it up again from scratch. */
+export async function deleteCurrentPlan(): Promise<void> {
+  await apiClient.delete("planner/plans/current/");
+}
+
 export async function getPlanDiff(planId: string): Promise<PlanDiff> {
   const response = await apiClient.get<PlanDiff>(`planner/plans/${planId}/diff/`);
   return response.data;

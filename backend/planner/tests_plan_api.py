@@ -131,3 +131,15 @@ class PlanApiTests(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("added", response.data)
+
+    def test_delete_current_plan_resets(self):
+        self._generate()
+        response = self.client.delete(reverse("planner-plan-current"))
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(StudyPlan.objects.filter(student=self.student).exists())
+        self.assertFalse(PlannedSession.objects.filter(student=self.student).exists())
+
+        current = self.client.get(reverse("planner-plan-current"))
+        self.assertEqual(current.status_code, status.HTTP_200_OK)
+        self.assertIsNone(current.data["plan"])
+        self.assertEqual(current.data["sessions"], [])

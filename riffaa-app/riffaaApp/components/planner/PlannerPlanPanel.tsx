@@ -123,12 +123,14 @@ export function PlannerPlanPanel({ selectedDate }: { selectedDate: string }) {
   const lockLocal = usePlannerStore((state) => state.lockLocal);
   const skipLocal = usePlannerStore((state) => state.skipLocal);
   const deleteLocal = usePlannerStore((state) => state.deleteLocal);
+  const resetPlan = usePlannerStore((state) => state.resetPlan);
   const clearDiff = usePlannerStore((state) => state.clearDiff);
 
   const [onboarding, setOnboarding] = useState<OnboardingState | null>(null);
   const [unmet, setUnmet] = useState<UnmetDemandItem[]>([]);
   const [active, setActive] = useState<PlannedSession | null>(null);
   const [busy, setBusy] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     void loadCurrent();
@@ -190,6 +192,22 @@ export function PlannerPlanPanel({ selectedDate }: { selectedDate: string }) {
     }
   }, [generate, selectedDate, t]);
 
+  const confirmReset = useCallback(() => {
+    Alert.alert(t('plannerResetTitle'), t('plannerResetConfirm'), [
+      { text: t('cancel'), style: 'cancel' },
+      {
+        text: t('plannerReset'),
+        style: 'destructive',
+        onPress: () => {
+          setResetting(true);
+          resetPlan()
+            .catch(() => Alert.alert(t('error'), t('serverUnreachable')))
+            .finally(() => setResetting(false));
+        },
+      },
+    ]);
+  }, [resetPlan, t]);
+
   const onMove = (session: PlannedSession, startIso: string, endIso: string) => {
     moveLocal(session.id, startIso, endIso);
     setActive(null);
@@ -228,19 +246,38 @@ export function PlannerPlanPanel({ selectedDate }: { selectedDate: string }) {
       <UnmetBanner items={unmet} />
 
       {plan ? (
-        <Row gap={8} align="center" justify="space-between">
-          <AppText variant="micro" tone="subtle" className="uppercase tracking-widest">
-            {t('plannerPlan')} · v{plan.version}
-          </AppText>
-          <Button
-            label={busy ? t('plannerRegenerating') : t('plannerRegenerate')}
-            icon="refresh"
-            size="sm"
-            variant="secondary"
-            loading={busy}
-            onPress={() => void regenerate()}
-          />
-        </Row>
+        <Stack gap={10}>
+          <Row gap={8} align="center" justify="space-between">
+            <AppText variant="micro" tone="subtle" className="uppercase tracking-widest">
+              {t('plannerPlan')} · v{plan.version}
+            </AppText>
+            <Button
+              label={busy ? t('plannerRegenerating') : t('plannerRegenerate')}
+              icon="refresh"
+              size="sm"
+              variant="secondary"
+              loading={busy}
+              onPress={() => void regenerate()}
+            />
+          </Row>
+          <Row gap={8} wrap>
+            <Button
+              label={t('plannerSetup')}
+              icon="options-outline"
+              size="sm"
+              variant="secondary"
+              onPress={() => router.push('/planner/onboarding' as never)}
+            />
+            <Button
+              label={t('plannerReset')}
+              icon="trash-outline"
+              size="sm"
+              variant="danger"
+              loading={resetting}
+              onPress={confirmReset}
+            />
+          </Row>
+        </Stack>
       ) : (
         <Card variant="list">
           <Stack gap={10}>

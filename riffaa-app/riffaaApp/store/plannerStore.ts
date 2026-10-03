@@ -5,6 +5,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { isNetworkError } from '../services/api/client';
 import {
+  deleteCurrentPlan,
   deletePlannedSession,
   generatePlan,
   getCurrentPlan,
@@ -48,6 +49,8 @@ interface PlannerState {
   lockLocal: (sessionId: string, is_locked: boolean) => void;
   skipLocal: (sessionId: string) => void;
   deleteLocal: (sessionId: string, reason?: string) => void;
+  /** Delete the whole current plan server-side and wipe the local cache. */
+  resetPlan: () => Promise<void>;
   enqueue: (action: Omit<PendingPlannerAction, 'id' | 'createdAt'>) => void;
   flush: () => Promise<void>;
   isStale: () => boolean;
@@ -136,6 +139,18 @@ export const usePlannerStore = create<PlannerState>()(
       deleteLocal: (sessionId, reason = '') => {
         set({ sessions: patchSession(get().sessions, sessionId, { state: 'CANCELLED' }) });
         get().enqueue({ type: 'delete', sessionId, payload: { reason } });
+      },
+
+      resetPlan: async () => {
+        await deleteCurrentPlan();
+        set({
+          plan: null,
+          sessions: [],
+          lastDiff: null,
+          pending: [],
+          fetchedAt: null,
+          error: null,
+        });
       },
 
       enqueue: (action) => {

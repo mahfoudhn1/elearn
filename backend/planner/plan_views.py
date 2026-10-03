@@ -76,6 +76,12 @@ class PlanCurrentView(APIView):
             }
         )
 
+    def delete(self, request):
+        """Discard the student's current plan (sessions cascade) for a fresh start."""
+        student = get_student(request.user)
+        StudyPlan.objects.filter(student=student).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class PlanDiffView(APIView):
     permission_classes = [IsAuthenticated, HasStudentProfile]
