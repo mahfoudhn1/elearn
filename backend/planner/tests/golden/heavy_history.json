@@ -1,0 +1,590 @@
+{
+  "expected": {
+    "diagnostics": {
+      "capacity_minutes_by_day": {
+        "2099-09-07": 180,
+        "2099-09-08": 180,
+        "2099-09-09": 180,
+        "2099-09-10": 180,
+        "2099-09-11": 180,
+        "2099-09-12": 180,
+        "2099-09-13": 180
+      },
+      "demand_units": 1,
+      "placed_minutes": 300,
+      "sessions": 20,
+      "unmet": 0,
+      "used_minutes_by_day": {
+        "2099-09-07": 45,
+        "2099-09-08": 45,
+        "2099-09-09": 45,
+        "2099-09-10": 45,
+        "2099-09-11": 45,
+        "2099-09-12": 45,
+        "2099-09-13": 30
+      },
+      "window_days": 7
+    },
+    "sessions": [
+      {
+        "activity_type": "STUDY",
+        "date": "2099-09-07",
+        "end_min": 1035,
+        "reasons": [
+          {
+            "code": "PLACED_SESSION",
+            "params": {
+              "priority_score": 0.0,
+              "score_total": 3.2,
+              "session_length": 15,
+              "tier": 3,
+              "topic": null
+            }
+          }
+        ],
+        "source_demand_ids": [
+          "رياضيات|STUDY||#0"
+        ],
+        "start_min": 1020,
+        "subject_id": "رياضيات"
+      },
+      {
+        "activity_type": "STUDY",
+        "date": "2099-09-07",
+        "end_min": 1065,
+        "reasons": [
+          {
+            "code": "PLACED_SESSION",
+            "params": {
+              "priority_score": 0.0,
+              "score_total": 2.316667,
+              "session_length": 15,
+              "tier": 3,
+              "topic": null
+            }
+          }
+        ],
+        "source_demand_ids": [
+          "رياضيات|STUDY||#0"
+        ],
+        "start_min": 1050,
+        "subject_id": "رياضيات"
+      },
+      {
+        "activity_type": "STUDY",
+        "date": "2099-09-07",
+        "end_min": 1095,
+        "reasons": [
+          {
+            "code": "PLACED_SESSION",
+            "params": {
+              "priority_score": 0.0,
+              "score_total": 2.233333,
+              "session_length": 15,
+              "tier": 3,
+              "topic": null
+            }
+          }
+        ],
+        "source_demand_ids": [
+          "رياضيات|STUDY||#0"
+        ],
+        "start_min": 1080,
+        "subject_id": "رياضيات"
+      },
+      {
+        "activity_type": "STUDY",
+        "date": "2099-09-08",
+        "end_min": 1035,
+        "reasons": [
+          {
+            "code": "PLACED_SESSION",
+            "params": {
+              "priority_score": 0.0,
+              "score_total": 2.4,
+              "session_length": 15,
+              "tier": 3,
+              "topic": null
+            }
+          }
+        ],
+        "source_demand_ids": [
+          "رياضيات|STUDY||#0"
+        ],
+        "start_min": 1020,
+        "subject_id": "رياضيات"
+      },
+      {
+        "activity_type": "STUDY",
+        "date": "2099-09-08",
+        "end_min": 1065,
+        "reasons": [
+          {
+            "code": "PLACED_SESSION",
+            "params": {
+              "priority_score": 0.0,
+              "score_total": 2.316667,
+              "session_length": 15,
+              "tier": 3,
+              "topic": null
+            }
+          }
+        ],
+        "source_demand_ids": [
+          "رياضيات|STUDY||#0"
+        ],
+        "start_min": 1050,
+        "subject_id": "رياضيات"
+      },
+      {
+        "activity_type": "STUDY",
+        "date": "2099-09-08",
+        "end_min": 1095,
+        "reasons": [
+          {
+            "code": "PLACED_SESSION",
+            "params": {
+              "priority_score": 0.0,
+              "score_total": 2.233333,
+              "session_length": 15,
+              "tier": 3,
+              "topic": null
+            }
+          }
+        ],
+        "source_demand_ids": [
+          "رياضيات|STUDY||#0"
+        ],
+        "start_min": 1080,
+        "subject_id": "رياضيات"
+      },
+      {
+        "activity_type": "STUDY",
+        "date": "2099-09-09",
+        "end_min": 1035,
+        "reasons": [
+          {
+            "code": "PLACED_SESSION",
+            "params": {
+              "priority_score": 0.0,
+              "score_total": 3.2,
+              "session_length": 15,
+              "tier": 3,
+              "topic": null
+            }
+          }
+        ],
+        "source_demand_ids": [
+          "رياضيات|STUDY||#0"
+        ],
+        "start_min": 1020,
+        "subject_id": "رياضيات"
+      },
+      {
+        "activity_type": "STUDY",
+        "date": "2099-09-09",
+        "end_min": 1065,
+        "reasons": [
+          {
+            "code": "PLACED_SESSION",
+            "params": {
+              "priority_score": 0.0,
+              "score_total": 2.316667,
+              "session_length": 15,
+              "tier": 3,
+              "topic": null
+            }
+          }
+        ],
+        "source_demand_ids": [
+          "رياضيات|STUDY||#0"
+        ],
+        "start_min": 1050,
+        "subject_id": "رياضيات"
+      },
+      {
+        "activity_type": "STUDY",
+        "date": "2099-09-09",
+        "end_min": 1095,
+        "reasons": [
+          {
+            "code": "PLACED_SESSION",
+            "params": {
+              "priority_score": 0.0,
+              "score_total": 2.233333,
+              "session_length": 15,
+              "tier": 3,
+              "topic": null
+            }
+          }
+        ],
+        "source_demand_ids": [
+          "رياضيات|STUDY||#0"
+        ],
+        "start_min": 1080,
+        "subject_id": "رياضيات"
+      },
+      {
+        "activity_type": "STUDY",
+        "date": "2099-09-10",
+        "end_min": 1035,
+        "reasons": [
+          {
+            "code": "PLACED_SESSION",
+            "params": {
+              "priority_score": 0.0,
+              "score_total": 2.4,
+              "session_length": 15,
+              "tier": 3,
+              "topic": null
+            }
+          }
+        ],
+        "source_demand_ids": [
+          "رياضيات|STUDY||#0"
+        ],
+        "start_min": 1020,
+        "subject_id": "رياضيات"
+      },
+      {
+        "activity_type": "STUDY",
+        "date": "2099-09-10",
+        "end_min": 1065,
+        "reasons": [
+          {
+            "code": "PLACED_SESSION",
+            "params": {
+              "priority_score": 0.0,
+              "score_total": 2.316667,
+              "session_length": 15,
+              "tier": 3,
+              "topic": null
+            }
+          }
+        ],
+        "source_demand_ids": [
+          "رياضيات|STUDY||#0"
+        ],
+        "start_min": 1050,
+        "subject_id": "رياضيات"
+      },
+      {
+        "activity_type": "STUDY",
+        "date": "2099-09-10",
+        "end_min": 1095,
+        "reasons": [
+          {
+            "code": "PLACED_SESSION",
+            "params": {
+              "priority_score": 0.0,
+              "score_total": 2.233333,
+              "session_length": 15,
+              "tier": 3,
+              "topic": null
+            }
+          }
+        ],
+        "source_demand_ids": [
+          "رياضيات|STUDY||#0"
+        ],
+        "start_min": 1080,
+        "subject_id": "رياضيات"
+      },
+      {
+        "activity_type": "STUDY",
+        "date": "2099-09-11",
+        "end_min": 1035,
+        "reasons": [
+          {
+            "code": "PLACED_SESSION",
+            "params": {
+              "priority_score": 0.0,
+              "score_total": 3.2,
+              "session_length": 15,
+              "tier": 3,
+              "topic": null
+            }
+          }
+        ],
+        "source_demand_ids": [
+          "رياضيات|STUDY||#0"
+        ],
+        "start_min": 1020,
+        "subject_id": "رياضيات"
+      },
+      {
+        "activity_type": "STUDY",
+        "date": "2099-09-11",
+        "end_min": 1065,
+        "reasons": [
+          {
+            "code": "PLACED_SESSION",
+            "params": {
+              "priority_score": 0.0,
+              "score_total": 2.316667,
+              "session_length": 15,
+              "tier": 3,
+              "topic": null
+            }
+          }
+        ],
+        "source_demand_ids": [
+          "رياضيات|STUDY||#0"
+        ],
+        "start_min": 1050,
+        "subject_id": "رياضيات"
+      },
+      {
+        "activity_type": "STUDY",
+        "date": "2099-09-11",
+        "end_min": 1095,
+        "reasons": [
+          {
+            "code": "PLACED_SESSION",
+            "params": {
+              "priority_score": 0.0,
+              "score_total": 2.233333,
+              "session_length": 15,
+              "tier": 3,
+              "topic": null
+            }
+          }
+        ],
+        "source_demand_ids": [
+          "رياضيات|STUDY||#0"
+        ],
+        "start_min": 1080,
+        "subject_id": "رياضيات"
+      },
+      {
+        "activity_type": "STUDY",
+        "date": "2099-09-12",
+        "end_min": 1035,
+        "reasons": [
+          {
+            "code": "PLACED_SESSION",
+            "params": {
+              "priority_score": 0.0,
+              "score_total": 2.4,
+              "session_length": 15,
+              "tier": 3,
+              "topic": null
+            }
+          }
+        ],
+        "source_demand_ids": [
+          "رياضيات|STUDY||#0"
+        ],
+        "start_min": 1020,
+        "subject_id": "رياضيات"
+      },
+      {
+        "activity_type": "STUDY",
+        "date": "2099-09-12",
+        "end_min": 1065,
+        "reasons": [
+          {
+            "code": "PLACED_SESSION",
+            "params": {
+              "priority_score": 0.0,
+              "score_total": 2.316667,
+              "session_length": 15,
+              "tier": 3,
+              "topic": null
+            }
+          }
+        ],
+        "source_demand_ids": [
+          "رياضيات|STUDY||#0"
+        ],
+        "start_min": 1050,
+        "subject_id": "رياضيات"
+      },
+      {
+        "activity_type": "STUDY",
+        "date": "2099-09-12",
+        "end_min": 1095,
+        "reasons": [
+          {
+            "code": "PLACED_SESSION",
+            "params": {
+              "priority_score": 0.0,
+              "score_total": 2.233333,
+              "session_length": 15,
+              "tier": 3,
+              "topic": null
+            }
+          }
+        ],
+        "source_demand_ids": [
+          "رياضيات|STUDY||#0"
+        ],
+        "start_min": 1080,
+        "subject_id": "رياضيات"
+      },
+      {
+        "activity_type": "STUDY",
+        "date": "2099-09-13",
+        "end_min": 1035,
+        "reasons": [
+          {
+            "code": "PLACED_SESSION",
+            "params": {
+              "priority_score": 0.0,
+              "score_total": 3.2,
+              "session_length": 15,
+              "tier": 3,
+              "topic": null
+            }
+          }
+        ],
+        "source_demand_ids": [
+          "رياضيات|STUDY||#0"
+        ],
+        "start_min": 1020,
+        "subject_id": "رياضيات"
+      },
+      {
+        "activity_type": "STUDY",
+        "date": "2099-09-13",
+        "end_min": 1065,
+        "reasons": [
+          {
+            "code": "PLACED_SESSION",
+            "params": {
+              "priority_score": 0.0,
+              "score_total": 2.316667,
+              "session_length": 15,
+              "tier": 3,
+              "topic": null
+            }
+          }
+        ],
+        "source_demand_ids": [
+          "رياضيات|STUDY||#0"
+        ],
+        "start_min": 1050,
+        "subject_id": "رياضيات"
+      }
+    ],
+    "unmet": []
+  },
+  "input": {
+    "busy_blocks": [],
+    "days": [
+      {
+        "date": "2099-09-07",
+        "is_exam_day": false,
+        "is_holiday": false,
+        "is_weekend": false,
+        "protected_blocks": [],
+        "sleep_min": 1380,
+        "wake_min": 360
+      },
+      {
+        "date": "2099-09-08",
+        "is_exam_day": false,
+        "is_holiday": false,
+        "is_weekend": false,
+        "protected_blocks": [],
+        "sleep_min": 1380,
+        "wake_min": 360
+      },
+      {
+        "date": "2099-09-09",
+        "is_exam_day": false,
+        "is_holiday": false,
+        "is_weekend": false,
+        "protected_blocks": [],
+        "sleep_min": 1380,
+        "wake_min": 360
+      },
+      {
+        "date": "2099-09-10",
+        "is_exam_day": false,
+        "is_holiday": false,
+        "is_weekend": false,
+        "protected_blocks": [],
+        "sleep_min": 1380,
+        "wake_min": 360
+      },
+      {
+        "date": "2099-09-11",
+        "is_exam_day": false,
+        "is_holiday": false,
+        "is_weekend": false,
+        "protected_blocks": [],
+        "sleep_min": 1380,
+        "wake_min": 360
+      },
+      {
+        "date": "2099-09-12",
+        "is_exam_day": false,
+        "is_holiday": false,
+        "is_weekend": true,
+        "protected_blocks": [],
+        "sleep_min": 1380,
+        "wake_min": 360
+      },
+      {
+        "date": "2099-09-13",
+        "is_exam_day": false,
+        "is_holiday": false,
+        "is_weekend": true,
+        "protected_blocks": [],
+        "sleep_min": 1380,
+        "wake_min": 360
+      }
+    ],
+    "deficit_by_subject": {},
+    "demands": [
+      {
+        "activity_type": "STUDY",
+        "derived_from": null,
+        "due_by": null,
+        "minutes": 300,
+        "subject_id": "رياضيات",
+        "topic_id": null
+      }
+    ],
+    "exams": [],
+    "history": {
+      "band_penalty_weight": 0.5,
+      "by_activity": [
+        {
+          "activity_type": "STUDY",
+          "actual_minutes": 150,
+          "avg_completed_minutes": 30.0,
+          "completed_sessions": 5,
+          "completion_ratio": 0.5,
+          "missed_by_band": {},
+          "missed_by_weekday": {},
+          "planned_minutes": 300,
+          "pomodoros": 0,
+          "sessions": 5,
+          "subject_id": "رياضيات",
+          "sufficient": true
+        }
+      ],
+      "length_factor_ceil": 1.25,
+      "length_factor_floor": 0.5,
+      "lookback_days": 28,
+      "min_samples": 3,
+      "studied_minutes_by_subject": {
+        "رياضيات": 150
+      }
+    },
+    "lessons": [],
+    "now": "2099-09-07",
+    "profile": {
+      "completion_factor": 1.0,
+      "daily_study_target_minutes": 180,
+      "max_focus_minutes": null,
+      "preferred_period": "EVENING",
+      "session_length_preference": "MEDIUM"
+    },
+    "recent_topics": {},
+    "tombstoned_slots": []
+  },
+  "scenario": "heavy_history"
+}

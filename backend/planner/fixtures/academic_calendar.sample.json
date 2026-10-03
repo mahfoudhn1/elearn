@@ -1,0 +1,83 @@
+{
+  "meta": {
+    "description": "Phase 1 planner placeholder fixture. ALL VALUES ARE FAKE SAMPLES.",
+    "verified": false,
+    "warning": "Do NOT treat any date here as an official Algerian school calendar. Replace with verified values and list them in docs/TO_VERIFY.md."
+  },
+  "academic_years": [
+    {
+      "label": "2099-2100",
+      "start_date": "2099-09-01",
+      "end_date": "2100-06-30",
+      "is_current": true
+    }
+  ],
+  "academic_periods": [
+    {
+      "academic_year": "2099-2100",
+      "kind": "TRIMESTER",
+      "label": "PLACEHOLDER Trimester 1",
+      "start_date": "2099-09-01",
+      "end_date": "2099-12-05",
+      "applies_to_levels": [],
+      "suspends_school": false,
+      "verified": false,
+      "source_note": "PLACEHOLDER sample - invented, not an official date"
+    },
+    {
+      "academic_year": "2099-2100",
+      "kind": "TRIMESTER",
+      "label": "PLACEHOLDER Trimester 2",
+      "start_date": "2099-12-06",
+      "end_date": "2100-03-20",
+      "applies_to_levels": [],
+      "suspends_school": false,
+      "verified": false,
+      "source_note": "PLACEHOLDER sample - invented, not an official date"
+    },
+    {
+      "academic_year": "2099-2100",
+      "kind": "TRIMESTER",
+      "label": "PLACEHOLDER Trimester 3",
+      "start_date": "2100-03-21",
+      "end_date": "2100-06-30",
+      "applies_to_levels": [],
+      "suspends_school": false,
+      "verified": false,
+      "source_note": "PLACEHOLDER sample - invented, not an official date"
+    },
+    {
+      "academic_year": "2099-2100",
+      "kind": "HOLIDAY",
+      "label": "PLACEHOLDER Autumn break",
+      "start_date": "2099-10-25",
+      "end_date": "2099-10-31",
+      "applies_to_levels": [],
+      "suspends_school": true,
+      "verified": false,
+      "source_note": "PLACEHOLDER sample - invented, not an official date"
+    },
+    {
+      "academic_year": "2099-2100",
+      "kind": "EXAM_PERIOD",
+      "label": "PLACEHOLDER First trimester exams",
+      "start_date": "2099-11-24",
+      "end_date": "2099-12-04",
+      "applies_to_levels": ["السنة الثالثة ثانوي"],
+      "suspends_school": false,
+      "verified": false,
+      "source_note": "PLACEHOLDER sample - invented, not an official date and not an official level list"
+    },
+    {
+      "academic_year": "2099-2100",
+      "kind": "SPECIAL_DAY",
+      "label": "PLACEHOLDER Sample special day",
+      "start_date": "2099-09-15",
+      "end_date": "2099-09-15",
+      "applies_to_levels": [],
+      "suspends_school": true,
+      "verified": false,
+      "source_note": "PLACEHOLDER sample - invented, not an official date"
+    }
+  ]
+}

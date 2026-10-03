@@ -26,6 +26,10 @@ class PersonalScheduleItem(UUIDModel):
         UPCOMING = "UPCOMING", "Upcoming"
         MISSED = "MISSED", "Missed"
 
+    class Source(models.TextChoices):
+        MANUAL = "MANUAL", "Manual"
+        PLANNER = "PLANNER", "Planner"
+
     # Fallback study-time targets in minutes, keyed by priority, used for exam
     # readiness when target_prep_minutes is not set explicitly.
     DEFAULT_PREP_MINUTES = {
@@ -54,6 +58,11 @@ class PersonalScheduleItem(UUIDModel):
     location = models.CharField(max_length=255, blank=True, null=True)
     meeting_info = models.TextField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
+
+    # Planner mirroring. MANUAL for everything pre-existing / user-created.
+    source = models.CharField(max_length=8, choices=Source.choices, default=Source.MANUAL)
+    planned_session_id = models.UUIDField(null=True, blank=True, db_index=True)
+    activity_type = models.CharField(max_length=32, null=True, blank=True)
 
     progress_percentage = models.PositiveSmallIntegerField(default=0)
     estimated_duration_minutes = models.PositiveIntegerField(blank=True, null=True)

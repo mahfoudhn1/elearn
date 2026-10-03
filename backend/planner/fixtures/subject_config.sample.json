@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "description": "Phase 4 SubjectConfig placeholder fixture. Coefficients are INVENTED, not official.",
+    "verified": false
+  },
+  "subjects": [
+    { "subject": "رياضيات", "level": "", "stream": "", "coefficient": 5, "weekly_target_minutes": null, "source_note": "PLACEHOLDER coefficient - invented" },
+    { "subject": "فيزياء", "level": "", "stream": "", "coefficient": 4, "weekly_target_minutes": null, "source_note": "PLACEHOLDER coefficient - invented" },
+    { "subject": "كيمياء", "level": "", "stream": "", "coefficient": 3, "weekly_target_minutes": null, "source_note": "PLACEHOLDER coefficient - invented" },
+    { "subject": "أحياء", "level": "", "stream": "", "coefficient": 3, "weekly_target_minutes": null, "source_note": "PLACEHOLDER coefficient - invented" },
+    { "subject": "فرنسية", "level": "", "stream": "", "coefficient": 3, "weekly_target_minutes": null, "source_note": "PLACEHOLDER coefficient - invented" },
+    { "subject": "عربية", "level": "", "stream": "", "coefficient": 3, "weekly_target_minutes": null, "source_note": "PLACEHOLDER coefficient - invented" },
+    { "subject": "إنجليزية", "level": "", "stream": "", "coefficient": 2, "weekly_target_minutes": null, "source_note": "PLACEHOLDER coefficient - invented" },
+    { "subject": "تاريخ", "level": "", "stream": "", "coefficient": 2, "weekly_target_minutes": null, "source_note": "PLACEHOLDER coefficient - invented" },
+    { "subject": "جغرافيا", "level": "", "stream": "", "coefficient": 2, "weekly_target_minutes": null, "source_note": "PLACEHOLDER coefficient - invented" },
+    { "subject": "فلسفة", "level": "", "stream": "", "coefficient": 2, "weekly_target_minutes": null, "source_note": "PLACEHOLDER coefficient - invented" },
+    { "subject": "اقتصاد", "level": "", "stream": "", "coefficient": 2, "weekly_target_minutes": null, "source_note": "PLACEHOLDER coefficient - invented" }
+  ]
+}

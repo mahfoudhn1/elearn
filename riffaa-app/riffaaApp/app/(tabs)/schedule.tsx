@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import {
@@ -15,15 +15,18 @@ import {
   Row,
   Screen,
   ScreenHeader,
+  SegmentedControl,
   Skeleton,
   Stack,
   TwoToneNumber,
 } from '../../components/ui';
+import { PlannerPlanPanel } from '../../components/planner/PlannerPlanPanel';
 import { useDirection } from '../../hooks/useDirection';
 import { useSchedule, useScheduleMutations } from '../../hooks/queries';
 import { useTheme } from '../../hooks/useTheme';
 import { StartStudyButton } from '../../components/StartStudyButton';
 import { useTranslation } from '../../hooks/useTranslation';
+import { startPlannerQueue } from '../../store/plannerStore';
 import type { ScheduleItem } from '../../services/api/schedule';
 import { formatDate, formatTime } from '../../utils/format';
 
@@ -53,6 +56,10 @@ export default function ScheduleScreen() {
 
   const todayIso = toDayIso(new Date());
   const [selectedDate, setSelectedDate] = useState(todayIso);
+  const [view, setView] = useState<'tasks' | 'plan'>('tasks');
+
+  // Flush queued planner actions when connectivity returns.
+  useEffect(() => startPlannerQueue(), []);
   // React-query owns fetching/refetching-on-focus; mutations invalidate it.
   const { data, isLoading, isError, error, refetch } = useSchedule();
   const { update, remove } = useScheduleMutations();
@@ -244,6 +251,18 @@ export default function ScheduleScreen() {
           </Card>
 
           {/* Hero summary */}
+          <SegmentedControl
+            value={view}
+            onChange={setView}
+            options={[
+              { label: t('plannerTasks'), value: 'tasks' },
+              { label: t('plannerPlan'), value: 'plan' },
+            ]}
+          />
+
+          {view === 'plan' ? <PlannerPlanPanel selectedDate={selectedDate} /> : null}
+          {view === 'tasks' ? (
+            <>
           <Card variant="hero" tone="brand" className="overflow-hidden">
             <GhostNumber
               value={String(summary.total)}
@@ -342,6 +361,8 @@ export default function ScheduleScreen() {
             fullWidth
             onPress={() => router.push('/create-schedule')}
           />
+            </>
+          ) : null}
         </Stack>
       </Screen>
     </View>

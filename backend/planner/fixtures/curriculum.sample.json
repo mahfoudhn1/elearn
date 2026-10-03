@@ -1,0 +1,52 @@
+{
+  "meta": {
+    "description": "Phase 8 FAKE curriculum sample. NOT real Algerian program content.",
+    "verified": false
+  },
+  "academic_year": "2099-2100",
+  "level": "PLACEHOLDER level",
+  "stream": "PLACEHOLDER stream",
+  "status": "DRAFT",
+  "verified": false,
+  "source_note": "PLACEHOLDER fake sample - invented, not official curriculum",
+  "chapters": [
+    {
+      "subject": "رياضيات",
+      "order": 1,
+      "title_ar": "فصل تجريبي",
+      "title_fr": "PLACEHOLDER Chapter 1",
+      "weight": 4,
+      "topics": [
+        {
+          "order": 1,
+          "title_ar": "موضوع تجريبي",
+          "title_fr": "PLACEHOLDER Topic 1.1",
+          "objectives": [
+            { "text_ar": "هدف تجريبي", "text_fr": "PLACEHOLDER objective 1.1.a" }
+          ]
+        },
+        {
+          "order": 2,
+          "title_ar": "موضوع تجريبي",
+          "title_fr": "PLACEHOLDER Topic 1.2",
+          "objectives": []
+        }
+      ]
+    },
+    {
+      "subject": "رياضيات",
+      "order": 2,
+      "title_ar": "فصل تجريبي",
+      "title_fr": "PLACEHOLDER Chapter 2",
+      "weight": 2,
+      "topics": [
+        {
+          "order": 1,
+          "title_ar": "موضوع تجريبي",
+          "title_fr": "PLACEHOLDER Topic 2.1",
+          "objectives": []
+        }
+      ]
+    }
+  ]
+}

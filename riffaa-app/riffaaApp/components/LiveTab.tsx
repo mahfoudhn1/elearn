@@ -58,7 +58,14 @@ export default function LiveTab({ schedules, groupId }: { schedules: MeetingInfo
             fullWidth
             className="mt-5"
             onPress={() => {
-              // TODO(live): open the Jitsi room via `activeSession.Meeting.room_name`.
+              // TODO(live): still a no-op on mobile. The web flow exists but the
+              // mobile app has no reusable Jitsi-join helper — `services/api/
+              // livestream.ts` only exposes meeting CRUD/token refresh, and the
+              // Jitsi room URL/token builder lives in the backend (`jitsi/`).
+              // Needs: a `joinLiveRoom(roomName)` service that mints a Jitsi JWT
+              // (or reuses `refreshLiveMeetingToken`), then opens an in-app
+              // Jitsi WebView / external deep link. `activeSession.Meeting.
+              // room_name` is the room to join.
             }}
           />
           <View className="mt-2">

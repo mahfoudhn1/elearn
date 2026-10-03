@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "verified": false,
+  "source_note": "PLACEHOLDER subject catalogue. Reuses the existing Arabic subject vocabulary for every level; per-level subject lists are NOT verified. See docs/TO_VERIFY.md.",
+  "default_subjects": [
+    "رياضيات",
+    "فيزياء",
+    "كيمياء",
+    "أحياء",
+    "فرنسية",
+    "عربية",
+    "إنجليزية",
+    "تاريخ",
+    "جغرافيا",
+    "فلسفة",
+    "اقتصاد"
+  ],
+  "levels": {}
+}

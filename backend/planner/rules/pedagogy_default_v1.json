@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "verified": false,
+  "source_note": "PLACEHOLDER pedagogy. All numbers are invented/tunable, NOT official pedagogy. See docs/TO_VERIFY.md.",
+  "weekly_target_minutes_by_level_subject": {
+    "default": {
+      "رياضيات": 300,
+      "فيزياء": 180,
+      "كيمياء": 120,
+      "أحياء": 120,
+      "فرنسية": 120,
+      "عربية": 120,
+      "إنجليزية": 120,
+      "تاريخ": 90,
+      "جغرافيا": 90,
+      "فلسفة": 90,
+      "اقتصاد": 90
+    }
+  },
+  "importance_from_coefficient": {
+    "1": 0.8,
+    "2": 1.0,
+    "3": 1.2,
+    "4": 1.4,
+    "5": 1.6,
+    "6": 1.8
+  },
+  "instruction_credit_ratios": {
+    "group": 0.5,
+    "private": 0.75
+  },
+  "activity_type_session_length": {
+    "REVIEW": { "min": 15, "default": 25, "max": 45 },
+    "EXERCISES": { "min": 20, "default": 40, "max": 60 },
+    "REVISION": { "min": 20, "default": 40, "max": 60 }
+  },
+  "followup_chains": [
+    { "source": "LESSON", "target": "REVIEW", "within_hours": 48 },
+    { "source": "REVIEW", "target": "EXERCISES", "within_days": 5 }
+  ],
+  "exam_boost_curve": {
+    "0": 3.0,
+    "1": 2.5,
+    "3": 2.0,
+    "7": 1.5,
+    "14": 1.2
+  },
+  "weakness_multipliers": {
+    "WEAK": 1.5,
+    "AVERAGE": 1.2,
+    "GOOD": 1.0,
+    "VERY_GOOD": 0.8
+  },
+  "deficit_carryover_cap": 1440,
+  "daily_capacity_ratio_table": {
+    "default": 0.5,
+    "weekend": 0.6,
+    "holiday": 0.7,
+    "exam_day": 0.8
+  },
+  "min_break_minutes": 10,
+  "max_consecutive_hard_subjects": 2,
+  "max_demand_minutes_per_subject": 600,
+  "priority_weights": {
+    "EXAM_PROXIMITY": { "weight": 1.0, "why": "PLACEHOLDER: exams close in time should dominate ordering" },
+    "WEAKNESS": { "weight": 0.8, "why": "PLACEHOLDER: weaker subjects should get earlier/bigger slots" },
+    "DEFICIT": { "weight": 0.6, "why": "PLACEHOLDER: accrued deficit should be caught up" },
+    "IMPORTANCE": { "weight": 0.5, "why": "PLACEHOLDER: higher-coefficient subjects rank higher" },
+    "FOLLOWUP_DUE": { "weight": 0.4, "why": "PLACEHOLDER: follow-ups due sooner go first" }
+  },
+  "history": {
+    "lookback_days": 28,
+    "min_samples": 3,
+    "length_factor_floor": 0.5,
+    "length_factor_ceil": 1.25,
+    "band_penalty_weight": 0.5,
+    "done_threshold_ratio": 0.8,
+    "partial_threshold_ratio": 0.3,
+    "replan_debounce_minutes": 30
+  }
+}

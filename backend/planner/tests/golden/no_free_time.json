@@ -1,0 +1,226 @@
+{
+  "expected": {
+    "diagnostics": {
+      "capacity_minutes_by_day": {
+        "2099-09-07": 15,
+        "2099-09-08": 15,
+        "2099-09-09": 15,
+        "2099-09-10": 15,
+        "2099-09-11": 15,
+        "2099-09-12": 18,
+        "2099-09-13": 18
+      },
+      "demand_units": 1,
+      "placed_minutes": 0,
+      "sessions": 0,
+      "unmet": 1,
+      "used_minutes_by_day": {
+        "2099-09-07": 0,
+        "2099-09-08": 0,
+        "2099-09-09": 0,
+        "2099-09-10": 0,
+        "2099-09-11": 0,
+        "2099-09-12": 0,
+        "2099-09-13": 0
+      },
+      "window_days": 7
+    },
+    "sessions": [],
+    "unmet": [
+      {
+        "activity_type": "STUDY",
+        "derived_from": null,
+        "due_by": null,
+        "minutes": 300,
+        "reasons": [
+          {
+            "code": "NO_FREE_SLOT",
+            "params": {
+              "remaining_minutes": 300,
+              "session_length": 45
+            }
+          }
+        ],
+        "subject_id": "رياضيات"
+      }
+    ]
+  },
+  "input": {
+    "busy_blocks": [
+      {
+        "activity_type": "FIXED",
+        "counts_as_study_credit": false,
+        "date": "2099-09-07",
+        "end_min": 1410,
+        "kind": "SCHOOL",
+        "movable": false,
+        "source": "protected",
+        "source_id": null,
+        "start_min": 420,
+        "subject_id": null
+      },
+      {
+        "activity_type": "FIXED",
+        "counts_as_study_credit": false,
+        "date": "2099-09-08",
+        "end_min": 1410,
+        "kind": "SCHOOL",
+        "movable": false,
+        "source": "protected",
+        "source_id": null,
+        "start_min": 420,
+        "subject_id": null
+      },
+      {
+        "activity_type": "FIXED",
+        "counts_as_study_credit": false,
+        "date": "2099-09-09",
+        "end_min": 1410,
+        "kind": "SCHOOL",
+        "movable": false,
+        "source": "protected",
+        "source_id": null,
+        "start_min": 420,
+        "subject_id": null
+      },
+      {
+        "activity_type": "FIXED",
+        "counts_as_study_credit": false,
+        "date": "2099-09-10",
+        "end_min": 1410,
+        "kind": "SCHOOL",
+        "movable": false,
+        "source": "protected",
+        "source_id": null,
+        "start_min": 420,
+        "subject_id": null
+      },
+      {
+        "activity_type": "FIXED",
+        "counts_as_study_credit": false,
+        "date": "2099-09-11",
+        "end_min": 1410,
+        "kind": "SCHOOL",
+        "movable": false,
+        "source": "protected",
+        "source_id": null,
+        "start_min": 420,
+        "subject_id": null
+      },
+      {
+        "activity_type": "FIXED",
+        "counts_as_study_credit": false,
+        "date": "2099-09-12",
+        "end_min": 1410,
+        "kind": "SCHOOL",
+        "movable": false,
+        "source": "protected",
+        "source_id": null,
+        "start_min": 420,
+        "subject_id": null
+      },
+      {
+        "activity_type": "FIXED",
+        "counts_as_study_credit": false,
+        "date": "2099-09-13",
+        "end_min": 1410,
+        "kind": "SCHOOL",
+        "movable": false,
+        "source": "protected",
+        "source_id": null,
+        "start_min": 420,
+        "subject_id": null
+      }
+    ],
+    "days": [
+      {
+        "date": "2099-09-07",
+        "is_exam_day": false,
+        "is_holiday": false,
+        "is_weekend": false,
+        "protected_blocks": [],
+        "sleep_min": 1380,
+        "wake_min": 360
+      },
+      {
+        "date": "2099-09-08",
+        "is_exam_day": false,
+        "is_holiday": false,
+        "is_weekend": false,
+        "protected_blocks": [],
+        "sleep_min": 1380,
+        "wake_min": 360
+      },
+      {
+        "date": "2099-09-09",
+        "is_exam_day": false,
+        "is_holiday": false,
+        "is_weekend": false,
+        "protected_blocks": [],
+        "sleep_min": 1380,
+        "wake_min": 360
+      },
+      {
+        "date": "2099-09-10",
+        "is_exam_day": false,
+        "is_holiday": false,
+        "is_weekend": false,
+        "protected_blocks": [],
+        "sleep_min": 1380,
+        "wake_min": 360
+      },
+      {
+        "date": "2099-09-11",
+        "is_exam_day": false,
+        "is_holiday": false,
+        "is_weekend": false,
+        "protected_blocks": [],
+        "sleep_min": 1380,
+        "wake_min": 360
+      },
+      {
+        "date": "2099-09-12",
+        "is_exam_day": false,
+        "is_holiday": false,
+        "is_weekend": true,
+        "protected_blocks": [],
+        "sleep_min": 1380,
+        "wake_min": 360
+      },
+      {
+        "date": "2099-09-13",
+        "is_exam_day": false,
+        "is_holiday": false,
+        "is_weekend": true,
+        "protected_blocks": [],
+        "sleep_min": 1380,
+        "wake_min": 360
+      }
+    ],
+    "deficit_by_subject": {},
+    "demands": [
+      {
+        "activity_type": "STUDY",
+        "derived_from": null,
+        "due_by": null,
+        "minutes": 300,
+        "subject_id": "رياضيات",
+        "topic_id": null
+      }
+    ],
+    "exams": [],
+    "history": null,
+    "lessons": [],
+    "now": "2099-09-07",
+    "profile": {
+      "completion_factor": 1.0,
+      "daily_study_target_minutes": 180,
+      "max_focus_minutes": null,
+      "preferred_period": "EVENING",
+      "session_length_preference": "MEDIUM"
+    },
+    "recent_topics": {},
+    "tombstoned_slots": []
+  },
+  "scenario": "no_free_time"
+}

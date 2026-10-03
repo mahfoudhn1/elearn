@@ -81,6 +81,7 @@ INSTALLED_APPS = [
     "riffaaAi",
     "schedule",
     "tracking",
+    "planner",
 
     ]
 

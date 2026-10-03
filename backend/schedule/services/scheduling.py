@@ -30,13 +30,15 @@ class SchedulingService:
     def get_personal_items_queryset(self, start: datetime | None = None, end: datetime | None = None):
         # Terminal items no longer occupy time, so a finished or cancelled task
         # (or a missed exam) must not block a new booking that overlaps it.
+        # Planner-mirrored rows are projections of the generated plan and are
+        # not pre-existing busy time, so they must not block edits/regeneration.
         qs = PersonalScheduleItem.objects.filter(user=self.user).exclude(
             status__in=[
                 PersonalScheduleItem.Status.COMPLETED,
                 PersonalScheduleItem.Status.CANCELLED,
                 PersonalScheduleItem.Status.MISSED,
             ]
-        )
+        ).exclude(source=PersonalScheduleItem.Source.PLANNER)
         if start and end:
             qs = qs.filter(start_datetime__lt=end, end_datetime__gt=start)
         return qs

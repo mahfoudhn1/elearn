@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "verified": false,
+  "source_note": "PLACEHOLDER rule values - invented, not verified pedagogy. See docs/TO_VERIFY.md",
+  "grid_minutes": 15,
+  "wake_buffer_min": 30,
+  "sleep_buffer_min": 30,
+  "post_school_margin_min": 30,
+  "min_free_interval_min": 30,
+  "default_private_session_min": 60,
+  "capacity_ratios": {
+    "default": 0.5,
+    "weekend": 0.6,
+    "holiday": 0.7,
+    "exam_day": 0.8
+  },
+  "allocation": {
+    "session_length_by_preference": { "SHORT": 25, "MEDIUM": 45, "LONG": 60, "NONE": 40 },
+    "completion_factor": 1.0,
+    "min_session_minutes": 15,
+    "max_session_minutes": 60,
+    "min_break_minutes": 10,
+    "hard_subject_spacing_days": 1,
+    "lesson_proximity_days": 3,
+    "topic_recency_days": 7,
+    "band_boundaries": {
+      "morning_start": 300,
+      "afternoon_start": 720,
+      "evening_start": 1020,
+      "night_start": 1380
+    },
+    "priority": {
+      "exam_urgent": 3.0,
+      "expiring_followup": 2.0,
+      "deficit": 1.0,
+      "exam_urgency_days": 7,
+      "followup_urgency_days": 2,
+      "rationale": {
+        "exam_urgent": "PLACEHOLDER: demand for subjects with an exam soon comes first",
+        "expiring_followup": "PLACEHOLDER: follow-ups whose window is closing come next",
+        "deficit": "PLACEHOLDER: then rank by how far behind the student is"
+      }
+    },
+    "soft": {
+      "preferred_period": 1.0,
+      "spread_across_days": 1.0,
+      "hard_subject_spacing": 0.8,
+      "lesson_proximity": 0.6,
+      "length_fit": 0.4,
+      "topic_recency": 0.7,
+      "rationale": {
+        "preferred_period": "PLACEHOLDER: match the student's preferred time of day",
+        "spread_across_days": "PLACEHOLDER: fill the emptiest days first",
+        "hard_subject_spacing": "PLACEHOLDER: avoid stacking the same subject back-to-back",
+        "lesson_proximity": "PLACEHOLDER: put a lesson's follow-up near the lesson",
+        "length_fit": "PLACEHOLDER: prefer full-length sessions over scraps",
+        "topic_recency": "PLACEHOLDER: prefer topics a recent lesson covered"
+      }
+    }
+  }
+}
