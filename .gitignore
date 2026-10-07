@@ -28,6 +28,8 @@ env/
 
 # Migrations
 migrations/
+!**/migrations/
+!**/migrations/*.py
 
 # Static files
 staticfiles/

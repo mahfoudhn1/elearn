@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('planner', '0001_initial'),
-        ('users', '0001_initial'),
+        ('users', '0004_fieldofstudy_grade'),
     ]
 
     operations = [
