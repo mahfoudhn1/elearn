@@ -39,6 +39,7 @@ python-dotenv==1.0.1
 redis==5.2.1
 requests==2.32.3
 requests-oauthlib==2.0.0
+resend==2.7.0
 rsa==4.9
 service-identity==24.2.0
 setuptools==74.1.2
