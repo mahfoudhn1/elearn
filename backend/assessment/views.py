@@ -223,7 +223,7 @@ class StaffQuestionImportView(APIView):
     nothing.
     """
 
-    permission_classes = [IsAuthenticated, IsTeacherOrStaff]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     parser_classes = [JSONParser, MultiPartParser, FormParser]
 
     def post(self, request):
