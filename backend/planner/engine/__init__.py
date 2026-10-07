@@ -36,6 +36,15 @@ from .pedagogy import (
 )
 from .priority import RankedDemand, rank_demands, tier_for
 from .rules import EngineRules, load_rules
+from .tiers import (
+    CORE,
+    LIGHT,
+    STANDARD,
+    TierThresholds,
+    raise_tier,
+    resolve_tier,
+    tier_rank,
+)
 from .scheduling import (
     compute_free_intervals,
     daily_capacity,
@@ -88,4 +97,11 @@ __all__ = [
     "session_length_for",
     "sort_blocks",
     "tier_for",
+    "CORE",
+    "LIGHT",
+    "STANDARD",
+    "TierThresholds",
+    "raise_tier",
+    "resolve_tier",
+    "tier_rank",
 ]

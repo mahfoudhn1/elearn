@@ -35,7 +35,9 @@ from .serializers import (
     CommitmentSerializer,
     OnboardingSerializer,
     StudentPlannerProfileSerializer,
+    SubjectPlanningUpdateSerializer,
 )
+from .subject_planning import apply_subject_planning, subject_planning_state
 
 
 class AcademicYearViewSet(UUIDLookupMixin, viewsets.ReadOnlyModelViewSet):
@@ -167,3 +169,27 @@ class OnboardingView(APIView):
                 {"detail": "The submission violated a data constraint."}
             ) from exc
         return Response(state, status=status.HTTP_200_OK)
+
+
+class SubjectPlanningView(APIView):
+    """Read and update the student's subject planning modes.
+
+    GET returns, per subject: tier, coefficient (may be null), whether
+    importance is known, the mode and structured reasons. PUT upserts modes.
+    """
+
+    permission_classes = [IsAuthenticated, HasStudentProfile]
+
+    def get(self, request):
+        student = get_student(request.user)
+        return Response(subject_planning_state(student))
+
+    def put(self, request):
+        student = get_student(request.user)
+        serializer = SubjectPlanningUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        modes = {
+            row["subject"]: row["mode"]
+            for row in serializer.validated_data["subjects"]
+        }
+        return Response(apply_subject_planning(student, modes))

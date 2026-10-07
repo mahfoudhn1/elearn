@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Mapping
 
-from .demand import DemandActivity, DemandUnit, Reason
+from .demand import DemandActivity, DemandUnit, MasteryTopicSummary, Reason
 from .dto import BusyBlock, DayContext
 from .history import HistorySummary
 from .priority import RankedDemand, rank_demands
@@ -43,10 +43,17 @@ class EngineInput:
     lessons: tuple[BusyBlock, ...] = ()
     exams: tuple[ExamInput, ...] = ()
     deficit_by_subject: Mapping[str, int] = field(default_factory=dict)
+    #: subject_id -> tier (CORE/STANDARD/LIGHT) for priority ordering.
+    tier_by_subject: Mapping[str, str] = field(default_factory=dict)
+    #: subject_id -> applied weakness multiplier (for priority tie-breaks).
+    weakness_by_subject: Mapping[str, float] = field(default_factory=dict)
     tombstoned_slots: frozenset[tuple[date, int]] = frozenset()
     history: HistorySummary | None = None
     # topic_id -> last time it was covered/studied (for topic_recency scoring).
     recent_topics: Mapping[str, date] = field(default_factory=dict)
+    #: topic_id -> MasteryTopicSummary (Phase A7). Empty = feature disabled and
+    #: the plan is byte-identical to a pre-A7 run.
+    mastery_summary: Mapping[str, "MasteryTopicSummary"] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -58,6 +65,8 @@ class PlannedSessionDTO:
     activity_type: str
     reasons: tuple[Reason, ...]
     source_demand_ids: tuple[str, ...]
+    #: Topic the session targets (mastery/flashcard demand); None for subject-level.
+    topic_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -323,6 +332,8 @@ def generate_plan(inputs: EngineInput, rules: EngineRules, now: date) -> EngineO
         now,
         exam_days_by_subject=exam_days_by_subject,
         deficit_by_subject=inputs.deficit_by_subject,
+        tier_by_subject=inputs.tier_by_subject,
+        weakness_by_subject=inputs.weakness_by_subject,
     )
 
     sessions: list[PlannedSessionDTO] = []
@@ -403,6 +414,7 @@ def generate_plan(inputs: EngineInput, rules: EngineRules, now: date) -> EngineO
                     ),
                 ),
                 source_demand_ids=(demand_id,),
+                topic_id=demand.topic_id,
             )
             sessions.append(session)
             placed.append(session)

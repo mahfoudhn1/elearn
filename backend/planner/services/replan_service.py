@@ -22,6 +22,8 @@ class ReplanTrigger:
     WEEKLY = "WEEKLY"
     AVAILABILITY = "AVAILABILITY"
     MANUAL = "MANUAL"
+    #: Mastery changed (submitted attempt / flashcard batch moved a confidence band).
+    MASTERY = "MASTERY"
 
 
 def default_window(now=None, days: int = 7):

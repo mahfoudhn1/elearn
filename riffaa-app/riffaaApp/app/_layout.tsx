@@ -170,6 +170,43 @@ export default function RootLayout() {
           name="course/[id]"
           options={{ animation: 'fade', animationDuration: 240 }}
         />
+        {/* Assessment (Phase A8): soft fade for the readiness/quiz/flashcard flow. */}
+        <Stack.Screen
+          name="assessment/index"
+          options={{ animation: 'fade', animationDuration: 240 }}
+        />
+        <Stack.Screen
+          name="assessment/subject/[subject]"
+          options={{ animation: 'fade', animationDuration: 240 }}
+        />
+        <Stack.Screen
+          name="assessment/quiz/[quizId]"
+          options={{ animation: 'fade', animationDuration: 240 }}
+        />
+        <Stack.Screen
+          name="assessment/results/[attemptId]"
+          options={{ animation: 'fade', animationDuration: 240 }}
+        />
+        <Stack.Screen
+          name="assessment/diagnostic"
+          options={{ animation: 'fade', animationDuration: 240 }}
+        />
+        <Stack.Screen
+          name="assessment/flashcards"
+          options={{ animation: 'fade', animationDuration: 240 }}
+        />
+        <Stack.Screen
+          name="assessment/planning-modes"
+          options={{ animation: 'fade', animationDuration: 240 }}
+        />
+        <Stack.Screen
+          name="assessment/fix"
+          options={{ animation: 'fade', animationDuration: 240 }}
+        />
+        <Stack.Screen
+          name="assessment/math-spike"
+          options={{ animation: 'fade', animationDuration: 240 }}
+        />
       </Stack>
               <PomodoroRuntime />
               <OfflineBanner />

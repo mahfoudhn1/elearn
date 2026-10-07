@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { StudyTracker } from '../../components/StudyTracker';
+import { SmartPlanCard } from '../../components/planner/SmartPlanCard';
 import {
   CourseCardHorizontal,
   GroupCard,
@@ -40,7 +41,9 @@ import {
   getStudyStats,
 } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
+import { usePlannerStore } from '../../store/plannerStore';
 import { formatTime } from '../../utils/format';
+import { activityKey } from '../../utils/plannerReasons';
 import {
   getArrayFromPayload,
   normalizeGroup,
@@ -86,6 +89,7 @@ interface MergedEntry {
   title: string;
   subtitle: string;
   isClass: boolean;
+  isSmartPlan?: boolean;
   groupId?: string;
   scheduleItemId?: string;
 }
@@ -96,6 +100,7 @@ interface UpNext {
   subtitle: string;
   timeLabel: string;
   isClass: boolean;
+  isSmartPlan?: boolean;
   groupId?: string;
   scheduleItemId?: string;
 }
@@ -176,6 +181,9 @@ export default function HomeScreen() {
   const [scheduleError, setScheduleError] = useState<string | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
 
+  const plannedSessions = usePlannerStore((state) => state.sessions);
+  const loadPlanner = usePlannerStore((state) => state.loadCurrent);
+
   const loadSchedule = useCallback(async () => {
     setScheduleError(null);
     const [personal, classes, groupList] = await Promise.allSettled([
@@ -219,14 +227,16 @@ export default function HomeScreen() {
     setStatsLoading(true);
     void loadSchedule();
     void loadStats();
-  }, [loadSchedule, loadStats]);
+    void loadPlanner();
+  }, [loadSchedule, loadStats, loadPlanner]);
 
   // Refetch on focus, so returning from the create screen shows the new item.
   useFocusEffect(
     useCallback(() => {
       loadSchedule();
       loadStats();
-    }, [loadSchedule, loadStats]),
+      void loadPlanner();
+    }, [loadSchedule, loadStats, loadPlanner]),
   );
 
   // Live/soon state is time-relative; refresh it without a full data fetch.
@@ -243,6 +253,7 @@ export default function HomeScreen() {
         title: item.title,
         subtitle: item.subject || '',
         isClass: false,
+        isSmartPlan: false,
         scheduleItemId: String(item.id),
       })),
       ...classSessions.map((session) => ({
@@ -251,8 +262,20 @@ export default function HomeScreen() {
         title: session.title,
         subtitle: session.subject || session.groupName,
         isClass: true,
+        isSmartPlan: false,
         groupId: session.groupId || undefined,
       })),
+      ...plannedSessions
+        .filter((s) => s.state !== 'CANCELLED' && s.state !== 'SKIPPED')
+        .map((s) => ({
+          start: s.start_dt ? new Date(s.start_dt) : null,
+          end: s.end_dt ? new Date(s.end_dt) : null,
+          title: s.subject,
+          subtitle: `${t('plannerSmartPlan')} · ${t(activityKey(s.activity_type))}`,
+          isClass: false,
+          isSmartPlan: true,
+          scheduleItemId: s.personal_item ?? undefined,
+        })),
     ];
 
     const merged = entries
@@ -269,6 +292,7 @@ export default function HomeScreen() {
         subtitle: live.subtitle,
         timeLabel: formatTime(live.start),
         isClass: live.isClass,
+        isSmartPlan: live.isSmartPlan,
         groupId: live.groupId,
         scheduleItemId: live.scheduleItemId,
       };
@@ -282,6 +306,7 @@ export default function HomeScreen() {
         subtitle: next.subtitle,
         timeLabel: formatTime(next.start),
         isClass: next.isClass,
+        isSmartPlan: next.isSmartPlan,
         groupId: next.groupId,
         scheduleItemId: next.scheduleItemId,
       };
@@ -293,8 +318,9 @@ export default function HomeScreen() {
       subtitle: t('planYourDayMessage'),
       timeLabel: '',
       isClass: false,
+      isSmartPlan: false,
     };
-  }, [items, classSessions, now, t]);
+  }, [items, classSessions, plannedSessions, now, t]);
 
   const openHeroAction = useCallback(() => {
     if (upNext.kind === 'empty') {
@@ -551,6 +577,11 @@ export default function HomeScreen() {
             </Row>
           </Glass>
         )}
+      </View>
+
+      {/* ===================== SMART STUDY PLAN ===================== */}
+      <View className="mt-5 px-5">
+        <SmartPlanCard />
       </View>
 
       {/* ===================== NEW: this week ===================== */}

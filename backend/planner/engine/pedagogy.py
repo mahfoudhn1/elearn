@@ -14,6 +14,7 @@ from typing import Mapping
 from planner.pedagogy_schema import validate_pedagogy_rules
 
 from .rules import RULES_DIR
+from .tiers import TierThresholds
 
 DEFAULT_PEDAGOGY_FILENAME = "pedagogy_default_v1.json"
 
@@ -23,6 +24,42 @@ class SessionLength:
     min: int
     default: int
     max: int
+
+
+@dataclass(frozen=True)
+class MasteryRules:
+    """Placeholder thresholds/knobs for mastery-aware demand (Phase A7)."""
+
+    low_threshold: float = 0.5
+    high_threshold: float = 0.85
+    min_confidence: str = "LOW"
+    topic_session_minutes: int = 30
+    flashcard_session_minutes: int = 10
+    revision_topics_max: int = 3
+    low_mastery_boost: float = 1.3
+
+    @classmethod
+    def default(cls) -> "MasteryRules":
+        return cls()
+
+    @classmethod
+    def from_dict(cls, data) -> "MasteryRules":
+        if not isinstance(data, Mapping):
+            return cls.default()
+        return cls(
+            low_threshold=float(data.get("low_threshold", 0.5)),
+            high_threshold=float(data.get("high_threshold", 0.85)),
+            min_confidence=str(data.get("min_confidence", "LOW")),
+            topic_session_minutes=int(data.get("topic_session_minutes", 30)),
+            flashcard_session_minutes=int(data.get("flashcard_session_minutes", 10)),
+            revision_topics_max=int(data.get("revision_topics_max", 3)),
+            low_mastery_boost=float(data.get("low_mastery_boost", 1.3)),
+        )
+
+    def confidence_at_least(self, confidence: str) -> bool:
+        """True when ``confidence`` meets the minimum that may affect demand."""
+        order = {"NONE": 0, "LOW": 1, "MEDIUM": 2, "HIGH": 3}
+        return order.get(confidence, 0) >= order.get(self.min_confidence, 1)
 
 
 @dataclass(frozen=True)
@@ -91,6 +128,18 @@ class PedagogyRules:
     max_consecutive_hard_subjects: int
     max_demand_minutes_per_subject: int
     priority_weights: Mapping[str, Mapping[str, object]]
+    max_weakness_multiplier_by_tier: Mapping[str, float] = field(
+        default_factory=lambda: {"CORE": 1.5, "STANDARD": 1.25, "LIGHT": 1.0}
+    )
+    weekly_minutes_floor_by_tier: Mapping[str, int] = field(
+        default_factory=lambda: {"CORE": 60, "STANDARD": 30, "LIGHT": 15}
+    )
+    weekly_minutes_ceiling_by_tier: Mapping[str, int] = field(
+        default_factory=lambda: {"CORE": 600, "STANDARD": 480, "LIGHT": 180}
+    )
+    tier_thresholds: TierThresholds = field(default_factory=TierThresholds.default)
+    planning_mode_tier_step: int = 1
+    mastery: MasteryRules = field(default_factory=MasteryRules.default)
     history: HistoryRules = field(default_factory=HistoryRules.default)
     version: int = 1
     verified: bool = False
@@ -148,6 +197,21 @@ class PedagogyRules:
                 str(code): {"weight": float(spec["weight"]), "why": str(spec["why"])}
                 for code, spec in data["priority_weights"].items()
             },
+            max_weakness_multiplier_by_tier=_tier_numbers(
+                data.get("max_weakness_multiplier_by_tier"),
+                {"CORE": 1.5, "STANDARD": 1.25, "LIGHT": 1.0},
+            ),
+            weekly_minutes_floor_by_tier=_tier_ints(
+                data.get("weekly_minutes_floor_by_tier"),
+                {"CORE": 60, "STANDARD": 30, "LIGHT": 15},
+            ),
+            weekly_minutes_ceiling_by_tier=_tier_ints(
+                data.get("weekly_minutes_ceiling_by_tier"),
+                {"CORE": 600, "STANDARD": 480, "LIGHT": 180},
+            ),
+            tier_thresholds=_tier_thresholds(data.get("tier_coefficient_thresholds")),
+            planning_mode_tier_step=int(data.get("planning_mode_tier_step", 1)),
+            mastery=MasteryRules.from_dict(data.get("mastery")),
             history=HistoryRules.from_dict(data.get("history", {})),
             version=int(data.get("version", 1)),
             verified=bool(data.get("verified", False)),
@@ -167,6 +231,20 @@ class PedagogyRules:
     def weakness_for(self, confidence: str) -> float:
         return float(self.weakness_multipliers.get(confidence, 1.0))
 
+    # -- tier helpers ----------------------------------------------------------
+
+    def max_weakness_multiplier(self, tier: str) -> float:
+        return float(self.max_weakness_multiplier_by_tier.get(tier, 1.0))
+
+    def weekly_minutes_floor(self, tier: str) -> int:
+        return int(self.weekly_minutes_floor_by_tier.get(tier, 0))
+
+    def weekly_minutes_ceiling(self, tier: str) -> int:
+        return int(self.weekly_minutes_ceiling_by_tier.get(tier, 0))
+
+    def tier_for_coefficient(self, coefficient: float | None) -> str:
+        return self.tier_thresholds.tier_for(coefficient)
+
     def session_length(self, activity_type: str) -> SessionLength | None:
         return self.session_lengths.get(activity_type)
 
@@ -184,6 +262,33 @@ class PedagogyRules:
         if not candidates:
             return 1.0
         return float(self.exam_boost_curve[min(candidates)])
+
+
+def _tier_numbers(data, default: Mapping[str, float]) -> dict[str, float]:
+    if not isinstance(data, Mapping):
+        return dict(default)
+    return {
+        tier: float(data.get(tier, value))
+        for tier, value in default.items()
+    }
+
+
+def _tier_ints(data, default: Mapping[str, int]) -> dict[str, int]:
+    if not isinstance(data, Mapping):
+        return dict(default)
+    return {
+        tier: int(data.get(tier, value))
+        for tier, value in default.items()
+    }
+
+
+def _tier_thresholds(data) -> TierThresholds:
+    if not isinstance(data, Mapping):
+        return TierThresholds.default()
+    return TierThresholds(
+        core_min=float(data.get("core_min", 3)),
+        light_max=float(data.get("light_max", 1)),
+    )
 
 
 def load_pedagogy_rules(path: str | Path | None = None) -> PedagogyRules:

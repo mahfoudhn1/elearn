@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "verified": false,
+  "source_note": "PLACEHOLDER item-analysis thresholds. Every number is invented to make the analyser runnable and MUST be checked against psychometric practice before it is trusted (see docs/TO_VERIFY.md).",
+  "min_responses": 10,
+  "min_responses_why": "PLACEHOLDER: below this many answers an item's statistics are noise; report INSUFFICIENT_DATA instead of flags.",
+  "too_easy_pct": 0.85,
+  "too_easy_pct_why": "PLACEHOLDER: an item almost everyone answers correctly discriminates weakly and wastes session time.",
+  "too_hard_pct": 0.3,
+  "too_hard_pct_why": "PLACEHOLDER: an item almost nobody answers correctly is likely mis-keyed or beyond the level.",
+  "low_discrimination": 0.1,
+  "low_discrimination_why": "PLACEHOLDER: discrimination below this (top-group minus bottom-group correctness) means strong and weak students perform alike.",
+  "negative_discrimination": 0.0,
+  "negative_discrimination_why": "PLACEHOLDER: a discrimination below this means the top group did WORSE than the bottom group -- almost always a mis-keyed answer.",
+  "ambiguous_distractor_pct": 0.15,
+  "ambiguous_distractor_pct_why": "PLACEHOLDER: a single wrong option chosen by at least this share of students suggests a plausible-but-marked-wrong distractor or a mis-key.",
+  "top_bottom_fraction": 0.27,
+  "top_bottom_fraction_why": "PLACEHOLDER: the classic 27% upper/lower groups used to compute discrimination.",
+  "calibration_min_samples": 10,
+  "calibration_min_samples_why": "PLACEHOLDER: a readiness-vs-grade correlation needs at least this many paired students before it is reported as significant."
+}

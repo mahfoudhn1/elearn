@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, View } from 'react-native';
@@ -16,6 +17,7 @@ import {
   Stack,
   TextField,
 } from '../../components/ui';
+import { subjectTint } from '../../constants/subjects';
 import { useTranslation } from '../../hooks/useTranslation';
 import {
   getOnboardingState,
@@ -167,20 +169,46 @@ export default function PlannerOnboardingScreen() {
     if (!state) return null;
 
     if (activeStep === 'routine') {
+      const WAKE_PRESETS = ['06:00', '06:30', '07:00', '07:30'];
+      const SLEEP_PRESETS = ['22:00', '22:30', '23:00', '23:30'];
       return (
-        <Stack gap={12}>
-          <TextField
-            label={t('plannerWakeTime')}
-            value={draft.wake_time}
-            onChangeText={(value) => update({ wake_time: value })}
-            placeholder="06:30"
-          />
-          <TextField
-            label={t('plannerSleepTime')}
-            value={draft.sleep_time}
-            onChangeText={(value) => update({ sleep_time: value })}
-            placeholder="23:00"
-          />
+        <Stack gap={16}>
+          <Stack gap={8}>
+            <TextField
+              label={t('plannerWakeTime')}
+              value={draft.wake_time}
+              onChangeText={(value) => update({ wake_time: value })}
+              placeholder="06:30"
+            />
+            <Row gap={6} wrap>
+              {WAKE_PRESETS.map((preset) => (
+                <Chip
+                  key={preset}
+                  label={preset}
+                  selected={draft.wake_time === preset}
+                  onPress={() => update({ wake_time: preset })}
+                />
+              ))}
+            </Row>
+          </Stack>
+          <Stack gap={8}>
+            <TextField
+              label={t('plannerSleepTime')}
+              value={draft.sleep_time}
+              onChangeText={(value) => update({ sleep_time: value })}
+              placeholder="23:00"
+            />
+            <Row gap={6} wrap>
+              {SLEEP_PRESETS.map((preset) => (
+                <Chip
+                  key={preset}
+                  label={preset}
+                  selected={draft.sleep_time === preset}
+                  onPress={() => update({ sleep_time: preset })}
+                />
+              ))}
+            </Row>
+          </Stack>
         </Stack>
       );
     }
@@ -215,7 +243,7 @@ export default function PlannerOnboardingScreen() {
                     <Row gap={8}>
                       <View className="flex-1">
                         <TextField
-                          label={t('plannerWakeTime')}
+                          label={t('plannerSchoolStart')}
                           value={day.start_time}
                           onChangeText={(value) =>
                             update({
@@ -230,7 +258,7 @@ export default function PlannerOnboardingScreen() {
                       </View>
                       <View className="flex-1">
                         <TextField
-                          label={t('plannerSleepTime')}
+                          label={t('plannerSchoolEnd')}
                           value={day.end_time}
                           onChangeText={(value) =>
                             update({
@@ -366,12 +394,24 @@ export default function PlannerOnboardingScreen() {
               ]}
             />
           </Stack>
-          <TextField
-            label={t('plannerDailyTarget')}
-            value={draft.daily_study_target_minutes}
-            keyboardType="number-pad"
-            onChangeText={(value) => update({ daily_study_target_minutes: value })}
-          />
+          <Stack gap={8}>
+            <TextField
+              label={t('plannerDailyTarget')}
+              value={draft.daily_study_target_minutes}
+              keyboardType="number-pad"
+              onChangeText={(value) => update({ daily_study_target_minutes: value })}
+            />
+            <Row gap={6} wrap>
+              {['60', '90', '120', '180'].map((mins) => (
+                <Chip
+                  key={mins}
+                  label={`${mins} min`}
+                  selected={draft.daily_study_target_minutes === mins}
+                  onPress={() => update({ daily_study_target_minutes: mins })}
+                />
+              ))}
+            </Row>
+          </Stack>
         </Stack>
       );
     }
@@ -381,12 +421,21 @@ export default function PlannerOnboardingScreen() {
         <Stack gap={10}>
           {state.available_subjects.map((subject) => {
             const selected = draft.subject_confidences[subject];
+            const tint = subjectTint(subject);
             return (
-              <Card key={subject} variant="list">
-                <Stack gap={8}>
-                  <AppText variant="bodySm" weight="medium">
-                    {subject}
-                  </AppText>
+              <Card key={subject} variant="list" subject={subject}>
+                <Stack gap={10}>
+                  <Row gap={10} align="center">
+                    <View
+                      className="h-8 w-8 items-center justify-center rounded-xl"
+                      style={{ backgroundColor: `${tint.color}25` }}
+                    >
+                      <Ionicons name={tint.icon} size={16} color={tint.color} />
+                    </View>
+                    <AppText variant="bodySm" weight="semibold">
+                      {subject}
+                    </AppText>
+                  </Row>
                   <Row gap={6} wrap>
                     {CONFIDENCE_LEVELS.map((level) => (
                       <Chip

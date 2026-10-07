@@ -44,6 +44,30 @@ _PRIORITY_WEIGHT = {
     "additionalProperties": False,
 }
 
+_TIER_NUMBERS = {
+    "type": "object",
+    "required": ["CORE", "STANDARD", "LIGHT", "why"],
+    "properties": {
+        "CORE": {"type": "number"},
+        "STANDARD": {"type": "number"},
+        "LIGHT": {"type": "number"},
+        "why": {"type": "string", "minLength": 1},
+    },
+    "additionalProperties": False,
+}
+
+_TIER_INTEGERS = {
+    "type": "object",
+    "required": ["CORE", "STANDARD", "LIGHT", "why"],
+    "properties": {
+        "CORE": {"type": "integer", "minimum": 0},
+        "STANDARD": {"type": "integer", "minimum": 0},
+        "LIGHT": {"type": "integer", "minimum": 0},
+        "why": {"type": "string", "minLength": 1},
+    },
+    "additionalProperties": False,
+}
+
 PEDAGOGY_SCHEMA = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
@@ -76,6 +100,60 @@ PEDAGOGY_SCHEMA = {
         "followup_chains": {"type": "array", "items": _FOLLOWUP_CHAIN},
         "exam_boost_curve": _OBJ_OF_NUMBERS,
         "weakness_multipliers": _OBJ_OF_NUMBERS,
+        "tier_coefficient_thresholds": {
+            "type": "object",
+            "required": ["core_min", "light_max", "why"],
+            "properties": {
+                "core_min": {"type": "number"},
+                "light_max": {"type": "number"},
+                "why": {"type": "string", "minLength": 1},
+            },
+            "additionalProperties": False,
+        },
+        "max_weakness_multiplier_by_tier": _TIER_NUMBERS,
+        "weekly_minutes_floor_by_tier": _TIER_INTEGERS,
+        "weekly_minutes_ceiling_by_tier": _TIER_INTEGERS,
+        "planning_mode_tier_step": {"type": "integer", "minimum": 0},
+        "planning_mode_tier_step_why": {"type": "string", "minLength": 1},
+        "mastery": {
+            "type": "object",
+            "required": [
+                "low_threshold",
+                "low_threshold_why",
+                "high_threshold",
+                "high_threshold_why",
+                "min_confidence",
+                "min_confidence_why",
+                "topic_session_minutes",
+                "topic_session_minutes_why",
+                "flashcard_session_minutes",
+                "flashcard_session_minutes_why",
+                "revision_topics_max",
+                "revision_topics_max_why",
+                "low_mastery_boost",
+                "low_mastery_boost_why",
+            ],
+            "properties": {
+                "low_threshold": {"type": "number", "minimum": 0, "maximum": 1},
+                "low_threshold_why": {"type": "string", "minLength": 1},
+                "high_threshold": {"type": "number", "minimum": 0, "maximum": 1},
+                "high_threshold_why": {"type": "string", "minLength": 1},
+                "min_confidence": {
+                    "type": "string",
+                    "enum": ["NONE", "LOW", "MEDIUM", "HIGH"],
+                },
+                "min_confidence_why": {"type": "string", "minLength": 1},
+                "topic_session_minutes": {"type": "integer", "minimum": 0},
+                "topic_session_minutes_why": {"type": "string", "minLength": 1},
+                "flashcard_session_minutes": {"type": "integer", "minimum": 0},
+                "flashcard_session_minutes_why": {"type": "string", "minLength": 1},
+                "revision_topics_max": {"type": "integer", "minimum": 0},
+                "revision_topics_max_why": {"type": "string", "minLength": 1},
+                "low_mastery_boost": {"type": "number", "minimum": 0},
+                "low_mastery_boost_why": {"type": "string", "minLength": 1},
+            },
+            "additionalProperties": False,
+        },
         "deficit_carryover_cap": {"type": "integer", "minimum": 0},
         "daily_capacity_ratio_table": _OBJ_OF_NUMBERS,
         "min_break_minutes": {"type": "integer", "minimum": 0},

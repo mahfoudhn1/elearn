@@ -31,6 +31,7 @@ from .models import (
     StudentPlannerProfile,
     StudyPlan,
     SubjectConfidence,
+    SubjectPlanningMode,
 )
 from .subjects import subjects_for_student
 
@@ -252,6 +253,8 @@ class PlannedSessionSerializer(UUIDModelSerializer):
             "student",
             "subject",
             "activity_type",
+            "topic",
+            "practice_quiz",
             "start_dt",
             "end_dt",
             "origin",
@@ -269,6 +272,8 @@ class PlannedSessionSerializer(UUIDModelSerializer):
             "student",
             "subject",
             "activity_type",
+            "topic",
+            "practice_quiz",
             "origin",
             "state",
             "reasons",
@@ -479,3 +484,24 @@ class OnboardingSerializer(serializers.Serializer):
                 raise serializers.ValidationError(
                     {section: f"Overlaps existing commitment '{conflict.title}'."}
                 )
+
+
+class SubjectPlanningModeInputSerializer(serializers.Serializer):
+    subject = serializers.CharField(max_length=150)
+    mode = serializers.ChoiceField(choices=SubjectPlanningMode.Mode.choices)
+
+
+class SubjectPlanningUpdateSerializer(serializers.Serializer):
+    """Body for ``PUT /api/planner/subject-planning/``."""
+
+    subjects = SubjectPlanningModeInputSerializer(many=True)
+
+    def validate_subjects(self, value):
+        seen = set()
+        for item in value:
+            if item["subject"] in seen:
+                raise serializers.ValidationError(
+                    f"Duplicate subject '{item['subject']}'."
+                )
+            seen.add(item["subject"])
+        return value

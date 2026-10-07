@@ -77,7 +77,7 @@ class Migration(migrations.Migration):
             options={
                 'ordering': ['student', 'date', 'start_min'],
                 'indexes': [models.Index(fields=['student', 'date'], name='planner_ses_student_7ca5a2_idx')],
-                'constraints': [models.UniqueConstraint(fields=('student', 'date', 'start_min'), name='planner_unique_tombstone_slot'), models.CheckConstraint(condition=models.Q(('end_min__gt', models.F('start_min'))), name='planner_tombstone_end_after_start')],
+                'constraints': [models.UniqueConstraint(fields=('student', 'date', 'start_min'), name='planner_unique_tombstone_slot'), models.CheckConstraint(check=models.Q(('end_min__gt', models.F('start_min'))), name='planner_tombstone_end_after_start')],
             },
         ),
         migrations.AddIndex(
@@ -90,7 +90,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='studyplan',
-            constraint=models.CheckConstraint(condition=models.Q(('window_end__gte', models.F('window_start'))), name='planner_plan_window_order'),
+            constraint=models.CheckConstraint(check=models.Q(('window_end__gte', models.F('window_start'))), name='planner_plan_window_order'),
         ),
         migrations.AddIndex(
             model_name='plannedsession',
@@ -106,7 +106,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='plannedsession',
-            constraint=models.CheckConstraint(condition=models.Q(('end_dt__gt', models.F('start_dt'))), name='planner_planned_session_end_after_start'),
+            constraint=models.CheckConstraint(check=models.Q(('end_dt__gt', models.F('start_dt'))), name='planner_planned_session_end_after_start'),
         ),
         migrations.AddConstraint(
             model_name='plannedsession',

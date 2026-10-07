@@ -9,7 +9,7 @@ from __future__ import annotations
 from datetime import date
 
 from .allocate import EngineInput, ExamInput, PlannerPreferences
-from .demand import DemandUnit
+from .demand import DemandUnit, MasteryTopicSummary
 from .dto import BusyBlock, DayContext, Reason
 from .history import ActivityStats, HistorySummary
 
@@ -157,7 +157,7 @@ def _history_from_dict(data: dict | None) -> HistorySummary | None:
 
 
 def engine_input_to_dict(engine_input: EngineInput, now: date) -> dict:
-    return {
+    payload = {
         "now": now.isoformat(),
         "profile": {
             "preferred_period": engine_input.profile.preferred_period,
@@ -175,10 +175,27 @@ def engine_input_to_dict(engine_input: EngineInput, now: date) -> dict:
             for exam in engine_input.exams
         ],
         "deficit_by_subject": dict(engine_input.deficit_by_subject),
+        "tier_by_subject": dict(engine_input.tier_by_subject),
+        "weakness_by_subject": dict(engine_input.weakness_by_subject),
         "tombstoned_slots": sorted([day.isoformat(), minute] for day, minute in engine_input.tombstoned_slots),
         "history": _history_to_dict(engine_input.history),
         "recent_topics": {key: value.isoformat() for key, value in engine_input.recent_topics.items()},
     }
+    # Only emitted when present, so pre-A7 golden input is unchanged.
+    if engine_input.mastery_summary:
+        payload["mastery_summary"] = {
+            key: {
+                "topic_id": value.topic_id,
+                "subject_id": value.subject_id,
+                "mastery": value.mastery,
+                "confidence": value.confidence,
+                "trend": value.trend,
+                "due_flashcards": value.due_flashcards,
+                "title": value.title,
+            }
+            for key, value in engine_input.mastery_summary.items()
+        }
+    return payload
 
 
 def engine_input_from_dict(data: dict) -> tuple[EngineInput, date]:
@@ -200,6 +217,11 @@ def engine_input_from_dict(data: dict) -> tuple[EngineInput, date]:
             for exam in data.get("exams", [])
         ),
         deficit_by_subject=data.get("deficit_by_subject", {}),
+        tier_by_subject=data.get("tier_by_subject", {}),
+        weakness_by_subject={
+            str(key): float(value)
+            for key, value in data.get("weakness_by_subject", {}).items()
+        },
         tombstoned_slots=frozenset(
             (date.fromisoformat(entry[0]), entry[1]) for entry in data.get("tombstoned_slots", [])
         ),
@@ -207,24 +229,40 @@ def engine_input_from_dict(data: dict) -> tuple[EngineInput, date]:
         recent_topics={
             key: date.fromisoformat(value) for key, value in data.get("recent_topics", {}).items()
         },
+        mastery_summary={
+            key: MasteryTopicSummary(
+                topic_id=value["topic_id"],
+                subject_id=value["subject_id"],
+                mastery=value.get("mastery"),
+                confidence=value.get("confidence", "NONE"),
+                trend=value.get("trend", "UNKNOWN"),
+                due_flashcards=int(value.get("due_flashcards", 0)),
+                title=value.get("title", ""),
+            )
+            for key, value in data.get("mastery_summary", {}).items()
+        },
     )
     return engine_input, date.fromisoformat(data["now"])
 
 
 def engine_output_to_dict(output) -> dict:
+    sessions = []
+    for session in output.sessions:
+        entry = {
+            "date": session.date.isoformat(),
+            "start_min": session.start_min,
+            "end_min": session.end_min,
+            "subject_id": session.subject_id,
+            "activity_type": session.activity_type,
+            "reasons": [_reason_to_dict(reason) for reason in session.reasons],
+            "source_demand_ids": list(session.source_demand_ids),
+        }
+        # Only emitted when set, so pre-A7 golden output is unchanged.
+        if session.topic_id is not None:
+            entry["topic_id"] = session.topic_id
+        sessions.append(entry)
     return {
-        "sessions": [
-            {
-                "date": session.date.isoformat(),
-                "start_min": session.start_min,
-                "end_min": session.end_min,
-                "subject_id": session.subject_id,
-                "activity_type": session.activity_type,
-                "reasons": [_reason_to_dict(reason) for reason in session.reasons],
-                "source_demand_ids": list(session.source_demand_ids),
-            }
-            for session in output.sessions
-        ],
+        "sessions": sessions,
         "unmet": [
             {
                 "subject_id": item.subject_id,

@@ -51,6 +51,47 @@
     "GOOD": 1.0,
     "VERY_GOOD": 0.8
   },
+  "tier_coefficient_thresholds": {
+    "core_min": 3,
+    "light_max": 1,
+    "why": "PLACEHOLDER: coefficient >= core_min is CORE, coefficient <= light_max is LIGHT, otherwise STANDARD. Missing coefficient -> STANDARD."
+  },
+  "max_weakness_multiplier_by_tier": {
+    "CORE": 1.5,
+    "STANDARD": 1.25,
+    "LIGHT": 1.0,
+    "why": "PLACEHOLDER: a weak subject may be boosted, but never above its tier cap; a LIGHT subject gets no weakness boost at all."
+  },
+  "weekly_minutes_floor_by_tier": {
+    "CORE": 60,
+    "STANDARD": 30,
+    "LIGHT": 15,
+    "why": "PLACEHOLDER: every planned subject keeps a small weekly floor so a LIGHT subject is not fully starved."
+  },
+  "weekly_minutes_ceiling_by_tier": {
+    "CORE": 600,
+    "STANDARD": 480,
+    "LIGHT": 180,
+    "why": "PLACEHOLDER: hard per-tier weekly ceiling regardless of weakness or exam boost."
+  },
+  "planning_mode_tier_step": 1,
+  "planning_mode_tier_step_why": "PLACEHOLDER: MORE raises the weakness-cap tier one step (LIGHT->STANDARD->CORE, capped at CORE); TRACKING_ONLY removes the subject from planning entirely.",
+  "mastery": {
+    "low_threshold": 0.5,
+    "low_threshold_why": "PLACEHOLDER: a topic below 0.5 mastery is weak enough to earn targeted REVIEW/EXERCISES demand.",
+    "high_threshold": 0.85,
+    "high_threshold_why": "PLACEHOLDER: at/above 0.85 mastery with HIGH confidence a topic is mastered and earns no demand.",
+    "min_confidence": "LOW",
+    "min_confidence_why": "PLACEHOLDER: only evidence-backed mastery (confidence >= LOW) may change demand; NONE is ignored.",
+    "topic_session_minutes": 30,
+    "topic_session_minutes_why": "PLACEHOLDER: default length of a topic-targeted REVIEW/EXERCISES micro-session.",
+    "flashcard_session_minutes": 10,
+    "flashcard_session_minutes_why": "PLACEHOLDER: short micro-session for clearing due flashcards.",
+    "revision_topics_max": 3,
+    "revision_topics_max_why": "PLACEHOLDER: before an exam, add revision demand for at most this many weakest topics per subject.",
+    "low_mastery_boost": 1.3,
+    "low_mastery_boost_why": "PLACEHOLDER: multiplier applied to a weak topic's targeted demand before the tier cap."
+  },
   "deficit_carryover_cap": 1440,
   "daily_capacity_ratio_table": {
     "default": 0.5,

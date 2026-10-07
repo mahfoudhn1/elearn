@@ -25,7 +25,8 @@ export type PlannerTrigger =
   | "COMMITMENT"
   | "SESSION_MISSED"
   | "WEEKLY"
-  | "AVAILABILITY";
+  | "AVAILABILITY"
+  | "MASTERY";
 
 export interface PlannerReason {
   code: string;
@@ -239,4 +240,61 @@ export async function getCommitments(): Promise<OnboardingCommitment[]> {
   );
   const data = response.data;
   return Array.isArray(data) ? data : data.results ?? [];
+}
+
+// --- Subject importance & planning modes (Phase A6/A8) ------------------------
+
+export type SubjectTier = "CORE" | "STANDARD" | "LIGHT";
+export type SubjectPlanningMode = "AUTO" | "MORE" | "TRACKING_ONLY";
+
+export interface SubjectPlanningReason {
+  code: string;
+  params: Record<string, unknown>;
+}
+
+export interface SubjectPlanningRow {
+  subject: string;
+  tier: SubjectTier;
+  /** Null when no coefficient is known (tier then defaults to STANDARD). */
+  coefficient: number | null;
+  coefficient_known: boolean;
+  mode: SubjectPlanningMode;
+  verified: boolean;
+  reasons: SubjectPlanningReason[];
+}
+
+export interface SubjectPlanningState {
+  level: string;
+  stream: string;
+  subjects: SubjectPlanningRow[];
+}
+
+export async function getSubjectPlanning(): Promise<SubjectPlanningState> {
+  const response = await apiClient.get<SubjectPlanningState>("planner/subject-planning/");
+  return response.data;
+}
+
+/** Upsert planning modes. Omitted subjects keep their existing mode. */
+export async function updateSubjectPlanning(
+  modes: { subject: string; mode: SubjectPlanningMode }[],
+): Promise<SubjectPlanningState> {
+  const response = await apiClient.put<SubjectPlanningState>("planner/subject-planning/", {
+    subjects: modes,
+  });
+  return response.data;
+}
+
+export interface SessionPracticeQuiz {
+  quiz: { id: string; title: string; kind: string; subject: string } | null;
+  session: string;
+}
+
+/** The practice quiz offered for a topic REVIEW/EXERCISES session, if any. */
+export async function getSessionPracticeQuiz(
+  sessionId: string,
+): Promise<SessionPracticeQuiz> {
+  const response = await apiClient.get<SessionPracticeQuiz>(
+    `planner/sessions/${sessionId}/practice-quiz/`,
+  );
+  return response.data;
 }

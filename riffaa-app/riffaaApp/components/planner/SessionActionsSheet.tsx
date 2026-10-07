@@ -1,14 +1,16 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { AppText, Badge, Button, Row, Stack } from '../ui';
 import { Sheet } from '../ui/Sheet';
+import { subjectTint } from '../../constants/subjects';
+import { useTheme } from '../../hooks/useTheme';
 import { useTranslation } from '../../hooks/useTranslation';
 import type { PlannedSession } from '../../services/api/planner';
+import { formatTime } from '../../utils/format';
 import { activityKey } from '../../utils/plannerReasons';
 import { ReasonList } from './ReasonList';
-
-const SHIFT_MINUTES = [15, 30];
 
 export interface SessionActionsSheetProps {
   visible: boolean;
@@ -22,8 +24,8 @@ export interface SessionActionsSheetProps {
 }
 
 /**
- * Bottom sheet for a planned session. "Move" is a set of quick shifts (this is
- * a fast reschedule, not a full drag-and-drop editor).
+ * Polished bottom sheet for a planned study session.
+ * Features 1-tap start, human-friendly quick rescheduling, and transparent smart insights.
  */
 export function SessionActionsSheet({
   visible,
@@ -36,14 +38,21 @@ export function SessionActionsSheet({
   onDelete,
 }: SessionActionsSheetProps) {
   const { t } = useTranslation();
+  const { tokens } = useTheme();
   const [showReasons, setShowReasons] = useState(false);
 
-  const durationMs = useMemo(() => {
+  const durationMin = useMemo(() => {
     if (!session) return 0;
-    return new Date(session.end_dt).getTime() - new Date(session.start_dt).getTime();
+    const diff = new Date(session.end_dt).getTime() - new Date(session.start_dt).getTime();
+    return Math.max(1, Math.round(diff / 60_000));
   }, [session]);
 
+  const tint = useMemo(() => subjectTint(session?.subject), [session?.subject]);
+
   if (!session) return null;
+
+  const startDate = new Date(session.start_dt);
+  const endDate = new Date(session.end_dt);
 
   const shift = (minutes: number) => {
     const start = new Date(session.start_dt).getTime() + minutes * 60_000;
@@ -52,28 +61,38 @@ export function SessionActionsSheet({
   };
 
   const shiftDay = (days: number) => {
-    const start = new Date(session.start_dt).getTime() + days * 24 * 60 * 60_000;
+    const diff = endDate.getTime() - startDate.getTime();
+    const start = startDate.getTime() + days * 24 * 60 * 60_000;
     onMove(
       session,
       new Date(start).toISOString(),
-      new Date(start + durationMs).toISOString(),
+      new Date(start + diff).toISOString(),
     );
   };
 
   return (
     <Sheet visible={visible} onClose={onClose} title={session.subject}>
-      <Stack gap={12}>
-        <Row gap={8} align="center" wrap>
-          <Badge label={t(activityKey(session.activity_type))} tone="brand" />
-          {session.is_locked ? <Badge label={t('plannerLocked')} tone="neutral" /> : null}
-          {session.origin === 'STUDENT' ? <Badge label={t('plannerMove')} tone="neutral" /> : null}
+      <Stack gap={16}>
+        {/* Header badge row */}
+        <Row gap={12} align="center">
+          <View
+            className="h-12 w-12 items-center justify-center rounded-2xl"
+            style={{ backgroundColor: `${tint.color}25` }}
+          >
+            <Ionicons name={tint.icon} size={24} color={tint.color} />
+          </View>
+          <Stack gap={2} className="flex-1">
+            <Row gap={8} align="center" wrap>
+              <Badge label={t(activityKey(session.activity_type))} tone="brand" />
+              {session.is_locked ? <Badge label={t('plannerLocked')} tone="neutral" /> : null}
+            </Row>
+            <AppText variant="caption" tone="muted">
+              {formatTime(startDate)} - {formatTime(endDate)} · {t('plannerDuration', { minutes: durationMin })}
+            </AppText>
+          </Stack>
         </Row>
 
-        <AppText variant="caption" tone="muted">
-          {new Date(session.start_dt).toLocaleString()} -{' '}
-          {new Date(session.end_dt).toLocaleTimeString()}
-        </AppText>
-
+        {/* Primary Start Action */}
         <Button
           label={t('plannerStart')}
           icon="play"
@@ -82,33 +101,46 @@ export function SessionActionsSheet({
           onPress={() => onStart(session)}
         />
 
-        <View>
-          <AppText variant="micro" weight="medium" tone="subtle" className="mb-2 uppercase tracking-widest">
-            {t('plannerMove')}
-          </AppText>
-          <Row gap={8} wrap>
-            {SHIFT_MINUTES.map((minutes) => (
+        {/* Quick Reschedule */}
+        <View className="rounded-2xl border border-line/60 bg-surface2/40 p-3.5">
+          <Row justify="space-between" align="center" className="mb-2.5">
+            <AppText variant="micro" weight="medium" tone="subtle" className="uppercase tracking-widest">
+              {t('plannerMove')}
+            </AppText>
+            <Ionicons name="time-outline" size={14} color={tokens.inkSubtle} />
+          </Row>
+          <Row gap={8}>
+            <View className="flex-1">
               <Button
-                key={`earlier-${minutes}`}
-                label={`-${minutes}m`}
+                label={t('plannerQuickShiftEarlier')}
+                icon="play-back-outline"
                 size="sm"
                 variant="secondary"
-                onPress={() => shift(-minutes)}
+                onPress={() => shift(-30)}
               />
-            ))}
-            {SHIFT_MINUTES.map((minutes) => (
+            </View>
+            <View className="flex-1">
               <Button
-                key={`later-${minutes}`}
-                label={`+${minutes}m`}
+                label={t('plannerQuickShiftLater')}
+                icon="play-forward-outline"
                 size="sm"
                 variant="secondary"
-                onPress={() => shift(minutes)}
+                onPress={() => shift(30)}
               />
-            ))}
-            <Button label="+1d" size="sm" variant="secondary" onPress={() => shiftDay(1)} />
+            </View>
+            <View className="flex-1">
+              <Button
+                label={t('plannerQuickShiftTomorrow')}
+                icon="calendar-outline"
+                size="sm"
+                variant="secondary"
+                onPress={() => shiftDay(1)}
+              />
+            </View>
           </Row>
         </View>
 
+        {/* Session Management Actions */}
         <Row gap={8} wrap>
           <Button
             label={session.is_locked ? t('plannerUnlock') : t('plannerLock')}
@@ -125,13 +157,6 @@ export function SessionActionsSheet({
             onPress={() => onSkip(session)}
           />
           <Button
-            label={t('plannerReasons')}
-            icon="information-circle-outline"
-            size="sm"
-            variant="ghost"
-            onPress={() => setShowReasons((value) => !value)}
-          />
-          <Button
             label={t('plannerDeleteAction')}
             icon="trash-outline"
             size="sm"
@@ -140,9 +165,30 @@ export function SessionActionsSheet({
           />
         </Row>
 
-        {showReasons ? (
-          <View className="rounded-2xl bg-surface2 p-3">
-            <ReasonList reasons={session.reasons ?? []} />
+        {/* Why this session was scheduled */}
+        {session.reasons && session.reasons.length > 0 ? (
+          <View className="overflow-hidden rounded-2xl border border-line/40 bg-surface2/30">
+            <Pressable
+              onPress={() => setShowReasons((v) => !v)}
+              className="flex-row items-center justify-between p-3.5"
+            >
+              <Row gap={8} align="center">
+                <Ionicons name="sparkles" size={16} color={tokens.brand} />
+                <AppText variant="bodySm" weight="medium">
+                  {t('plannerWhyScheduled')}
+                </AppText>
+              </Row>
+              <Ionicons
+                name={showReasons ? 'chevron-up' : 'chevron-down'}
+                size={16}
+                color={tokens.inkSubtle}
+              />
+            </Pressable>
+            {showReasons ? (
+              <View className="border-t border-line/40 px-3.5 pb-3.5 pt-2">
+                <ReasonList reasons={session.reasons} />
+              </View>
+            ) : null}
           </View>
         ) : null}
       </Stack>

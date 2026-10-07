@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 
 from courses.permissions import get_student
 
-from .models import StudyPlan
+from .models import PlannedSession, StudyPlan
 from .permissions import HasStudentProfile
 from .serializers import (
     GeneratePlanInputSerializer,
@@ -134,6 +134,38 @@ class SessionSkipView(APIView):
         except plan_service.SessionMoveError as exc:
             raise ValidationError({exc.field: [exc.message], "reason": [exc.code]}) from exc
         return Response(PlannedSessionSerializer(session).data)
+
+
+class SessionPracticeQuizView(APIView):
+    """Offer the practice quiz attached to a topic REVIEW/EXERCISES session.
+
+    Returns the quiz (attaching one on the fly when the session has a topic and
+    an active TOPIC_PRACTICE quiz exists), or ``{"quiz": null}``.
+    """
+
+    permission_classes = [IsAuthenticated, HasStudentProfile]
+
+    def get(self, request, pk):
+        student = get_student(request.user)
+        session = PlannedSession.objects.filter(student=student, uuid=pk).first()
+        if session is None:
+            raise ValidationError({"session": ["Not found."]})
+        from planner.mastery_planner import attach_practice_quiz
+
+        quiz = attach_practice_quiz(session)
+        if quiz is None:
+            return Response({"quiz": None, "session": str(session.uuid)})
+        return Response(
+            {
+                "quiz": {
+                    "id": str(quiz.uuid),
+                    "title": quiz.title,
+                    "kind": quiz.kind,
+                    "subject": quiz.subject,
+                },
+                "session": str(session.uuid),
+            }
+        )
 
 
 class WeeklyReportView(APIView):

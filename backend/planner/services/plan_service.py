@@ -220,6 +220,27 @@ def _slot_repr(session, tz: ZoneInfo) -> dict:
     }
 
 
+def _topic_pk(topic_uuid):
+    """Resolve an engine topic uuid string to a Topic pk (None when absent)."""
+    if not topic_uuid:
+        return None
+    from planner.models import Topic
+
+    return (
+        Topic.objects.filter(uuid=topic_uuid).values_list("id", flat=True).first()
+    )
+
+
+def _attach_practice_quiz_quietly(session) -> None:
+    """Attach a practice quiz if one exists; never fail plan generation."""
+    from planner.mastery_planner import attach_practice_quiz
+
+    try:
+        attach_practice_quiz(session)
+    except Exception:  # noqa: BLE001 - quiz linking must not break planning
+        logger.exception("practice-quiz attach failed for session %s", session.pk)
+
+
 def _diff(old_slots: list, new_slots: list) -> dict:
     old_pairs = Counter((slot["subject"], slot["activity_type"]) for slot in old_slots)
     new_pairs = Counter((slot["subject"], slot["activity_type"]) for slot in new_slots)
@@ -333,8 +354,19 @@ def build_engine_context(student, window, now, profile=None) -> EngineContext:
     )
 
     demand_window = DemandWindow(window_start, window_end)
+    from planner.mastery_planner import build_mastery_summary
+
+    mastery_summary = build_mastery_summary(student, now=now_dt)
     demands = tuple(
-        compute_demand(student_state, lessons, history, pedagogy_rules, demand_window, today)
+        compute_demand(
+            student_state,
+            lessons,
+            history,
+            pedagogy_rules,
+            demand_window,
+            today,
+            mastery_summary,
+        )
     )
 
     if student_state.exams:
@@ -356,9 +388,25 @@ def build_engine_context(student, window, now, profile=None) -> EngineContext:
     tombstoned_slots = frozenset((t.date, t.start_min) for t in tombstones)
 
     deficit = {}
+    tier_by_subject = {}
+    weakness_by_subject = {}
     for subject in student_state.subjects:
         target = pedagogy_rules.weekly_target(student_state.level, subject.subject_id)
         deficit[subject.subject_id] = max(0, target - studied.get(subject.subject_id, 0))
+        tier_by_subject[subject.subject_id] = subject.tier
+        # The applied weakness multiplier (tier-clamped, MORE raises the cap) is
+        # recomputed here for priority tie-breaking only.
+        cap_tier = subject.tier
+        if subject.planning_mode == "MORE":
+            from planner.engine.tiers import raise_tier
+
+            cap_tier = raise_tier(
+                subject.tier, pedagogy_rules.planning_mode_tier_step
+            )
+        requested = pedagogy_rules.weakness_for(subject.confidence)
+        weakness_by_subject[subject.subject_id] = min(
+            requested, pedagogy_rules.max_weakness_multiplier(cap_tier)
+        )
 
     engine_input = EngineInput(
         profile=_build_preferences(profile),
@@ -368,6 +416,8 @@ def build_engine_context(student, window, now, profile=None) -> EngineContext:
         lessons=tuple(lessons),
         exams=exam_inputs,
         deficit_by_subject=deficit,
+        tier_by_subject=tier_by_subject,
+        weakness_by_subject=weakness_by_subject,
         tombstoned_slots=tombstoned_slots,
         history=history,
         recent_topics=recent_topics,
@@ -469,6 +519,7 @@ def generate_plan_for_student(student, window, trigger, now, force: bool = False
             student=student,
             subject=session_dto.subject_id,
             activity_type=session_dto.activity_type,
+            topic_id=_topic_pk(session_dto.topic_id),
             start_dt=start_dt,
             end_dt=end_dt,
             reasons=[
@@ -476,6 +527,8 @@ def generate_plan_for_student(student, window, trigger, now, force: bool = False
                 for reason in session_dto.reasons
             ],
         )
+        if session.activity_type in ("EXERCISES", "REVIEW"):
+            _attach_practice_quiz_quietly(session)
         _mirror_session(session, tz)
         new_slots.append(_slot_repr(session, tz))
 

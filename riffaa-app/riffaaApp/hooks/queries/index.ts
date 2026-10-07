@@ -12,6 +12,14 @@ export { useProfileGroups, useTeacher, useTeachers } from './useTeachers';
 export type { TeacherFilters } from './useTeachers';
 export { useStudyStats } from './useStudyStats';
 export {
+  useChapterReadiness,
+  useFlashcardStats,
+  useReadinessOverview,
+  useSubjectPlanning,
+  useSubjectReadiness,
+  useTopicMastery,
+} from './useAssessment';
+export {
   useAnalytics,
   useCourseProgress,
   useGoal,

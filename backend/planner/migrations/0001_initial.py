@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'ordering': ['-start_date', 'id'],
-                'constraints': [models.CheckConstraint(condition=models.Q(('end_date__gt', models.F('start_date'))), name='planner_year_end_after_start')],
+                'constraints': [models.CheckConstraint(check=models.Q(('end_date__gt', models.F('start_date'))), name='planner_year_end_after_start')],
             },
         ),
         migrations.CreateModel(
@@ -113,7 +113,7 @@ class Migration(migrations.Migration):
             options={
                 'ordering': ['start_date', 'id'],
                 'indexes': [models.Index(fields=['academic_year', 'start_date'], name='planner_aca_academi_bb0664_idx'), models.Index(fields=['kind'], name='planner_aca_kind_45b3cb_idx')],
-                'constraints': [models.CheckConstraint(condition=models.Q(('end_date__gte', models.F('start_date'))), name='planner_period_end_on_or_after_start')],
+                'constraints': [models.CheckConstraint(check=models.Q(('end_date__gte', models.F('start_date'))), name='planner_period_end_on_or_after_start')],
             },
         ),
         migrations.AddIndex(
@@ -122,19 +122,19 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='commitment',
-            constraint=models.CheckConstraint(condition=models.Q(('end_time__gt', models.F('start_time'))), name='planner_commitment_end_after_start'),
+            constraint=models.CheckConstraint(check=models.Q(('end_time__gt', models.F('start_time'))), name='planner_commitment_end_after_start'),
         ),
         migrations.AddConstraint(
             model_name='commitment',
-            constraint=models.CheckConstraint(condition=models.Q(('weekday__gte', 0), ('weekday__lte', 6)), name='planner_commitment_weekday_range'),
+            constraint=models.CheckConstraint(check=models.Q(('weekday__gte', 0), ('weekday__lte', 6)), name='planner_commitment_weekday_range'),
         ),
         migrations.AddConstraint(
             model_name='commitment',
-            constraint=models.CheckConstraint(condition=models.Q(('valid_to__isnull', True), ('valid_to__gte', models.F('valid_from')), _connector='OR'), name='planner_commitment_validity_order'),
+            constraint=models.CheckConstraint(check=models.Q(('valid_to__isnull', True), ('valid_to__gte', models.F('valid_from')), _connector='OR'), name='planner_commitment_validity_order'),
         ),
         migrations.AddConstraint(
             model_name='commitment',
-            constraint=models.CheckConstraint(condition=models.Q(models.Q(('kind', 'SCHOOL'), _negated=True), ('suspended_by_periods', True), _connector='OR'), name='planner_school_commitment_suspendable'),
+            constraint=models.CheckConstraint(check=models.Q(models.Q(('kind', 'SCHOOL'), _negated=True), ('suspended_by_periods', True), _connector='OR'), name='planner_school_commitment_suspendable'),
         ),
         migrations.AddConstraint(
             model_name='commitmentexception',
@@ -142,18 +142,18 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='commitmentexception',
-            constraint=models.CheckConstraint(condition=models.Q(models.Q(('type', 'MOVED'), _negated=True), models.Q(('new_start__isnull', False), ('new_end__isnull', False)), _connector='OR'), name='planner_moved_exception_needs_times'),
+            constraint=models.CheckConstraint(check=models.Q(models.Q(('type', 'MOVED'), _negated=True), models.Q(('new_start__isnull', False), ('new_end__isnull', False)), _connector='OR'), name='planner_moved_exception_needs_times'),
         ),
         migrations.AddConstraint(
             model_name='commitmentexception',
-            constraint=models.CheckConstraint(condition=models.Q(models.Q(('type', 'CANCELLED'), _negated=True), models.Q(('new_start__isnull', True), ('new_end__isnull', True)), _connector='OR'), name='planner_cancelled_exception_has_no_times'),
+            constraint=models.CheckConstraint(check=models.Q(models.Q(('type', 'CANCELLED'), _negated=True), models.Q(('new_start__isnull', True), ('new_end__isnull', True)), _connector='OR'), name='planner_cancelled_exception_has_no_times'),
         ),
         migrations.AddConstraint(
             model_name='commitmentexception',
-            constraint=models.CheckConstraint(condition=models.Q(('new_start__isnull', True), ('new_end__isnull', True), ('new_end__gt', models.F('new_start')), _connector='OR'), name='planner_exception_new_end_after_new_start'),
+            constraint=models.CheckConstraint(check=models.Q(('new_start__isnull', True), ('new_end__isnull', True), ('new_end__gt', models.F('new_start')), _connector='OR'), name='planner_exception_new_end_after_new_start'),
         ),
         migrations.AddConstraint(
             model_name='studentplannerprofile',
-            constraint=models.CheckConstraint(condition=models.Q(('max_focus_minutes__isnull', True), ('max_focus_minutes__gte', 1), _connector='OR'), name='planner_profile_max_focus_gte_1'),
+            constraint=models.CheckConstraint(check=models.Q(('max_focus_minutes__isnull', True), ('max_focus_minutes__gte', 1), _connector='OR'), name='planner_profile_max_focus_gte_1'),
         ),
     ]

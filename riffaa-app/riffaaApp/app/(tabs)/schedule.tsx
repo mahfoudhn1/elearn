@@ -1,17 +1,16 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, Pressable, View } from 'react-native';
 
 import {
   AppText,
   Badge,
   Button,
   Card,
-  EmptyState,
   ErrorState,
   GhostNumber,
   IconButton,
-  ProgressBar,
   Row,
   Screen,
   ScreenHeader,
@@ -20,20 +19,52 @@ import {
   Stack,
   TwoToneNumber,
 } from '../../components/ui';
+import { DiffSheet } from '../../components/planner/DiffSheet';
+import {
+  PlannerDayTimeline,
+  type TimelineEntry,
+} from '../../components/planner/PlannerDayTimeline';
 import { PlannerPlanPanel } from '../../components/planner/PlannerPlanPanel';
+import { SessionActionsSheet } from '../../components/planner/SessionActionsSheet';
+import { UnmetBanner, type UnmetDemandItem } from '../../components/planner/UnmetBanner';
 import { useDirection } from '../../hooks/useDirection';
+import { usePomodoro } from '../../hooks/usePomodoro';
 import { useSchedule, useScheduleMutations } from '../../hooks/queries';
 import { useTheme } from '../../hooks/useTheme';
-import { StartStudyButton } from '../../components/StartStudyButton';
 import { useTranslation } from '../../hooks/useTranslation';
-import { startPlannerQueue } from '../../store/plannerStore';
+import {
+  getOnboardingState,
+  getWeeklyReport,
+  type OnboardingState,
+  type PlannedSession,
+} from '../../services/api/planner';
 import type { ScheduleItem } from '../../services/api/schedule';
-import { formatDate, formatTime } from '../../utils/format';
+import { startPlannerQueue, usePlannerStore } from '../../store/plannerStore';
+import { formatDate } from '../../utils/format';
+
+type ScheduleViewMode = 'all' | 'plan' | 'tasks' | 'classes';
 
 function toDayIso(value: Date): string {
   return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(
     value.getDate(),
   ).padStart(2, '0')}`;
+}
+
+function timeToMinutes(value: string | null | undefined): number | null {
+  if (!value) return null;
+  const [hour, minute] = value.split(':').map(Number);
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return null;
+  return hour * 60 + minute;
+}
+
+function dateToMinutes(d: Date): number {
+  return d.getHours() * 60 + d.getMinutes();
+}
+
+function addDays(iso: string, days: number): string {
+  const date = new Date(`${iso}T00:00:00`);
+  date.setDate(date.getDate() + days);
+  return toDayIso(date);
 }
 
 function getWeekDates(selectedIso: string) {
@@ -48,18 +79,122 @@ function getWeekDates(selectedIso: string) {
   });
 }
 
+/** Busy blocks for one local day from the onboarding feed (school/class/private). */
+function busyEntriesForDay(state: OnboardingState | null, iso: string): TimelineEntry[] {
+  if (!state) return [];
+  const weekday = new Date(`${iso}T00:00:00`).getDay();
+  const backendWeekday = (weekday + 6) % 7;
+  const entries: TimelineEntry[] = [];
+
+  for (const commitment of state.school_commitments) {
+    if (commitment.weekday !== backendWeekday) continue;
+    if (commitment.valid_from && iso < commitment.valid_from) continue;
+    if (commitment.valid_to && iso > commitment.valid_to) continue;
+    const start = timeToMinutes(commitment.start_time);
+    const end = timeToMinutes(commitment.end_time);
+    if (start == null || end == null) continue;
+    entries.push({
+      key: `commitment-${commitment.id}`,
+      entryType: 'CLASS',
+      kind: commitment.kind,
+      title: commitment.title,
+      startMin: start,
+      endMin: end,
+      locked: true,
+    });
+  }
+
+  for (const raw of state.group_schedules as Record<string, unknown>[]) {
+    const start = timeToMinutes(raw.start_time as string);
+    const end = timeToMinutes(raw.end_time as string);
+    if (start == null || end == null) continue;
+    const dayOfWeek = String(raw.day_of_week ?? '').toLowerCase();
+    const matches =
+      dayOfWeek ===
+        new Date(`${iso}T00:00:00`).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase() ||
+      raw.scheduled_date === iso;
+    if (!matches) continue;
+    entries.push({
+      key: `group-${String(raw.id)}`,
+      entryType: 'CLASS',
+      kind: 'GROUP_LESSON',
+      title: String(raw.group_name ?? ''),
+      startMin: start,
+      endMin: end,
+      locked: true,
+    });
+  }
+
+  for (const raw of state.private_sessions as Record<string, unknown>[]) {
+    const sessionDate = String(raw.session_date ?? '').slice(0, 10);
+    if (sessionDate !== iso) continue;
+    const start = timeToMinutes(new Date(String(raw.session_date)).toTimeString().slice(0, 5));
+    if (start == null) continue;
+    entries.push({
+      key: `private-${String(raw.id)}`,
+      entryType: 'CLASS',
+      kind: 'PRIVATE_SESSION',
+      title: state.available_subjects[0] ?? '',
+      startMin: start,
+      endMin: start + 60,
+      locked: true,
+    });
+  }
+
+  return entries;
+}
+
 export default function ScheduleScreen() {
   const router = useRouter();
   const { tokens } = useTheme();
   const { isRTL } = useDirection();
   const { t } = useTranslation();
+  const { start } = usePomodoro();
 
   const todayIso = toDayIso(new Date());
   const [selectedDate, setSelectedDate] = useState(todayIso);
-  const [view, setView] = useState<'tasks' | 'plan'>('tasks');
+  const [view, setView] = useState<ScheduleViewMode>('all');
+
+  // Planner store bindings
+  const plan = usePlannerStore((state) => state.plan);
+  const sessions = usePlannerStore((state) => state.sessions);
+  const lastDiff = usePlannerStore((state) => state.lastDiff);
+  const loadCurrent = usePlannerStore((state) => state.loadCurrent);
+  const generate = usePlannerStore((state) => state.generate);
+  const moveLocal = usePlannerStore((state) => state.moveLocal);
+  const lockLocal = usePlannerStore((state) => state.lockLocal);
+  const skipLocal = usePlannerStore((state) => state.skipLocal);
+  const deleteLocal = usePlannerStore((state) => state.deleteLocal);
+  const clearDiff = usePlannerStore((state) => state.clearDiff);
+
+  const [onboarding, setOnboarding] = useState<OnboardingState | null>(null);
+  const [unmet, setUnmet] = useState<UnmetDemandItem[]>([]);
+  const [activeSession, setActiveSession] = useState<PlannedSession | null>(null);
+  const [regenerating, setRegenerating] = useState(false);
 
   // Flush queued planner actions when connectivity returns.
   useEffect(() => startPlannerQueue(), []);
+
+  useEffect(() => {
+    void loadCurrent();
+    getOnboardingState()
+      .then(setOnboarding)
+      .catch(() => undefined);
+    getWeeklyReport()
+      .then((report) => {
+        const items = report.suggestions
+          .filter((suggestion) => suggestion.code === 'INCREASE_ALLOCATION')
+          .map((suggestion) => ({
+            subject: String(suggestion.params.subject ?? ''),
+            minutes: Number(suggestion.params.deficit_minutes ?? 0),
+            suggestion: t('plannerUnmetSuggestion'),
+          }))
+          .filter((item) => item.subject && item.minutes > 0);
+        setUnmet(items);
+      })
+      .catch(() => undefined);
+  }, [loadCurrent, t]);
+
   // React-query owns fetching/refetching-on-focus; mutations invalidate it.
   const { data, isLoading, isError, error, refetch } = useSchedule();
   const { update, remove } = useScheduleMutations();
@@ -98,94 +233,102 @@ export default function ScheduleScreen() {
     remove.mutate(item.id);
   };
 
-  const renderItem = (item: ScheduleItem, showMarker: boolean) => {
-    const start = new Date(item.start_datetime);
-    const end = new Date(item.end_datetime);
-    const done = item.status === 'COMPLETED';
-    const live = showMarker && start <= new Date() && end >= new Date();
-    const targetMinutes =
-      item.target_prep_minutes ?? item.estimated_duration_minutes ?? null;
-    const trackedMinutes = item.actual_duration_minutes ?? 0;
-    const trackedPercent = targetMinutes
-      ? Math.min(100, Math.round((trackedMinutes / targetMinutes) * 100))
-      : null;
+  // Build unified chronological entries for the selected day
+  const unifiedEntries = useMemo<TimelineEntry[]>(() => {
+    const result: TimelineEntry[] = [];
 
-    return (
-      <Card key={item.id} variant="list" subject={item.subject}>
-        <Row gap={12} align="flex-start">
-          <View
-            className="mt-1 w-1 self-stretch rounded-pill"
-            style={{ backgroundColor: done ? tokens.success : tokens.brand, width: 4 }}
-          />
-          <Stack gap={2} className="flex-1">
-            <Row gap={8} align="center" wrap>
-              <AppText
-                variant="micro"
-                weight="medium"
-                tone="brand"
-                className="uppercase tracking-widest"
-              >
-                {item.subject || (item.item_type === 'EXAM' ? t('exam') : t('task'))}
-              </AppText>
-              {live ? <Badge label={t('liveNow')} tone="success" /> : null}
-              {done ? <Badge label={t('completed')} tone="success" /> : null}
-            </Row>
-            <AppText variant="body" weight="medium" numberOfLines={2}>
-              {item.title}
-            </AppText>
-            <AppText variant="caption" tone="muted">
-              {formatTime(start)} - {formatTime(end)}
-              {item.notes ? ` · ${item.notes}` : ''}
-            </AppText>
-          </Stack>
-          <Stack gap={6}>
-            <IconButton
-              icon={done ? 'arrow-undo-outline' : 'checkmark-outline'}
-              accessibilityLabel={done ? t('unmarkReviewed') : t('markReviewed')}
-              variant={done ? 'success' : 'surface'}
-              onPress={() => toggleComplete(item)}
-            />
-            <IconButton
-              icon="trash-outline"
-              accessibilityLabel={t('deleteLabel')}
-              variant="danger"
-              onPress={() => removeItem(item)}
-            />
-          </Stack>
-        </Row>
+    // 1. Classes & School commitments
+    if (view === 'all' || view === 'classes') {
+      const busy = busyEntriesForDay(onboarding, selectedDate);
+      result.push(...busy);
+    }
 
-        {!done ? (
-          <Stack gap={8} className="mt-3">
-            {targetMinutes ? (
-              <Stack gap={6}>
-                <Row justify="space-between" align="center">
-                  <AppText variant="micro" tone="subtle">
-                    {t('trackedProgress')}
-                  </AppText>
-                  <AppText variant="micro" weight="medium" tone="brand">
-                    {trackedMinutes} / {targetMinutes} {t('unitMinutes')}
-                  </AppText>
-                </Row>
-                <ProgressBar value={trackedPercent ?? 0} />
-              </Stack>
-            ) : null}
-            <Row justify="space-between" align="center">
-              <Badge label={`${item.progress_percentage}%`} tone="neutral" />
-              <StartStudyButton
-                source={{
-                  type: 'SCHEDULE',
-                  id: String(item.id),
-                  scheduleItemId: String(item.id),
-                  subject: item.subject,
-                  title: item.title,
-                  isScheduled: true,
-                }}
-              />
-            </Row>
-          </Stack>
-        ) : null}
-      </Card>
-    );
+    // 2. Smart Planned study sessions
+    if (view === 'all' || view === 'plan') {
+      const planned = sessions
+        .filter(
+          (s) =>
+            s.state !== 'CANCELLED' &&
+            toDayIso(new Date(s.start_dt)) === selectedDate,
+        )
+        .map((s): TimelineEntry => {
+          const startDate = new Date(s.start_dt);
+          const endDate = new Date(s.end_dt);
+          return {
+            key: `session-${s.id}`,
+            entryType: 'PLAN',
+            kind: s.activity_type,
+            title: s.subject,
+            subject: s.subject,
+            startMin: dateToMinutes(startDate),
+            endMin: dateToMinutes(endDate),
+            locked: s.is_locked,
+            session: s,
+          };
+        });
+      result.push(...planned);
+    }
+
+    // 3. Manual Tasks
+    if (view === 'all' || view === 'tasks') {
+      const tasks = dayItems.map((item): TimelineEntry => {
+        const startDate = new Date(item.start_datetime);
+        const endDate = new Date(item.end_datetime);
+        return {
+          key: `task-${item.id}`,
+          entryType: 'TASK',
+          kind: item.item_type,
+          title: item.title,
+          subtitle: item.notes || undefined,
+          subject: item.subject,
+          startMin: dateToMinutes(startDate),
+          endMin: dateToMinutes(endDate),
+          locked: false,
+          task: item,
+          completed: item.status === 'COMPLETED',
+        };
+      });
+      result.push(...tasks);
+    }
+
+    return result.sort((a, b) => a.startMin - b.startMin);
+  }, [view, onboarding, selectedDate, sessions, dayItems]);
+
+  const handleStartSession = async (session: PlannedSession) => {
+    setActiveSession(null);
+    try {
+      await start({
+        type: 'SCHEDULE',
+        id: session.id,
+        scheduleItemId: session.personal_item ?? undefined,
+        subject: session.subject,
+        title: session.subject,
+        isScheduled: true,
+      });
+      router.push({ pathname: '/study-session' });
+    } catch {
+      router.push({ pathname: '/study-session' });
+    }
+  };
+
+  const handleRegenerate = useCallback(async () => {
+    setRegenerating(true);
+    try {
+      await generate({
+        window_start: selectedDate,
+        window_end: addDays(selectedDate, 6),
+        trigger: 'MANUAL',
+      });
+    } catch {
+      Alert.alert(t('error'), t('serverUnreachable'));
+    } finally {
+      setRegenerating(false);
+    }
+  }, [generate, selectedDate, t]);
+
+  const onMoveSession = (session: PlannedSession, startIso: string, endIso: string) => {
+    moveLocal(session.id, startIso, endIso);
+    setActiveSession(null);
   };
 
   return (
@@ -250,83 +393,136 @@ export default function ScheduleScreen() {
             </Row>
           </Card>
 
-          {/* Hero summary */}
+          {/* Unified Navigation: All Agenda | Smart Plan | Tasks | Classes */}
           <SegmentedControl
             value={view}
-            onChange={setView}
+            onChange={(val) => setView(val as ScheduleViewMode)}
             options={[
-              { label: t('plannerTasks'), value: 'tasks' },
-              { label: t('plannerPlan'), value: 'plan' },
+              { label: t('plannerAll'), value: 'all' },
+              { label: t('plannerSmartPlan'), value: 'plan' },
+              { label: t('plannerMyTasks'), value: 'tasks' },
+              { label: t('plannerClasses'), value: 'classes' },
             ]}
           />
 
-          {view === 'plan' ? <PlannerPlanPanel selectedDate={selectedDate} /> : null}
-          {view === 'tasks' ? (
-            <>
-          <Card variant="hero" tone="brand" className="overflow-hidden">
-            <GhostNumber
-              value={String(summary.total)}
-              size={104}
-              style={{
-                position: 'absolute',
-                top: -16,
-                ...(isRTL ? { left: -6 } : { right: -6 }),
-              }}
-            />
-            <AppText
-              variant="micro"
-              weight="medium"
-              tone="muted"
-              className="uppercase tracking-widest"
-            >
-              {t('completed')}
-            </AppText>
-            <View className="mt-2">
-              <TwoToneNumber
-                value={String(summary.done)}
-                secondary={`/ ${summary.total}`}
-                variant="displayLg"
-              />
-            </View>
-            <Row gap={8} wrap className="mt-3">
-              <Badge label={`${summary.today} ${t('appointmentsToday')}`} tone="neutral" />
-              <Badge label={`${t('thisWeek')} · ${summary.total}`} tone="neutral" />
-            </Row>
-          </Card>
+          {/* Dedicated Plan Hub View */}
+          {view === 'plan' ? (
+            <PlannerPlanPanel selectedDate={selectedDate} />
+          ) : null}
 
-          {isLoading ? (
-            <Stack gap={12}>
-              <Skeleton height={92} radius={28} />
-              <Skeleton height={92} radius={28} />
-            </Stack>
-          ) : isError ? (
-            <ErrorState error={error} onRetry={() => void refetch()} />
-          ) : (
+          {/* Unified Daily Agenda View ('all') or Filtered Views ('tasks', 'classes') */}
+          {view !== 'plan' ? (
             <>
-              {/* Today timeline */}
-              <View>
-                <AppText
-                  variant="micro"
-                  weight="medium"
-                  tone="subtle"
-                  className="mb-3 uppercase tracking-widest"
-                >
-                  {t('todayTimeline')}
-                </AppText>
-                {todayItems.length === 0 ? (
-                  <Card variant="list">
-                    <AppText variant="bodySm" tone="muted" align="center">
-                      {t('noSchedulesToday')}
-                    </AppText>
-                  </Card>
-                ) : (
-                  <Stack gap={10}>
-                    {todayItems.map((item) => renderItem(item, true))}
-                  </Stack>
-                )}
-              </View>
+              {/* Smart Plan Status Bar when in 'all' view */}
+              {view === 'all' && (
+                <>
+                  {plan ? (
+                    <Card variant="hero" tone="brand" className="overflow-hidden p-4">
+                      <Row justify="space-between" align="center">
+                        <Row gap={8} align="center">
+                          <View className="h-8 w-8 items-center justify-center rounded-xl bg-brand/20">
+                            <Ionicons name="sparkles" size={16} color={tokens.brand} />
+                          </View>
+                          <Stack gap={2}>
+                            <AppText variant="micro" weight="medium" tone="brand" className="uppercase tracking-widest">
+                              {t('plannerActivePlan')}
+                            </AppText>
+                            <AppText variant="bodySm" tone="muted">
+                              {t('plannerTodayScheduled', {
+                                count: sessions.filter(
+                                  (s) =>
+                                    s.state !== 'CANCELLED' &&
+                                    toDayIso(new Date(s.start_dt)) === selectedDate,
+                                ).length,
+                              })}
+                            </AppText>
+                          </Stack>
+                        </Row>
 
-              {/* Selected day list */}
+                        <Row gap={6} align="center">
+                          <Button
+                            label={regenerating ? t('plannerRegenerating') : t('plannerRegenerate')}
+                            icon="refresh"
+                            size="sm"
+                            variant="secondary"
+                            loading={regenerating}
+                            onPress={() => void handleRegenerate()}
+                          />
+                          <IconButton
+                            icon="options-outline"
+                            accessibilityLabel={t('plannerSetupPlan')}
+                            variant="surface"
+                            onPress={() => router.push('/planner/onboarding' as never)}
+                          />
+                        </Row>
+                      </Row>
+                    </Card>
+                  ) : (
+                    <Card variant="hero" tone="brand" className="overflow-hidden p-4">
+                      <Row justify="space-between" align="center">
+                        <Row gap={10} align="center" className="flex-1">
+                          <View className="h-9 w-9 items-center justify-center rounded-xl bg-brand/20">
+                            <Ionicons name="sparkles" size={18} color={tokens.brand} />
+                          </View>
+                          <Stack gap={2} className="flex-1">
+                            <AppText variant="body" weight="semibold">
+                              {t('plannerNoPlanHeroTitle')}
+                            </AppText>
+                            <AppText variant="caption" tone="muted" numberOfLines={1}>
+                              {t('plannerNoPlanHeroSubtitle')}
+                            </AppText>
+                          </Stack>
+                        </Row>
+                        <Button
+                          label={t('plannerGenerate')}
+                          icon="sparkles"
+                          size="sm"
+                          variant="primary"
+                          onPress={() => router.push('/planner/onboarding' as never)}
+                        />
+                      </Row>
+                    </Card>
+                  )}
+
+                  <UnmetBanner items={unmet} />
+                </>
+              )}
+
+              {/* Tasks Summary Card (when viewing only tasks) */}
+              {view === 'tasks' && (
+                <Card variant="hero" tone="brand" className="overflow-hidden">
+                  <GhostNumber
+                    value={String(summary.total)}
+                    size={104}
+                    style={{
+                      position: 'absolute',
+                      top: -16,
+                      ...(isRTL ? { left: -6 } : { right: -6 }),
+                    }}
+                  />
+                  <AppText
+                    variant="micro"
+                    weight="medium"
+                    tone="muted"
+                    className="uppercase tracking-widest"
+                  >
+                    {t('completed')}
+                  </AppText>
+                  <View className="mt-2">
+                    <TwoToneNumber
+                      value={String(summary.done)}
+                      secondary={`/ ${summary.total}`}
+                      variant="displayLg"
+                    />
+                  </View>
+                  <Row gap={8} wrap className="mt-3">
+                    <Badge label={`${summary.today} ${t('appointmentsToday')}`} tone="neutral" />
+                    <Badge label={`${t('thisWeek')} · ${summary.total}`} tone="neutral" />
+                  </Row>
+                </Card>
+              )}
+
+              {/* Unified Day Timeline */}
               <View>
                 <AppText
                   variant="micro"
@@ -340,31 +536,68 @@ export default function ScheduleScreen() {
                     month: 'short',
                   })}
                 </AppText>
-                {dayItems.length === 0 ? (
-                  <EmptyState
-                    icon="calendar-outline"
-                    title={t('noSchedulesToday')}
-                    actionLabel={t('addTask')}
-                    onAction={() => router.push('/create-schedule')}
-                  />
+
+                {isLoading && unifiedEntries.length === 0 ? (
+                  <Stack gap={12}>
+                    <Skeleton height={80} radius={24} />
+                    <Skeleton height={80} radius={24} />
+                  </Stack>
+                ) : isError && unifiedEntries.length === 0 ? (
+                  <ErrorState error={error} onRetry={() => void refetch()} />
                 ) : (
-                  <Stack gap={10}>{dayItems.map((item) => renderItem(item, false))}</Stack>
+                  <PlannerDayTimeline
+                    entries={unifiedEntries}
+                    emptyLabel={
+                      view === 'classes'
+                        ? t('plannerNoClassesToday')
+                        : view === 'tasks'
+                          ? t('plannerNoTasksToday')
+                          : t('noSchedulesToday')
+                    }
+                    onPressSession={setActiveSession}
+                    onStartSession={handleStartSession}
+                    onToggleTask={toggleComplete}
+                    onDeleteTask={removeItem}
+                  />
                 )}
               </View>
-            </>
-          )}
 
-          <Button
-            label={t('addTask')}
-            icon="add"
-            variant="secondary"
-            fullWidth
-            onPress={() => router.push('/create-schedule')}
-          />
+              {/* Quick Add Task Button */}
+              <Button
+                label={t('addTask')}
+                icon="add"
+                variant="secondary"
+                fullWidth
+                onPress={() => router.push('/create-schedule')}
+              />
             </>
           ) : null}
         </Stack>
       </Screen>
+
+      {/* Session Actions Bottom Sheet */}
+      <SessionActionsSheet
+        visible={activeSession !== null}
+        session={activeSession}
+        onClose={() => setActiveSession(null)}
+        onStart={handleStartSession}
+        onMove={onMoveSession}
+        onLockToggle={(session) => {
+          lockLocal(session.id, !session.is_locked);
+          setActiveSession(null);
+        }}
+        onSkip={(session) => {
+          skipLocal(session.id);
+          setActiveSession(null);
+        }}
+        onDelete={(session) => {
+          deleteLocal(session.id);
+          setActiveSession(null);
+        }}
+      />
+
+      {/* Plan Changes Diff Sheet */}
+      <DiffSheet visible={lastDiff !== null} diff={lastDiff} onClose={clearDiff} />
     </View>
   );
 }

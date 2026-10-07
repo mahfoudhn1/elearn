@@ -532,6 +532,103 @@ class SubjectConfig(UUIDModel):
         return f"{self.subject} ({scope}) coeff={self.coefficient}"
 
 
+class SubjectImportance(UUIDModel):
+    """Per-subject planning importance for a stream/level.
+
+    ``tier`` (CORE / STANDARD / LIGHT) is derived from ``coefficient`` against
+    thresholds in the pedagogy rule set (see ``planner.engine.tiers``). A missing
+    coefficient never invents importance: it resolves to STANDARD with the
+    reason code ``IMPORTANCE_UNKNOWN``.
+
+    All seeded rows are **placeholder** data (``verified=False``) -- see
+    ``docs/TO_VERIFY.md``. Real coefficients must never be invented here.
+    """
+
+    class Tier(models.TextChoices):
+        CORE = "CORE", "Core"
+        STANDARD = "STANDARD", "Standard"
+        LIGHT = "LIGHT", "Light"
+
+    subject = models.CharField(max_length=150)
+    # Empty level/stream means "applies to any".
+    level = models.CharField(max_length=120, blank=True, default="")
+    stream = models.CharField(max_length=120, blank=True, default="")
+    # Nullable: an unknown coefficient resolves to STANDARD + IMPORTANCE_UNKNOWN.
+    coefficient = models.DecimalField(
+        max_digits=4, decimal_places=2, null=True, blank=True
+    )
+    tier = models.CharField(
+        max_length=8, choices=Tier.choices, default=Tier.STANDARD
+    )
+    academic_year = models.ForeignKey(
+        AcademicYear,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="subject_importances",
+    )
+    verified = models.BooleanField(default=False)
+    source_note = models.CharField(max_length=255, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["level", "stream", "subject", "id"]
+        verbose_name_plural = "subject importance"
+        indexes = [models.Index(fields=["level", "stream", "subject"])]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["subject", "level", "stream"],
+                name="planner_unique_subject_importance_scope",
+            ),
+            models.CheckConstraint(
+                check=Q(coefficient__isnull=True) | Q(coefficient__gte=0),
+                name="planner_subject_importance_coefficient_non_negative",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        scope = " / ".join(part for part in (self.level, self.stream) if part) or "any"
+        return f"{self.subject} ({scope}) {self.tier}"
+
+
+class SubjectPlanningMode(UUIDModel):
+    """A student's planning override for one subject.
+
+    * ``AUTO`` -- use the subject tier as-is (default).
+    * ``MORE`` -- raise the tier cap one step (more weakness headroom).
+    * ``TRACKING_ONLY`` -- the subject produces no planner demand at all, but
+      evidence for it is still tracked elsewhere.
+    """
+
+    class Mode(models.TextChoices):
+        AUTO = "AUTO", "Auto"
+        MORE = "MORE", "More"
+        TRACKING_ONLY = "TRACKING_ONLY", "Tracking only"
+
+    student = models.ForeignKey(
+        "users.Student",
+        on_delete=models.CASCADE,
+        related_name="subject_planning_modes",
+    )
+    subject = models.CharField(max_length=150)
+    mode = models.CharField(max_length=16, choices=Mode.choices, default=Mode.AUTO)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["student", "subject"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["student", "subject"],
+                name="planner_unique_subject_planning_mode",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.student_id} {self.subject}: {self.mode}"
+
+
 class StudyPlan(UUIDModel):
     """One generated version of a student's study plan."""
 
@@ -544,6 +641,7 @@ class StudyPlan(UUIDModel):
         SESSION_MISSED = "SESSION_MISSED", "Session missed"
         WEEKLY = "WEEKLY", "Weekly roll"
         AVAILABILITY = "AVAILABILITY", "Availability change"
+        MASTERY = "MASTERY", "Mastery change"
 
     student = models.ForeignKey(
         "users.Student",
@@ -605,6 +703,22 @@ class PlannedSession(UUIDModel):
     )
     subject = models.CharField(max_length=150)
     activity_type = models.CharField(max_length=32)
+    #: Topic targeted by mastery/flashcard demand (Phase A7); null = subject-level.
+    topic = models.ForeignKey(
+        "planner.Topic",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="planned_sessions",
+    )
+    #: Optional practice quiz the student may take to complete this session.
+    practice_quiz = models.ForeignKey(
+        "assessment.Quiz",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="planned_sessions",
+    )
     start_dt = models.DateTimeField()
     end_dt = models.DateTimeField()
     origin = models.CharField(max_length=8, choices=Origin.choices, default=Origin.SYSTEM)

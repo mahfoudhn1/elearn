@@ -42,5 +42,6 @@ urlpatterns = [
     path("api/ai/", include("riffaaAi.urls")),
     path("api/tracking/", include("tracking.urls")),
     path("api/planner/", include("planner.urls")),
+    path("api/assessment/", include("assessment.urls")),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

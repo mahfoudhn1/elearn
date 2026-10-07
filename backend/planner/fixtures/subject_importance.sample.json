@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "description": "Phase A6 SubjectImportance placeholder fixture. Tiers are INVENTED from the sample coefficients, not official. verified=false everywhere.",
+    "verified": false
+  },
+  "importances": [
+    { "subject": "رياضيات", "level": "", "stream": "", "coefficient": 5, "source_note": "PLACEHOLDER: fake coefficient -> CORE" },
+    { "subject": "فيزياء", "level": "", "stream": "", "coefficient": 4, "source_note": "PLACEHOLDER: fake coefficient -> CORE" },
+    { "subject": "كيمياء", "level": "", "stream": "", "coefficient": 3, "source_note": "PLACEHOLDER: fake coefficient -> CORE" },
+    { "subject": "أحياء", "level": "", "stream": "", "coefficient": 3, "source_note": "PLACEHOLDER: fake coefficient -> CORE" },
+    { "subject": "فرنسية", "level": "", "stream": "", "coefficient": 3, "source_note": "PLACEHOLDER: fake coefficient -> CORE" },
+    { "subject": "عربية", "level": "", "stream": "", "coefficient": 3, "source_note": "PLACEHOLDER: fake coefficient -> CORE" },
+    { "subject": "إنجليزية", "level": "", "stream": "", "coefficient": 2, "source_note": "PLACEHOLDER: fake coefficient -> STANDARD" },
+    { "subject": "تاريخ", "level": "", "stream": "", "coefficient": 2, "source_note": "PLACEHOLDER: fake coefficient -> STANDARD" },
+    { "subject": "جغرافيا", "level": "", "stream": "", "coefficient": 2, "source_note": "PLACEHOLDER: fake coefficient -> STANDARD" },
+    { "subject": "فلسفة", "level": "", "stream": "", "coefficient": 2, "source_note": "PLACEHOLDER: fake coefficient -> STANDARD" },
+    { "subject": "اقتصاد", "level": "", "stream": "", "coefficient": 1, "source_note": "PLACEHOLDER: fake coefficient -> LIGHT" }
+  ]
+}

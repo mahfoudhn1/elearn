@@ -1,8 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { AppText, Badge, Button, Card, Row, Stack } from '../ui';
+import { useTheme } from '../../hooks/useTheme';
 import { useTranslation } from '../../hooks/useTranslation';
 import { usePomodoro } from '../../hooks/usePomodoro';
 import {
@@ -42,7 +44,6 @@ function addDays(iso: string, days: number): string {
 function busyEntriesForDay(state: OnboardingState | null, iso: string): TimelineEntry[] {
   if (!state) return [];
   const weekday = new Date(`${iso}T00:00:00`).getDay();
-  const target = new Date(`${iso}T00:00:00`).getDay();
   // Backend weekday: 0 = Monday ... 6 = Sunday; JS: 0 = Sunday.
   const backendWeekday = (weekday + 6) % 7;
   const entries: TimelineEntry[] = [];
@@ -64,7 +65,7 @@ function busyEntriesForDay(state: OnboardingState | null, iso: string): Timeline
     });
   }
 
-  for (const raw of state.group_schedules as Array<Record<string, unknown>>) {
+  for (const raw of state.group_schedules as Record<string, unknown>[]) {
     const start = timeToMinutes(raw.start_time as string);
     const end = timeToMinutes(raw.end_time as string);
     if (start == null || end == null) continue;
@@ -83,7 +84,7 @@ function busyEntriesForDay(state: OnboardingState | null, iso: string): Timeline
     });
   }
 
-  for (const raw of state.private_sessions as Array<Record<string, unknown>>) {
+  for (const raw of state.private_sessions as Record<string, unknown>[]) {
     const sessionDate = String(raw.session_date ?? '').slice(0, 10);
     if (sessionDate !== iso) continue;
     const start = timeToMinutes(new Date(String(raw.session_date)).toTimeString().slice(0, 5));
@@ -98,8 +99,6 @@ function busyEntriesForDay(state: OnboardingState | null, iso: string): Timeline
     });
   }
 
-  // `target` is unused but kept for clarity of the day computation above.
-  void target;
   return entries;
 }
 
@@ -111,6 +110,7 @@ function busyEntriesForDay(state: OnboardingState | null, iso: string): Timeline
 export function PlannerPlanPanel({ selectedDate }: { selectedDate: string }) {
   const router = useRouter();
   const { t } = useTranslation();
+  const { tokens } = useTheme();
   const { start } = usePomodoro();
 
   const plan = usePlannerStore((state) => state.plan);
@@ -185,7 +185,7 @@ export function PlannerPlanPanel({ selectedDate }: { selectedDate: string }) {
         window_end: addDays(selectedDate, 6),
         trigger: 'MANUAL',
       });
-    } catch (error) {
+    } catch {
       Alert.alert(t('error'), t('serverUnreachable'));
     } finally {
       setBusy(false);
@@ -246,45 +246,74 @@ export function PlannerPlanPanel({ selectedDate }: { selectedDate: string }) {
       <UnmetBanner items={unmet} />
 
       {plan ? (
-        <Stack gap={10}>
-          <Row gap={8} align="center" justify="space-between">
-            <AppText variant="micro" tone="subtle" className="uppercase tracking-widest">
-              {t('plannerPlan')} · v{plan.version}
-            </AppText>
-            <Button
-              label={busy ? t('plannerRegenerating') : t('plannerRegenerate')}
-              icon="refresh"
-              size="sm"
-              variant="secondary"
-              loading={busy}
-              onPress={() => void regenerate()}
-            />
-          </Row>
-          <Row gap={8} wrap>
-            <Button
-              label={t('plannerSetup')}
-              icon="options-outline"
-              size="sm"
-              variant="secondary"
-              onPress={() => router.push('/planner/onboarding' as never)}
-            />
-            <Button
-              label={t('plannerReset')}
-              icon="trash-outline"
-              size="sm"
-              variant="danger"
-              loading={resetting}
-              onPress={confirmReset}
-            />
-          </Row>
-        </Stack>
-      ) : (
-        <Card variant="list">
-          <Stack gap={10}>
-            <AppText variant="bodySm" tone="muted">
-              {t('plannerNoPlan')}
-            </AppText>
+        <Card variant="hero" tone="brand" className="overflow-hidden p-4">
+          <Stack gap={12}>
+            <Row justify="space-between" align="center">
+              <Row gap={8} align="center">
+                <View className="h-8 w-8 items-center justify-center rounded-xl bg-brand/20">
+                  <Ionicons name="sparkles" size={16} color={tokens.brand} />
+                </View>
+                <Stack gap={2}>
+                  <AppText variant="micro" weight="medium" tone="brand" className="uppercase tracking-widest">
+                    {t('plannerSmartPlan')}
+                  </AppText>
+                  <AppText variant="bodySm" tone="muted">
+                    {t('plannerTodayScheduled', { count: entries.filter((e) => e.session).length })}
+                  </AppText>
+                </Stack>
+              </Row>
+
+              <Button
+                label={busy ? t('plannerRegenerating') : t('plannerRegenerate')}
+                icon="refresh"
+                size="sm"
+                variant="primary"
+                loading={busy}
+                onPress={() => void regenerate()}
+              />
+            </Row>
+
             <Row gap={8} wrap>
+              <Button
+                label={t('plannerWeekProgress')}
+                icon="bar-chart-outline"
+                size="sm"
+                variant="secondary"
+                onPress={() => router.push('/planner/weekly' as never)}
+              />
+              <Button
+                label={t('plannerSetupPlan')}
+                icon="options-outline"
+                size="sm"
+                variant="secondary"
+                onPress={() => router.push('/planner/onboarding' as never)}
+              />
+              <Button
+                label={t('plannerReset')}
+                icon="trash-outline"
+                size="sm"
+                variant="ghost"
+                loading={resetting}
+                onPress={confirmReset}
+              />
+            </Row>
+          </Stack>
+        </Card>
+      ) : (
+        <Card variant="hero" tone="brand" className="overflow-hidden p-5">
+          <Stack gap={10}>
+            <Row gap={8} align="center">
+              <View className="h-8 w-8 items-center justify-center rounded-xl bg-brand/20">
+                <Ionicons name="sparkles" size={18} color={tokens.brand} />
+              </View>
+              <AppText variant="title">
+                {t('plannerNoPlanHeroTitle')}
+              </AppText>
+            </Row>
+            <AppText variant="bodySm" tone="muted">
+              {t('plannerNoPlanHeroSubtitle')}
+            </AppText>
+            <Row gap={10} className="mt-2" wrap>
               <Button
                 label={t('plannerGenerate')}
                 icon="sparkles"
@@ -311,20 +340,11 @@ export function PlannerPlanPanel({ selectedDate }: { selectedDate: string }) {
         </AppText>
         <PlannerDayTimeline
           entries={entries}
-          emptyLabel={t('noSchedulesToday')}
+          emptyLabel={t('plannerNoSessionsToday')}
           onPressSession={setActive}
+          onStartSession={(session) => void onStart(session)}
         />
       </View>
-
-      {plan ? (
-        <Button
-          label={t('plannerWeekProgress')}
-          icon="bar-chart-outline"
-          variant="secondary"
-          fullWidth
-          onPress={() => router.push('/planner/weekly' as never)}
-        />
-      ) : null}
 
       <SessionActionsSheet
         visible={active !== null}

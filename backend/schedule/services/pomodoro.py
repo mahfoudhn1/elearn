@@ -378,7 +378,28 @@ class PomodoroService:
                 productivity.recompute_daily(day)
 
             self._record_tracking_activity(session)
+
+            self._sync_planned_session(session)
         return session
+
+    def _sync_planned_session(self, session: StudySession) -> None:
+        """Advance the linked planner session (DONE/PARTIAL) and mirror evidence.
+
+        Best-effort and idempotent: a failure here must not fail the Pomodoro
+        close. Only runs when the session is linked to a planner item.
+        """
+        if session.schedule_item_id is None:
+            return
+        try:
+            from planner.services.history_service import (
+                sync_planned_session_from_study_session,
+            )
+
+            sync_planned_session_from_study_session(session)
+        except Exception:  # noqa: BLE001 - never break session completion
+            logger.exception(
+                "planner session sync failed for study session %s", session.pk
+            )
 
     def _record_tracking_activity(self, session: StudySession) -> None:
         """Mirror a finished session into the tracking activity layer.

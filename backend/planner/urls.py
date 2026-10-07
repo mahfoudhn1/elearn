@@ -9,12 +9,14 @@ from .views import (
     OnboardingStateView,
     OnboardingView,
     StudentPlannerProfileViewSet,
+    SubjectPlanningView,
 )
 from .plan_views import (
     PlanCurrentView,
     PlanDiffView,
     PlanGenerateView,
     SessionDetailView,
+    SessionPracticeQuizView,
     SessionSkipView,
     WeeklyReportView,
 )
@@ -40,11 +42,17 @@ router.register(
 urlpatterns = [
     path("onboarding/state/", OnboardingStateView.as_view(), name="planner-onboarding-state"),
     path("onboarding/", OnboardingView.as_view(), name="planner-onboarding"),
+    path("subject-planning/", SubjectPlanningView.as_view(), name="planner-subject-planning"),
     path("plans/generate/", PlanGenerateView.as_view(), name="planner-plan-generate"),
     path("plans/current/", PlanCurrentView.as_view(), name="planner-plan-current"),
     path("plans/<uuid:pk>/diff/", PlanDiffView.as_view(), name="planner-plan-diff"),
     path("sessions/<uuid:pk>/", SessionDetailView.as_view(), name="planner-session-detail"),
     path("sessions/<uuid:pk>/skip/", SessionSkipView.as_view(), name="planner-session-skip"),
+    path(
+        "sessions/<uuid:pk>/practice-quiz/",
+        SessionPracticeQuizView.as_view(),
+        name="planner-session-practice-quiz",
+    ),
     path("reports/weekly/", WeeklyReportView.as_view(), name="planner-weekly-report"),
     path("staff/diagnostics/", StaffDiagnosticsView.as_view(), name="planner-staff-diagnostics"),
     path("staff/dry-run/", StaffDryRunView.as_view(), name="planner-staff-dry-run"),

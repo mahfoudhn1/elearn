@@ -16,6 +16,8 @@ from .models import (
     StudentTopicProgress,
     StudyPlan,
     SubjectConfig,
+    SubjectImportance,
+    SubjectPlanningMode,
     SubjectConfidence,
     Topic,
 )
@@ -106,6 +108,20 @@ class SubjectConfigAdmin(admin.ModelAdmin):
     list_display = ("subject", "level", "stream", "coefficient", "weekly_target_minutes", "verified")
     list_filter = ("verified", "level", "stream")
     search_fields = ("subject", "level", "stream")
+
+
+@admin.register(SubjectImportance)
+class SubjectImportanceAdmin(admin.ModelAdmin):
+    list_display = ("subject", "level", "stream", "coefficient", "tier", "verified", "academic_year")
+    list_filter = ("tier", "verified", "level", "stream")
+    search_fields = ("subject", "level", "stream")
+
+
+@admin.register(SubjectPlanningMode)
+class SubjectPlanningModeAdmin(admin.ModelAdmin):
+    list_display = ("student", "subject", "mode", "updated_at")
+    list_filter = ("mode",)
+    search_fields = ("student__user__username", "subject")
 
 
 class PlannedSessionInline(admin.TabularInline):

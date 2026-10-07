@@ -1,0 +1,90 @@
+{
+  "light_weak_topic": {
+    "capped_within_ceiling": true,
+    "light_ceiling_weekly": 180,
+    "mastery_tracked": {
+      "confidence": "LOW",
+      "effective_weight": 2.807561,
+      "evidence_count": 3,
+      "mastery": 0.677714,
+      "reason_codes": [
+        "EVIDENCE",
+        "SOURCE_WEIGHT",
+        "DIFFICULTY_WEIGHT",
+        "RECENCY",
+        "TREND_UNKNOWN"
+      ],
+      "trend": "UNKNOWN"
+    },
+    "topic_review_minutes": [
+      30,
+      30
+    ]
+  },
+  "misconceptions": {
+    "attempts": 12,
+    "discrimination": 1.0,
+    "flags": [
+      "AMBIGUOUS_DISTRACTOR"
+    ],
+    "has_ambiguous_distractor": true,
+    "option_distribution": {
+      "A": 6,
+      "B": 6
+    },
+    "pct_correct": 0.5
+  },
+  "new_student": {
+    "mastery": {
+      "confidence": "NONE",
+      "effective_weight": 0.0,
+      "evidence_count": 0,
+      "mastery": null,
+      "reason_codes": [
+        "EVIDENCE",
+        "LOW_CONFIDENCE"
+      ],
+      "trend": "UNKNOWN"
+    }
+  },
+  "repeated_retakes": {
+    "mastery": {
+      "confidence": "NONE",
+      "effective_weight": 0.946485,
+      "evidence_count": 41,
+      "mastery": null,
+      "reason_codes": [
+        "EVIDENCE",
+        "SOURCE_WEIGHT",
+        "DIFFICULTY_WEIGHT",
+        "RECENCY",
+        "REPEAT_CAP",
+        "LOW_CONFIDENCE"
+      ],
+      "trend": "UNKNOWN"
+    }
+  },
+  "strong_student": {
+    "mastery": {
+      "confidence": "HIGH",
+      "effective_weight": 4.419971,
+      "evidence_count": 5,
+      "mastery": 1.0,
+      "reason_codes": [
+        "EVIDENCE",
+        "SOURCE_WEIGHT",
+        "DIFFICULTY_WEIGHT",
+        "RECENCY",
+        "REPEAT_CAP",
+        "TREND_UNKNOWN"
+      ],
+      "trend": "UNKNOWN"
+    }
+  },
+  "thin_question_bank": {
+    "first_question": "q1",
+    "insufficient_topics": [
+      "t2"
+    ]
+  }
+}

@@ -217,14 +217,192 @@ Confirm also whether a lesson→topic link belongs on `groups.Schedule` or
 
 ---
 
-## Phase 10 — Final list
+## Phase A3 — Mastery / readiness placeholders
 
-Phase 10 added one rules knob and a review; everything else was tooling/tests.
+Source file: `backend/assessment/rules/mastery_default_v1.json`
+Loaded by: `assessment.engine.load_mastery_rules()`
+Validated by: `assessment.mastery_schema.validate_mastery_rules()`
 
-| Key | Placeholder | What to verify |
+**Every number here is an invented placeholder** (`verified: false`) chosen to
+make the mastery engine runnable. None is an educational fact and none was
+measured. Each carries a `why` string in the JSON.
+
+| Key | Placeholder | What to verify / decide |
 |---|---|---|
-| `allocation.band_boundaries` | morning 05:00, afternoon 12:00, evening 17:00, night 23:00 | Real time-of-day band boundaries |
-| `plan_service.WEEKEND_WEEKDAYS` | Fri/Sat (code constant) | Confirm Algerian weekend and move into rules |
+| `source_weights.QUIZ` / `PLANNER_EXERCISE` / `FLASHCARD` / `TEACHER_GRADE` | 1.0 / 0.8 / 0.6 / 1.2 | Relative trust in each evidence source |
+| `difficulty_weights.{1..5}` | 0.6 / 0.8 / 1.0 / 1.3 / 1.6 | How much a harder correct answer should count |
+| `half_life_days` | 30 | How fast evidence should decay |
+| `per_question_repeat_cap.window_days` | 7 | Rolling window for "same question" repetition |
+| `per_question_repeat_cap.max_weight` | 1.0 | Max total weight from one question in the window |
+| `confidence.min_effective_weight` | 1.5 | Evidence needed before a mastery number is shown |
+| `confidence.min_distinct_days` | 2 | Distinct days required |
+| `confidence.low_fraction` | 0.5 | LOW band below `min/min_fraction` |
+| `readiness.coverage_min` | 0.5 | Minimum topic coverage for a readiness value |
+| `readiness_bands.{weak_max,developing_max,secure_max}` | 0.4 / 0.6 / 0.8 | Band cut points |
+| `trend.window_days` | 14 | Recent-vs-prior window |
+| `trend.min_effective_weight` | 1.0 | Per-side minimum weight for a trend |
+| `trend.delta_threshold` | 0.1 | Mastery delta for UP/DOWN |
+
+Update the JSON, set `verified: true`, and remove the matching rows here once a
+human confirms them against product intent. → `docs/assessment/A3.md`.
+
+---
+
+## Phase A4 — Flashcard / Leitner placeholders
+
+Source file: `backend/assessment/rules/leitner_default_v1.json`
+Loaded by: `assessment.engine.load_leitner_rules()`
+Validated by: `assessment.leitner_schema.validate_leitner_rules()`
+
+**Every number here is an invented placeholder** (`verified: false`) chosen to
+make the flashcard engine runnable. None is a measured pedagogy fact. Each
+carries a `why` string in the JSON.
+
+| Key | Placeholder | What to verify / decide |
+|---|---|---|
+| `max_box` | 5 | Highest Leitner box before a card graduates |
+| `box_intervals_days.{1..5}` | 1 / 3 / 7 / 16 / 35 | Days until due per box |
+| `rating_box_delta.{AGAIN,HARD,GOOD,EASY}` | reset / 0 / +1 / +2 | Box movement per self-rated recall |
+| `rating_score.{AGAIN,HARD,GOOD,EASY}` | 0.0 / 0.3 / 0.7 / 1.0 | Evidence score mapped from the rating |
+| `overdue_interval_days.*` | 0 | Whether an overdue card schedules from now or from its old due date |
+| `new_cards_per_day` | 20 | Cap on brand-new cards surfaced per day |
+| `lapse_score_penalty` | 0.0 | Score multiplier applied on a lapse (AGAIN) |
+
+Update the JSON, set `verified: true`, and remove the matching rows here once a
+human confirms them. → `docs/assessment/A4.md`.
+
+---
+
+## Phase A5 — Adaptive-diagnostic placeholders
+
+Source file: `backend/assessment/rules/adaptive_default_v1.json`
+Loaded by: `assessment.engine.load_adaptive_rules()`
+Validated by: `assessment.adaptive_schema.validate_adaptive_rules()`
+
+**Every number here is an invented placeholder** (`verified: false`) chosen to
+make the adaptive selector runnable. None is a measured pedagogy fact. Each
+carries a `why` string in the JSON.
+
+| Key | Placeholder | What to verify / decide |
+|---|---|---|
+| `start_difficulty` | 2 | Where a topic's staircase starts |
+| `difficulty_step` | 1 | Move per correct/wrong answer |
+| `difficulty_min` / `difficulty_max` | 1 / 5 | Staircase clamp |
+| `min_questions_per_topic` | 2 | Per-topic coverage quota |
+| `max_questions` | 30 | Diagnostic session cap |
+| `skip_recent_days` | 14 | Do not resurface questions seen recently |
+| `prefer_untested_misconceptions` | true | Prefer probing unseen misconceptions |
+| `misconception_bonus` | 3 | Score bonus (tie-break units) for an unseen misconception |
+| `coverage_round_robin` / `stop_when_covered` | true / true | Coverage policy |
+
+Update the JSON, set `verified: true`, and remove the matching rows here once a
+human confirms them. → `docs/assessment/A5.md`.
+
+---
+
+## Phase A6 — Subject importance / planning-mode placeholders
+
+Source file: `backend/planner/rules/pedagogy_default_v1.json` (new keys) and
+`backend/planner/fixtures/subject_importance.sample.json`.
+Loaded by: `planner.engine.load_pedagogy_rules()` (`tier_thresholds`,
+`max_weakness_multiplier_by_tier`, `weekly_minutes_floor_by_tier`,
+`weekly_minutes_ceiling_by_tier`, `planning_mode_tier_step`).
+Validated by: `planner.pedagogy_schema.validate_pedagogy_rules()`.
+
+**Every number and every seeded coefficient/tier is an invented placeholder**
+(`verified: false`). No real Algerian coefficient is present; the seed derives
+tiers from fake coefficients and must be replaced with verified data.
+
+| Key | Placeholder | What to verify / decide |
+|---|---|---|
+| `tier_coefficient_thresholds.core_min` / `light_max` | 3 / 1 | Coefficient cut points for CORE / LIGHT |
+| `max_weakness_multiplier_by_tier` | CORE 1.5, STANDARD 1.25, LIGHT 1.0 | Max weakness boost per tier |
+| `weekly_minutes_floor_by_tier` | 60 / 30 / 15 | Minimum weekly minutes per tier |
+| `weekly_minutes_ceiling_by_tier` | 600 / 480 / 180 | Hard weekly ceiling per tier |
+| `planning_mode_tier_step` | 1 | Tier steps raised by mode MORE |
+| `subject_importance.sample.json` coefficients | invented (5/4/3/2/1) | Replace with official coefficients; set `verified: true` |
+
+Update the files, set `verified: true`, and remove the matching rows here once a
+human confirms them. → `docs/planner/phase-11.md`.
+
+---
+
+## Phase A7 — Mastery-driven planner placeholders
+
+Source file: `backend/planner/rules/pedagogy_default_v1.json` (`mastery` block).
+Loaded by: `planner.engine.load_pedagogy_rules()` (`MasteryRules`).
+Validated by: `planner.pedagogy_schema.validate_pedagogy_rules()`.
+
+**Every number here is an invented placeholder** (`verified: false`). None is a
+measured pedagogy fact. Each carries a `why` in the JSON.
+
+| Key | Placeholder | What to verify / decide |
+|---|---|---|
+| `mastery.low_threshold` | 0.5 | Mastery below which a topic earns REVIEW/EXERCISES |
+| `mastery.high_threshold` | 0.85 | Mastery at/above which (with HIGH confidence) no demand is added |
+| `mastery.min_confidence` | LOW | Minimum confidence that may affect demand |
+| `mastery.topic_session_minutes` | 30 | Base length of a topic micro-session |
+| `mastery.flashcard_session_minutes` | 10 | Length of a due-flashcard micro-session |
+| `mastery.revision_topics_max` | 3 | Weakest topics revised per exam subject |
+| `mastery.low_mastery_boost` | 1.3 | Boost applied to a weak topic (then tier-capped) |
+
+Update the JSON, set `verified: true`, and remove the matching rows here once a
+human confirms them. → `docs/planner/phase-12.md`.
+
+---
+
+## Phase A8 — Mobile assessment (rendering + screens)
+Code: `riffaa-app/riffaaApp/` (`components/assessment/*`, `app/assessment/*`,
+`services/api/assessment.ts`, `services/offline/*`). Spike record:
+`docs/mobile/00_math_rtl_spike.md`.
+
+**Open items to resolve before shipping:**
+
+| Item | Current (spike) | Needed |
+|---|---|---|
+| LaTeX runtime | KaTeX loaded from a jsDelivr **CDN** inside the WebView | **Bundle KaTeX into app assets** and inline it so math renders offline. Flashcards are offline-first, so this matters. |
+| Math WebView fonts | System font fallbacks inside the WebView | Optionally inline the IBM Plex Arabic font as a `@font-face` data URI so Arabic metrics match `AppText`. |
+| Math accessibility | `pointerEvents="none"`, not selectable; formulas announced as one block | Alt text per formula / accessibility labels (not solved in the spike). |
+| Device verification | `tsc` + `expo lint` pass; **not** run on Android/iOS | Run the spike test procedure on both platforms, RTL + LTR, light + dark. |
+| "Fix my weak spots" | Weakest topic by cached mastery, then a TOPIC_PRACTICE quiz or a `MASTERY` regenerate | Confirm product copy/behaviour for "no quiz + no planner profile". |
+| Topic labels in the app | New read-only `GET /api/assessment/curriculum/` returns chapter/topic titles | Confirm this is the right long-term source vs a dedicated curriculum service. |
+
+---
+
+## Phase A9 — Teacher tools placeholders
+
+Code: `backend/assessment/analytics.py`, `teacher_views.py`,
+`tests_teacher_analytics.py`; `frontend/elearn/app/dashboard/assessment/*`,
+`frontend/elearn/app/lib/assessmentApi.ts`. → `docs/assessment/A9.md`.
+
+| Item | Current | To verify / decide |
+|---|---|---|
+| `WEAK_THRESHOLD` / `DEVELOPING_THRESHOLD` / `SECURE_THRESHOLD` (0.4 / 0.6 / 0.8) | Placeholder mastery-band cut points for the class distribution | Confirm against product intent (same bands as `docs/TO_VERIFY.md` §A3?). |
+| `AT_RISK_THRESHOLD` (0.5) | Placeholder mean-mastery cut for "student at risk" | Confirm; may also depend on planner/tracking signals. |
+| `MOST_MISSED_LIMIT` / `MISCONCEPTION_LIMIT` (20) | Payload caps | Confirm sensible list lengths. |
+| Teacher scope | `Group.admin` + `Subscription.teacher` | Confirm this is the complete "my students" definition (e.g. accepted group requests, co-admins). |
+| Reviewer UI | Publish/Reject shown to any viewer; server enforces staff | Add a staff flag to the client user to hide reviewer actions. |
+| LaTeX preview | KaTeX from CDN (`next/script`) | Bundle KaTeX (see §A8). |
+
+---
+
+## Phase A10 — Item analysis, calibration, performance, abuse
+
+Code: `backend/assessment/engine/item_analysis.py`,
+`assessment/item_analysis.py`, `calibration.py`, `analytics.py`,
+`rules/item_analysis_default_v1.json`; tests `tests_item_analysis.py`,
+`tests_golden_scenarios.py`; docs `docs/assessment/ARCHITECTURE.md`,
+`docs/assessment/RULES.md`. → `docs/assessment/A10.md`.
+
+| Item | Current | To verify / decide |
+|---|---|---|
+| Item thresholds | `min_responses` 10, `too_easy` 0.85, `too_hard` 0.30, `low_disc` 0.10, `neg_disc` 0.0, `ambiguous` 0.15, `top_bottom_fraction` 0.27 | Confirm against psychometric practice; currently invented placeholders. |
+| `calibration_min_samples` | 10 | Confirm the sample size above which a readiness-vs-grade correlation is shown. |
+| `attempt_start` throttle | `30/min` (`core.settings`) | Tune the real rate; consider per-user vs per-IP and a burst allowance. |
+| Mastery recompute budget | Test asserts `<100ms` for one topic / 50 evidence rows | Re-check on production data volumes; add monitoring if needed. |
+| Query budget | `ensure_topic_mastery` ≤ 10 queries | Re-baseline after any service change. |
+| `TeacherGrade` | One current grade per (student, subject) | Confirm history/audit needs (replace vs append). |
+| Golden snapshot | `assessment/tests/golden/assessment_scenarios.json` | Regenerate only on intended change (`python manage.py write_assessment_golden`). |
 
 ### Consolidated placeholder index
 
@@ -245,10 +423,37 @@ Every value below is unverified and must be checked before production:
 - **Curriculum** (Phase 8): fake sample chapters/topics/objectives/weights, and
   `allocation.topic_recency_days` / `soft.topic_recency`. → §8.
 - **Band boundaries** (Phase 10): see table above.
+- **Mastery/readiness** (Phase A3): source/difficulty weights, half-life, repeat
+  cap, confidence and coverage minimums, readiness bands, trend window. → §A3.
+- **Flashcards** (Phase A4): box intervals, rating deltas/scores, max box,
+  per-day new-card cap, lapse penalty. → §A4.
+- **Adaptive diagnostic** (Phase A5): start difficulty, step, clamps, per-topic
+  quota, max length, skip window, misconception preference. → §A5.
+- **Subject importance** (Phase A6): tier coefficient thresholds, weakness caps,
+  per-tier floors/ceilings, mode step, fake seeded coefficients. → §A6.
+- **Mastery-driven planner** (Phase A7): mastery low/high thresholds, min
+  confidence, topic/flashcard session minutes, exam revision cap, mastery boost.
+  → §A7.
+- **Mobile assessment** (Phase A8): bundled KaTeX, device RTL verification, math
+  accessibility, curriculum endpoint. → §A8.
+- **Teacher tools** (Phase A9): class-level band/at-risk thresholds, teacher
+  scope definition, reviewer UI gate, CDN KaTeX. → §A9.
+- **Item analysis / calibration / abuse** (Phase A10): item thresholds,
+  calibration sample size, attempt-start throttle, recompute/query budgets,
+  grade model. → §A10.
+
+## Final note
+
+Every numeric value in this project's rules and seeds is a **placeholder**
+(`verified: false`) unless a row above has been removed after human
+confirmation. The canonical list of rule numbers and their rationale is
+`docs/assessment/RULES.md` (assessment) and `docs/planner/RULES.md`
+(planner); the architecture is `docs/assessment/ARCHITECTURE.md`. Before
+production: replace or verify every row, then regenerate the golden snapshots
+(`write_assessment_golden`, `write_golden_plans`).
 
 No real Algerian curriculum, calendar, coefficient, or pedagogical number has
 been invented — all seeded/config values are placeholders with `verified:false`.
-
 
 
 

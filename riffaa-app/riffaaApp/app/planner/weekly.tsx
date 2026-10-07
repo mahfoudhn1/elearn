@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 
@@ -12,6 +13,8 @@ import {
   Skeleton,
   Stack,
 } from '../../components/ui';
+import { subjectTint } from '../../constants/subjects';
+import { useTheme } from '../../hooks/useTheme';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useStudyStats } from '../../hooks/queries';
 import { getWeeklyReport, type WeeklyReport } from '../../services/api/planner';
@@ -30,6 +33,7 @@ function localDateIso(value: Date): string {
  */
 export default function WeeklyProgressScreen() {
   const { t } = useTranslation();
+  const { tokens } = useTheme();
   const [report, setReport] = useState<WeeklyReport | null>(null);
   const [loading, setLoading] = useState(true);
   const studyStats = useStudyStats(7) as unknown as { data?: Record<string, unknown> };
@@ -65,21 +69,27 @@ export default function WeeklyProgressScreen() {
       <Screen scroll>
         <Stack gap={16}>
           <Row gap={10}>
-            <Card variant="list" className="flex-1">
-              <Stack gap={4}>
-                <AppText variant="micro" tone="subtle" className="uppercase tracking-widest">
-                  {t('plannerStreak')}
-                </AppText>
+            <Card variant="hero" tone="brand" className="flex-1 p-4">
+              <Stack gap={6}>
+                <Row justify="space-between" align="center">
+                  <AppText variant="micro" tone="subtle" className="uppercase tracking-widest">
+                    {t('plannerStreak')}
+                  </AppText>
+                  <Ionicons name="flame" size={20} color={tokens.brand} />
+                </Row>
                 <AppText variant="displayLg" weight="semibold">
                   {streak}
                 </AppText>
               </Stack>
             </Card>
-            <Card variant="list" className="flex-1">
+            <Card variant="hero" tone="success" className="flex-1 p-4">
               <Stack gap={6}>
-                <AppText variant="micro" tone="subtle" className="uppercase tracking-widest">
-                  {t('plannerExamReadiness')}
-                </AppText>
+                <Row justify="space-between" align="center">
+                  <AppText variant="micro" tone="subtle" className="uppercase tracking-widest">
+                    {t('plannerExamReadiness')}
+                  </AppText>
+                  <Ionicons name="checkmark-circle" size={20} color={tokens.success} />
+                </Row>
                 <AppText variant="displayLg" weight="semibold">
                   {readiness}%
                 </AppText>
@@ -106,16 +116,25 @@ export default function WeeklyProgressScreen() {
           ) : (
             <Stack gap={10}>
               {report.items.map((item) => {
+                const tint = subjectTint(item.subject);
                 const percent = item.planned_minutes
                   ? Math.round((item.actual_minutes / item.planned_minutes) * 100)
                   : 0;
                 return (
                   <Card key={`${item.subject}-${item.activity_type}`} variant="list" subject={item.subject}>
                     <Stack gap={8}>
-                      <Row gap={8} align="center" justify="space-between">
-                        <AppText variant="bodySm" weight="medium">
-                          {item.subject}
-                        </AppText>
+                      <Row gap={10} align="center" justify="space-between">
+                        <Row gap={8} align="center" className="flex-1">
+                          <View
+                            className="h-8 w-8 items-center justify-center rounded-xl"
+                            style={{ backgroundColor: `${tint.color}25` }}
+                          >
+                            <Ionicons name={tint.icon} size={16} color={tint.color} />
+                          </View>
+                          <AppText variant="bodySm" weight="semibold" numberOfLines={1}>
+                            {item.subject}
+                          </AppText>
+                        </Row>
                         <Badge label={t(activityKey(item.activity_type))} tone="neutral" />
                       </Row>
                       <ProgressBar value={Math.min(100, percent)} />
@@ -127,7 +146,11 @@ export default function WeeklyProgressScreen() {
                           <AppText variant="caption" tone="muted">
                             -{item.deficit_minutes} {t('unitMinutes')}
                           </AppText>
-                        ) : null}
+                        ) : (
+                          <AppText variant="caption" tone="success" weight="medium">
+                            ✓ {percent}%
+                          </AppText>
+                        )}
                       </Row>
                     </Stack>
                   </Card>
@@ -135,11 +158,14 @@ export default function WeeklyProgressScreen() {
               })}
 
               {report.suggestions.length > 0 ? (
-                <Card variant="list">
-                  <Stack gap={6}>
-                    <AppText variant="micro" weight="medium" tone="brand" className="uppercase tracking-widest">
-                      {t('plannerUnmetTitle')}
-                    </AppText>
+                <Card variant="hero" tone="brand" className="p-4">
+                  <Stack gap={8}>
+                    <Row gap={8} align="center">
+                      <Ionicons name="bulb-outline" size={18} color={tokens.brand} />
+                      <AppText variant="micro" weight="medium" tone="brand" className="uppercase tracking-widest">
+                        {t('plannerCoachTip')}
+                      </AppText>
+                    </Row>
                     {report.suggestions.map((suggestion, index) => (
                       <AppText key={`suggestion-${index}`} variant="caption" tone="muted">
                         {String(suggestion.params.subject ?? '')} · {suggestion.code}

@@ -1,0 +1,80 @@
+{
+  "meta": {
+    "description": "Phase A1 FAKE sample. NOT real curriculum content. The uuids are fixed placeholders so tests can create matching curriculum rows; substitute real ones before importing into a live database.",
+    "verified": false
+  },
+  "misconceptions": [
+    {
+      "topic": "00000000-0000-0000-0000-0000000000b1",
+      "code": "PLACEHOLDER_SIGN",
+      "description_ar": "وصف تجريبي",
+      "description_fr": "PLACEHOLDER misconception"
+    }
+  ],
+  "questions": [
+    {
+      "external_id": "sample-mcq-1",
+      "topic": "00000000-0000-0000-0000-0000000000b1",
+      "objective": null,
+      "curriculum_version": "00000000-0000-0000-0000-0000000000a1",
+      "kind": "MCQ_SINGLE",
+      "prompt_ar": "ما هو $2 + 2$؟",
+      "prompt_fr": "What is $2 + 2$?",
+      "difficulty": 2,
+      "est_seconds": 30,
+      "explanation_ar": "الجواب التجريبي هو 4.",
+      "explanation_fr": "The placeholder answer is $$4$$.",
+      "status": "DRAFT",
+      "is_sample": true,
+      "source_note": "PLACEHOLDER fake sample - invented, not official content",
+      "options": [
+        { "text_ar": "3", "text_fr": "3", "is_correct": false, "order": 1, "misconception_code": null },
+        { "text_ar": "4", "text_fr": "4", "is_correct": true, "order": 2, "misconception_code": null },
+        { "text_ar": "5", "text_fr": "5", "is_correct": false, "order": 3, "misconception_code": "PLACEHOLDER_SIGN" }
+      ]
+    },
+    {
+      "external_id": "sample-tf-1",
+      "topic": "00000000-0000-0000-0000-0000000000b1",
+      "objective": null,
+      "curriculum_version": "00000000-0000-0000-0000-0000000000a1",
+      "kind": "TRUE_FALSE",
+      "prompt_ar": "الشمس نجم.",
+      "prompt_fr": "The sun is a star.",
+      "difficulty": 1,
+      "est_seconds": 15,
+      "explanation_ar": "بيان تجريبي.",
+      "explanation_fr": "PLACEHOLDER explanation.",
+      "status": "DRAFT",
+      "is_sample": true,
+      "source_note": "PLACEHOLDER fake sample - invented, not official content",
+      "options": [
+        { "text_ar": "صح", "text_fr": "True", "is_correct": true, "order": 1, "misconception_code": null },
+        { "text_ar": "خطأ", "text_fr": "False", "is_correct": false, "order": 2, "misconception_code": null }
+      ]
+    },
+    {
+      "external_id": "sample-numeric-1",
+      "topic": "00000000-0000-0000-0000-0000000000b1",
+      "objective": null,
+      "curriculum_version": "00000000-0000-0000-0000-0000000000a1",
+      "kind": "NUMERIC",
+      "prompt_ar": "احسب $\\pi$ مقرباً إلى منزلتين.",
+      "prompt_fr": "Approximate $$\\pi$$ to two decimals.",
+      "difficulty": 3,
+      "est_seconds": 45,
+      "explanation_ar": "القيمة التجريبية 3.14.",
+      "explanation_fr": "PLACEHOLDER value is 3.14.",
+      "status": "DRAFT",
+      "is_sample": true,
+      "source_note": "PLACEHOLDER fake sample - invented, not official content",
+      "numeric": {
+        "correct_value": "3.14",
+        "tolerance_abs": "0.01",
+        "tolerance_rel": null,
+        "accepted_units": null
+      },
+      "options": []
+    }
+  ]
+}

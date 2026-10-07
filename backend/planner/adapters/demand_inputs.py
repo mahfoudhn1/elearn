@@ -13,7 +13,16 @@ from django.db.models import Sum
 
 from planner.engine import ExamState, HistorySummary, StudentState, SubjectState
 from planner.engine.demand import INSTRUCTION_KINDS
-from planner.models import PlannerExam, StudentTopicProgress, SubjectConfig, SubjectConfidence
+from planner.engine.pedagogy import load_pedagogy_rules
+from planner.engine.tiers import resolve_tier
+from planner.models import (
+    PlannerExam,
+    StudentTopicProgress,
+    SubjectConfig,
+    SubjectConfidence,
+    SubjectImportance,
+    SubjectPlanningMode,
+)
 from schedule.models import StudySession
 
 from .collect import collect_busy_blocks
@@ -37,8 +46,8 @@ def _load_subject_configs() -> list[SubjectConfig]:
     return list(SubjectConfig.objects.all())
 
 
-def _coefficient(configs, subject: str, level: str, stream: str) -> float:
-    """Most specific config wins; falls back to a neutral coefficient of 1."""
+def _coefficient(configs, subject: str, level: str, stream: str):
+    """Most specific config wins; ``None`` when no coefficient is known."""
     scopes = (
         (subject, level, stream),
         (subject, level, ""),
@@ -52,28 +61,98 @@ def _coefficient(configs, subject: str, level: str, stream: str) -> float:
                 and config.stream == wanted_stream
             ):
                 return float(config.coefficient)
-    return 1.0
+    return None
+
+
+def _load_importances() -> list[SubjectImportance]:
+    return list(SubjectImportance.objects.select_related("academic_year"))
+
+
+def _importance(importances, subject: str, level: str, stream: str):
+    """Most specific :class:`SubjectImportance` wins, else ``None``."""
+    scopes = (
+        (subject, level, stream),
+        (subject, level, ""),
+        (subject, "", ""),
+    )
+    for wanted_subject, wanted_level, wanted_stream in scopes:
+        for importance in importances:
+            if (
+                importance.subject == wanted_subject
+                and importance.level == wanted_level
+                and importance.stream == wanted_stream
+            ):
+                return importance
+    return None
+
+
+def _planning_modes(student) -> dict[str, str]:
+    return {
+        row.subject: row.mode
+        for row in SubjectPlanningMode.objects.filter(student=student)
+    }
+
+
+def _subject_state(
+    subject,
+    confidence,
+    level,
+    stream,
+    configs,
+    importances,
+    modes,
+    thresholds,
+) -> SubjectState:
+    """Build one :class:`SubjectState` with tier, coefficient-known and mode."""
+    importance = _importance(importances, subject, level, stream)
+    if importance is not None and importance.coefficient is not None:
+        coefficient = float(importance.coefficient)
+    else:
+        coefficient = _coefficient(configs, subject, level, stream)
+
+    tier, known = resolve_tier(coefficient, thresholds)
+    return SubjectState(
+        subject_id=subject,
+        confidence=confidence,
+        coefficient=coefficient if coefficient is not None else 1.0,
+        tier=tier,
+        coefficient_known=known,
+        planning_mode=modes.get(subject, SubjectPlanningMode.Mode.AUTO),
+    )
 
 
 def build_student_state(student) -> StudentState:
     level = _level_for(student)
     stream = getattr(getattr(student, "field_of_study", None), "name", "") or ""
     configs = _load_subject_configs()
+    importances = _load_importances()
+    modes = _planning_modes(student)
+    thresholds = load_pedagogy_rules().tier_thresholds
 
     subjects: dict[str, SubjectState] = {}
     for confidence in SubjectConfidence.objects.filter(student=student):
-        subjects[confidence.subject] = SubjectState(
-            subject_id=confidence.subject,
-            confidence=confidence.level,
-            coefficient=_coefficient(configs, confidence.subject, level, stream),
+        subjects[confidence.subject] = _subject_state(
+            confidence.subject,
+            confidence.level,
+            level,
+            stream,
+            configs,
+            importances,
+            modes,
+            thresholds,
         )
     for exam in PlannerExam.objects.filter(student=student):
         subjects.setdefault(
             exam.subject,
-            SubjectState(
-                subject_id=exam.subject,
-                confidence="AVERAGE",
-                coefficient=_coefficient(configs, exam.subject, level, stream),
+            _subject_state(
+                exam.subject,
+                "AVERAGE",
+                level,
+                stream,
+                configs,
+                importances,
+                modes,
+                thresholds,
             ),
         )
 

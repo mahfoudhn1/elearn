@@ -7,9 +7,12 @@ the Pomodoro write-back (DONE/PARTIAL) and the MISSED sweep.
 
 from __future__ import annotations
 
+import logging
 from datetime import date, datetime, timedelta, timezone as dt_timezone
 
 from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 
 from planner.adapters.base import student_timezone
 from planner.engine import (
@@ -166,7 +169,24 @@ def sync_planned_session_from_study_session(study_session) -> PlannedSession | N
     else:
         return planned
     planned.save(update_fields=["state", "updated_at"])
+    _mirror_practice_evidence(planned, ratio)
     return planned
+
+
+def _mirror_practice_evidence(planned: PlannedSession, ratio: float) -> None:
+    """Mirror a completed topic practice session as PLANNER_EXERCISE evidence.
+
+    Best-effort: evidence mirroring must never break the completion path. Only
+    EXERCISES/REVIEW sessions that target a topic produce evidence.
+    """
+    from planner.mastery_planner import PRACTICE_ACTIVITY_TYPES, record_practice_outcome
+
+    if planned.activity_type not in PRACTICE_ACTIVITY_TYPES or planned.topic_id is None:
+        return
+    try:
+        record_practice_outcome(planned, score=min(max(ratio, 0.0), 1.0))
+    except Exception:  # noqa: BLE001 - never break session completion
+        logger.exception("practice evidence mirror failed for session %s", planned.pk)
 
 
 def mark_missed_sessions(now=None) -> int:

@@ -82,6 +82,7 @@ INSTALLED_APPS = [
     "schedule",
     "tracking",
     "planner",
+    "assessment",
 
     ]
 
@@ -196,6 +197,8 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/hour',
         'user': '1000/hour',  # Add authenticated user limit
+        # Phase A10: abuse protection on attempt creation (placeholder rate).
+        'attempt_start': '30/min',
     },
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',  # Disable web API UI in production

@@ -13,6 +13,7 @@ from typing import Mapping
 from .allocation_rules import PriorityWeights
 from .demand import DemandActivity, DemandUnit
 from .rules import EngineRules
+from .tiers import STANDARD, tier_rank
 
 
 @dataclass(frozen=True)
@@ -51,10 +52,21 @@ def rank_demands(
     *,
     exam_days_by_subject: Mapping[str, int] | None = None,
     deficit_by_subject: Mapping[str, int] | None = None,
+    tier_by_subject: Mapping[str, str] | None = None,
+    weakness_by_subject: Mapping[str, float] | None = None,
 ) -> list[RankedDemand]:
-    """Return demands in deterministic priority order."""
+    """Return demands in deterministic priority order.
+
+    Order: exam-urgent first (any tier), then tier rank (CORE > STANDARD >
+    LIGHT), then deficit, then weakness (higher first), then the deterministic
+    legacy tail ending in ``subject_id``. When no tier/weakness information is
+    supplied every demand is STANDARD with weakness 1.0, so the ordering is
+    identical to the pre-tier behaviour.
+    """
     exam_days_by_subject = exam_days_by_subject or {}
     deficit_by_subject = deficit_by_subject or {}
+    tier_by_subject = tier_by_subject or {}
+    weakness_by_subject = weakness_by_subject or {}
     weights = rules.allocation.priority
 
     ranked: list[RankedDemand] = []
@@ -71,17 +83,31 @@ def rank_demands(
             urgency = 0
         deficit = int(deficit_by_subject.get(unit.subject_id, 0))
         score = score_for(tier, urgency, deficit, weights)
+
+        subject_tier = tier_by_subject.get(unit.subject_id, STANDARD)
+        # Exam-urgent (tier 1) always outranks any non-urgent demand regardless
+        # of subject tier.
+        exam_urgent = 0 if tier == 1 else 1
+        weakness = float(weakness_by_subject.get(unit.subject_id, 1.0))
+
         sort_key = (
+            exam_urgent,
+            tier_rank(subject_tier),
+            -deficit,
+            -weakness,
+            # Legacy deterministic tie-break (kept last so pre-tier ordering is
+            # preserved when tier/weakness are uniform).
             -score,
             tier,
             urgency,
-            -deficit,
             -unit.minutes,
             unit.derived_from or "",
             unit.activity_type,
             unit.subject_id,
         )
-        ranked.append(RankedDemand(unit, tier, urgency, deficit, score, sort_key))
+        ranked.append(
+            RankedDemand(unit, tier, urgency, deficit, score, sort_key)
+        )
 
     ranked.sort(key=lambda item: item.sort_key)
     return ranked

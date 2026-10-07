@@ -45,4 +45,14 @@ export const queryKeys = {
   weeklyPattern: (range?: string) =>
     ['analytics', 'weekly-pattern', range ?? 'all'] as const,
   studentCourseProgress: () => ['analytics', 'courses'] as const,
+
+  readinessOverview: () => ['assessment', 'readiness', 'overview'] as const,
+  subjectReadiness: (subject: string) =>
+    ['assessment', 'readiness', 'subject', subject] as const,
+  chapterReadiness: (subject?: string) =>
+    ['assessment', 'mastery', 'chapters', subject ?? 'all'] as const,
+  topicMastery: (subject?: string) =>
+    ['assessment', 'mastery', 'topics', subject ?? 'all'] as const,
+  flashcardStats: () => ['assessment', 'flashcards', 'stats'] as const,
+  subjectPlanning: () => ['planner', 'subject-planning'] as const,
 } as const;
