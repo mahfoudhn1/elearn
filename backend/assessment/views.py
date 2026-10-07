@@ -4,8 +4,8 @@
   read-only access to PUBLISHED questions through a response shape that strips
   every correct flag.
 * ``MisconceptionViewSet`` -- teacher/staff writes, everyone reads.
-* ``StaffQuestionImportView`` -- staff-only bulk import (CSV or JSON) with a
-  dry-run mode that reports row errors without writing.
+* ``StaffQuestionImportView`` -- reviewer bulk import (CSV or JSON); teachers
+  may dry-run as themselves. The dry-run mode reports row errors without writing.
 """
 
 from __future__ import annotations
@@ -218,12 +218,12 @@ class MisconceptionViewSet(UUIDLookupMixin, viewsets.ModelViewSet):
 class StaffQuestionImportView(APIView):
     """Bulk question import. Accepts an uploaded file or an inline document.
 
-    Teachers import as themselves (their own author profile); staff reviewers may
-    target any teacher via the ``author`` field. ``dry_run`` validates and writes
-    nothing.
+    Teachers may ``dry_run`` a validation as themselves (their own author
+    profile); only staff reviewers may write, and they may target any teacher via
+    the ``author`` field.
     """
 
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated, IsTeacherOrStaff]
     parser_classes = [JSONParser, MultiPartParser, FormParser]
 
     def post(self, request):
@@ -248,6 +248,8 @@ class StaffQuestionImportView(APIView):
             own_teacher = getattr(request.user, "teacher", None)
             if own_teacher is None or author.id != own_teacher.id:
                 raise PermissionDenied("Teachers can only import as themselves.")
+            if not dry_run:
+                raise PermissionDenied("Only reviewers can import questions.")
 
         document = self._read_document(request)
         report = import_questions(document, author=author, dry_run=dry_run)
