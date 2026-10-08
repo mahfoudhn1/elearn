@@ -44,6 +44,10 @@ class CurriculumImportTests(TestCase):
         self.assertEqual(Chapter.objects.count(), 2)
         self.assertEqual(Topic.objects.count(), 3)
         self.assertEqual(LearningObjective.objects.count(), 1)
+        topic = Topic.objects.order_by("chapter__order", "order").first()
+        self.assertEqual(topic.trimester, 1)
+        self.assertEqual(topic.estimated_minutes, 90)
+        self.assertFalse(topic.is_published)
 
         call_command("import_curriculum", create_year=True)
         self.assertEqual(Chapter.objects.count(), 2)

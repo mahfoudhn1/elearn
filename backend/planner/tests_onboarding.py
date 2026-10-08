@@ -113,6 +113,9 @@ class OnboardingApplyTests(APITestCase):
         self.assertEqual(response.data["missing"], [])
         self.assertEqual(SubjectConfidence.objects.filter(student=self.student).count(), 1)
         self.assertEqual(PlannerExam.objects.filter(student=self.student).count(), 1)
+        profile = StudentPlannerProfile.objects.get(student=self.student)
+        self.assertEqual(profile.level, self.student.grade.name)
+        self.assertEqual(profile.stream, self.student.field_of_study.name)
 
         state = self.client.get(reverse("planner-onboarding-state"))
         self.assertEqual(state.data["missing"], [])
@@ -156,6 +159,15 @@ class OnboardingApplyTests(APITestCase):
             SubjectConfidence.objects.filter(student=self.student).count(), 1
         )
         self.assertTrue(Commitment.objects.filter(uuid=manual.uuid).exists())
+
+    def test_onboarding_can_override_curriculum_scope(self):
+        payload = self._full_payload()
+        payload["profile"]["level"] = "3AS"
+        payload["profile"]["stream"] = "Mathematics"
+        response = self.client.put(reverse("planner-onboarding"), payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data["profile"]["level"], "3AS")
+        self.assertEqual(response.data["profile"]["stream"], "Mathematics")
 
     def test_subject_not_for_level_is_rejected(self):
         payload = self._full_payload()

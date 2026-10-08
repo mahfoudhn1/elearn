@@ -1,14 +1,14 @@
 {
   "meta": {
-    "description": "Phase 8 FAKE curriculum sample. NOT real Algerian program content.",
+    "description": "FAKE sample for testing a 3AS Mathematics stream scope. NOT real Algerian program content.",
     "verified": false
   },
   "academic_year": "2099-2100",
-  "level": "PLACEHOLDER level",
-  "stream": "PLACEHOLDER stream",
+  "level": "3AS_PLACEHOLDER",
+  "stream": "MATHEMATICS_PLACEHOLDER",
   "status": "DRAFT",
   "verified": false,
-  "source_note": "PLACEHOLDER fake sample - invented, not official curriculum",
+  "source_note": "FICTIONAL TEST DATA ONLY. Not sourced from or representative of the Algerian Ministry curriculum.",
   "chapters": [
     {
       "subject": "رياضيات",
@@ -19,16 +19,24 @@
       "topics": [
         {
           "order": 1,
+          "trimester": 1,
           "title_ar": "موضوع تجريبي",
           "title_fr": "PLACEHOLDER Topic 1.1",
+          "title_en": "Placeholder lesson 1.1",
+          "estimated_minutes": 90,
+          "is_published": false,
           "objectives": [
             { "text_ar": "هدف تجريبي", "text_fr": "PLACEHOLDER objective 1.1.a" }
           ]
         },
         {
           "order": 2,
+          "trimester": 1,
           "title_ar": "موضوع تجريبي",
           "title_fr": "PLACEHOLDER Topic 1.2",
+          "title_en": "Placeholder lesson 1.2",
+          "estimated_minutes": 60,
+          "is_published": false,
           "objectives": []
         }
       ]
@@ -42,8 +50,12 @@
       "topics": [
         {
           "order": 1,
+          "trimester": 2,
           "title_ar": "موضوع تجريبي",
           "title_fr": "PLACEHOLDER Topic 2.1",
+          "title_en": "Placeholder lesson 2.1",
+          "estimated_minutes": 120,
+          "is_published": false,
           "objectives": []
         }
       ]

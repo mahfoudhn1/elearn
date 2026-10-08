@@ -101,6 +101,8 @@ class StudentPlannerProfileSerializer(UUIDModelSerializer):
         fields = [
             "id",
             "student",
+            "level",
+            "stream",
             "timezone",
             "wake_time",
             "sleep_time",
@@ -369,6 +371,8 @@ class PlannerExamInputSerializer(serializers.Serializer):
 
 
 class OnboardingProfileInputSerializer(serializers.Serializer):
+    level = serializers.CharField(max_length=120, required=False, allow_blank=True)
+    stream = serializers.CharField(max_length=120, required=False, allow_blank=True)
     timezone = serializers.CharField(max_length=64, required=False)
     wake_time = serializers.TimeField(required=False, allow_null=True)
     sleep_time = serializers.TimeField(required=False, allow_null=True)

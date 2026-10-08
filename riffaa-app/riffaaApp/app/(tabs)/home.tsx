@@ -349,6 +349,12 @@ export default function HomeScreen() {
       onPress: () => router.push('/study-session'),
     },
     {
+      key: 'assessment',
+      icon: 'speedometer-outline',
+      label: t('assessmentTitle'),
+      onPress: () => router.push('/assessment'),
+    },
+    {
       key: 'teachers',
       icon: 'people-outline',
       label: t('discoverTeachers'),

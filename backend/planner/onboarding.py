@@ -56,6 +56,8 @@ def _profile_dict(profile: StudentPlannerProfile | None) -> dict | None:
     if profile is None:
         return None
     return {
+        "level": profile.level,
+        "stream": profile.stream,
         "timezone": profile.timezone,
         "wake_time": _hhmm(profile.wake_time),
         "sleep_time": _hhmm(profile.sleep_time),
@@ -183,6 +185,10 @@ def build_onboarding_state(student) -> dict:
 
 def _upsert_profile(student, data: dict) -> StudentPlannerProfile:
     profile, _ = StudentPlannerProfile.objects.get_or_create(student=student)
+    if not profile.level and "level" not in data:
+        profile.level = student.grade.name if student.grade_id else ""
+    if not profile.stream and "stream" not in data:
+        profile.stream = student.field_of_study.name if student.field_of_study_id else ""
     for field, value in data.items():
         setattr(profile, field, value)
     profile.save()

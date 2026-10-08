@@ -9,8 +9,10 @@ JSON shape::
      "status": "DRAFT", "verified": false, "source_note": "...",
      "chapters": [{"subject": "...", "order": 1, "title_ar": "...",
                    "title_fr": "...", "weight": 4,
-                   "topics": [{"order": 1, "title_ar": "...", "title_fr": "...",
-                               "objectives": [{"text_ar": "...", "text_fr": "..."}]}]}]}
+                    "topics": [{"order": 1, "trimester": 1, "title_ar": "...",
+                                "title_fr": "...", "title_en": "...",
+                                "estimated_minutes": 60, "is_published": false,
+                                "objectives": [{"text_ar": "...", "text_fr": "..."}]}]}
 
 CSV columns: subject,chapter_order,chapter_title_ar,chapter_title_fr,chapter_weight,
 topic_order,topic_title_ar,topic_title_fr
@@ -103,8 +105,12 @@ class Command(BaseCommand):
                 chapter["topics"].append(
                     {
                         "order": int(row["topic_order"]),
+                        "trimester": int(row.get("trimester") or 1),
                         "title_ar": row.get("topic_title_ar", ""),
                         "title_fr": row.get("topic_title_fr", ""),
+                        "title_en": row.get("topic_title_en", ""),
+                        "estimated_minutes": int(row.get("estimated_minutes") or 60),
+                        "is_published": str(row.get("is_published", "false")).lower() in {"1", "true", "yes"},
                         "objectives": [],
                     }
                 )
@@ -153,8 +159,12 @@ class Command(BaseCommand):
                     chapter=chapter,
                     order=topic_data["order"],
                     defaults={
+                        "trimester": topic_data.get("trimester", 1),
                         "title_ar": topic_data.get("title_ar", ""),
                         "title_fr": topic_data.get("title_fr", ""),
+                        "title_en": topic_data.get("title_en", ""),
+                        "estimated_minutes": topic_data.get("estimated_minutes", 60),
+                        "is_published": topic_data.get("is_published", False),
                     },
                 )
                 topic_count += 1

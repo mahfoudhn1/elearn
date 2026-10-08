@@ -142,6 +142,10 @@ class StudentPlannerProfile(UUIDModel):
         on_delete=models.CASCADE,
         related_name="planner_profile",
     )
+    # Snapshot of the student's academic scope; defaults are populated from
+    # users.Student when the planner profile is first created.
+    level = models.CharField(max_length=120, blank=True, default="")
+    stream = models.CharField(max_length=120, blank=True, default="")
     timezone = models.CharField(
         max_length=64, default=DEFAULT_STUDENT_TIMEZONE
     )
@@ -885,8 +889,12 @@ class Chapter(UUIDModel):
 class Topic(UUIDModel):
     chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name="topics")
     order = models.PositiveIntegerField(default=0)
+    trimester = models.PositiveSmallIntegerField(default=1)
     title_ar = models.CharField(max_length=255, blank=True, default="")
     title_fr = models.CharField(max_length=255, blank=True, default="")
+    title_en = models.CharField(max_length=255, blank=True, default="")
+    estimated_minutes = models.PositiveIntegerField(default=60)
+    is_published = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["chapter", "order", "id"]
@@ -894,6 +902,10 @@ class Topic(UUIDModel):
             models.UniqueConstraint(
                 fields=["chapter", "order"],
                 name="planner_unique_topic_order",
+            ),
+            models.CheckConstraint(
+                check=Q(trimester__gte=1) & Q(trimester__lte=3),
+                name="planner_topic_trimester_range",
             ),
         ]
 
@@ -935,6 +947,10 @@ class StudentTopicProgress(UUIDModel):
     status = models.CharField(
         max_length=12, choices=Status.choices, default=Status.NOT_STARTED
     )
+    minutes_studied = models.PositiveIntegerField(default=0)
+    mastery_score = models.DecimalField(
+        max_digits=5, decimal_places=4, null=True, blank=True
+    )
     last_studied_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -950,3 +966,27 @@ class StudentTopicProgress(UUIDModel):
 
     def __str__(self) -> str:
         return f"{self.student_id} topic {self.topic_id}: {self.status}"
+
+
+class SubjectCurrentTopic(UUIDModel):
+    """Student-controlled curriculum position for one subject."""
+
+    student = models.ForeignKey(
+        "users.Student", on_delete=models.CASCADE, related_name="current_topics"
+    )
+    subject = models.CharField(max_length=150)
+    topic = models.ForeignKey(
+        Topic, on_delete=models.CASCADE, related_name="current_for_students"
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["student", "subject"],
+                name="planner_one_current_topic_per_subject",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.student_id} {self.subject}: {self.topic_id}"
