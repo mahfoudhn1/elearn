@@ -51,14 +51,14 @@ export interface ButtonProps extends Omit<ViewProps, 'children'> {
 }
 
 const SIZE_CLASS: Record<ButtonSize, string> = {
-  sm: 'h-11 px-5',
-  md: 'h-12 px-6',
-  lg: 'h-14 px-7',
+  sm: 'h-11 px-4',
+  md: 'h-12 px-5',
+  lg: 'h-14 px-6',
 };
 
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
   primary: 'bg-brand',
-  secondary: 'bg-surface-2 border border-line',
+  secondary: 'bg-surface-elevated border border-line',
   ghost: 'bg-transparent',
   danger: 'bg-danger',
 };
@@ -73,7 +73,7 @@ const LABEL_TEXT_CLASS: Record<ButtonVariant, string> = {
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 /**
- * Glass action button. Fully rounded, height never drops below the 44px touch
+ * Solid action button. Height never drops below the 44px touch
  * target, and the label uses the `on-brand` token so orange stays legible.
  */
 export function Button({
@@ -119,7 +119,7 @@ export function Button({
       onPressOut={() => {
         pressed.value = 0;
       }}
-      className={`items-center justify-center gap-2 rounded-pill ${SIZE_CLASS[size]} ${VARIANT_CLASS[variant]}${fullWidth ? ' w-full' : ''}${inactive ? ' opacity-50' : ''}${className ? ` ${className}` : ''}`}
+      className={`items-center justify-center gap-2 rounded-xl ${SIZE_CLASS[size]} ${VARIANT_CLASS[variant]}${fullWidth ? ' w-full' : ''}${inactive ? ' opacity-50' : ''}${className ? ` ${className}` : ''}`}
       style={[rowDirection, pressStyle, style]}
     >
       {loading ? (

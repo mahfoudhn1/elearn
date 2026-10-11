@@ -54,6 +54,9 @@ class EngineInput:
     #: topic_id -> MasteryTopicSummary (Phase A7). Empty = feature disabled and
     #: the plan is byte-identical to a pre-A7 run.
     mastery_summary: Mapping[str, "MasteryTopicSummary"] = field(default_factory=dict)
+    #: subject_id -> ordered CurriculumTopic tuples (Phase 2). Empty = no
+    #: curriculum supplied; the plan stays subject-level and backward-compatible.
+    curriculum_topics: Mapping[str, tuple] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

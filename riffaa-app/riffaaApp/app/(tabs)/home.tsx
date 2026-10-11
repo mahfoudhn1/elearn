@@ -1,10 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur'; // npx expo install expo-blur (skip if already installed)
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
-import { StudyTracker } from '../../components/StudyTracker';
 import { SmartPlanCard } from '../../components/planner/SmartPlanCard';
 import {
   CourseCardHorizontal,
@@ -17,6 +15,7 @@ import {
   AppText,
   Avatar,
   Button,
+  Card,
   ErrorState,
   IconButton,
   ProgressBar,
@@ -29,6 +28,7 @@ import {
 import type { IoniconName } from '../../components/ui';
 import { subjectTint } from '../../constants/subjects';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useTheme } from '../../hooks/useTheme';
 import { useUnreadNotificationsCount } from '../../hooks/useUnreadCounts';
 import { useCourses } from '../../hooks/useCourses';
 import { describeApiError } from '../../services/api/client';
@@ -106,49 +106,33 @@ interface UpNext {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Glass surface                                                              */
+/* Home surface adapter: keeps this screen on the shared solid-card system.     */
 /* -------------------------------------------------------------------------- */
 
-interface GlassProps {
+interface HomeSurfaceProps {
   children: ReactNode;
-  /** Brand-tinted glass for the one card that should stand out. */
   accent?: boolean;
   padded?: boolean;
   onPress?: () => void;
-  style?: StyleProp<ViewStyle>;
   className?: string;
 }
 
-function Glass({ children, accent, padded = true, onPress, style, className }: GlassProps) {
-  const body = (
-    <View
-      className={`overflow-hidden rounded-3xl border ${
-        accent ? 'border-brand/40' : 'border-white/10'
-      } ${className ?? ''}`}
-      style={style}
-    >
-      <BlurView intensity={accent ? 40 : 28} tint="dark" style={StyleSheet.absoluteFill} />
-      <View
-        pointerEvents="none"
-        className={`absolute inset-0 ${accent ? 'bg-brand/10' : 'bg-white/5'}`}
-      />
-      {/* top highlight: the thin light edge that sells the glass */}
-      <View pointerEvents="none" className="absolute inset-x-6 top-0 h-px bg-white/25" />
-      <View className={padded ? 'p-5' : undefined}>{children}</View>
-    </View>
-  );
-
-  if (!onPress) return body;
+function HomeSurface({ children, accent, padded = true, onPress, className }: HomeSurfaceProps) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
-      {body}
-    </Pressable>
+    <Card
+      variant={accent ? 'hero' : 'default'}
+      onPress={onPress}
+      className={`overflow-hidden ${padded ? '' : 'p-0'}${className ? ` ${className}` : ''}`}
+    >
+      {children}
+    </Card>
   );
 }
 
 function Pill({ icon, label, tone = 'default' }: { icon: IoniconName; label: string; tone?: 'default' | 'brand' | 'success' }) {
-  const color = tone === 'brand' ? '#FF7A3D' : tone === 'success' ? '#4ADE80' : '#C9CDD6';
-  const bg = tone === 'brand' ? 'bg-brand/15' : tone === 'success' ? 'bg-success/15' : 'bg-white/10';
+  const { tokens } = useTheme();
+  const color = tone === 'brand' ? tokens.brand : tone === 'success' ? tokens.success : tokens.inkMuted;
+  const bg = tone === 'brand' ? 'bg-brand/15' : tone === 'success' ? 'bg-success/15' : 'bg-surface-2';
   return (
     <Row gap={6} align="center" className={`rounded-full px-3 py-1.5 ${bg}`}>
       <Ionicons name={icon} size={14} color={color} />
@@ -420,7 +404,7 @@ export default function HomeScreen() {
           <Row gap={12}>
             <Avatar name={user?.name} url={user?.avatarUrl} size={48} />
             <Stack gap={2}>
-              <AppText variant="micro" weight="medium" tone="subtle" className="uppercase tracking-widest">
+              <AppText variant="caption" tone="muted">
                 {t('welcomeBack')}
               </AppText>
               <AppText variant="title">{user?.name || t('student')}</AppText>
@@ -439,8 +423,6 @@ export default function HomeScreen() {
           </View>
         </Row>
       </View>
-
-      {/* ===================== KEPT: quick actions ===================== */}
       <View className="mt-5">
         <QuickActionRow
           actions={quickActions}
@@ -448,10 +430,9 @@ export default function HomeScreen() {
           onAdd={() => router.push('/create-schedule')}
         />
       </View>
-
       {/* ===================== NEW: today focus (the one standout card) ===================== */}
       <View className="mt-6 px-5">
-        <Glass accent>
+      <HomeSurface accent>
           {statsLoading && !stats ? (
             <Stack gap={14}>
               <Skeleton width="35%" height={12} />
@@ -523,29 +504,29 @@ export default function HomeScreen() {
               </Row>
             </>
           )}
-        </Glass>
+        </HomeSurface>
       </View>
 
       {/* ===================== NEW: up next (compact row) ===================== */}
       <View className="mt-4 px-5">
         {scheduleLoading && upNext.kind === 'empty' ? (
-          <Glass>
+          <HomeSurface>
             <Skeleton width="50%" height={16} />
             <View className="mt-3">
               <Skeleton width="75%" height={12} />
             </View>
-          </Glass>
+          </HomeSurface>
         ) : scheduleError ? (
-          <Glass>
+          <HomeSurface>
             <ErrorState message={scheduleError} onRetry={loadSchedule} />
-          </Glass>
+          </HomeSurface>
         ) : (
-          <Glass onPress={openHeroAction} padded={false}>
+          <HomeSurface onPress={openHeroAction} padded={false}>
             <Row align="center" gap={14} className="p-4">
               <Row
                 justify="center"
                 align="center"
-                className={`h-12 w-12 rounded-2xl ${isLive ? 'bg-success/15' : 'bg-brand/15'}`}
+                className={`h-12 w-12 rounded-xl ${isLive ? 'bg-success/15' : 'bg-surface-2'}`}
               >
                 <Ionicons
                   name={
@@ -556,7 +537,7 @@ export default function HomeScreen() {
                         : 'time-outline'
                   }
                   size={22}
-                  color={isLive ? '#4ADE80' : '#FF7A3D'}
+                  color={isLive ? '#34D399' : '#FF7849'}
                 />
               </Row>
               <View style={{ flex: 1 }}>
@@ -579,9 +560,9 @@ export default function HomeScreen() {
                   </AppText>
                 ) : null}
               </View>
-              <Ionicons name="chevron-forward" size={18} color="#8A8F9C" />
+          <Ionicons name="chevron-forward" size={18} color="#788BA2" />
             </Row>
-          </Glass>
+          </HomeSurface>
         )}
       </View>
 
@@ -590,20 +571,45 @@ export default function HomeScreen() {
         <SmartPlanCard />
       </View>
 
+  
+
       {/* ===================== NEW: this week ===================== */}
       <View className="mt-8 px-5">
         <SectionHeader
           title={t('yourProgress')}
           action={{ label: t('viewAnalytics'), onPress: () => router.push('/analytics') }}
         />
-        <Glass>
-          <StudyTracker
-            stats={stats}
-            loading={statsLoading}
-            error={statsError}
-            onRetry={loadStats}
-          />
-        </Glass>
+        <HomeSurface onPress={() => router.push('/analytics')}>
+          {statsLoading && !stats ? (
+            <Stack gap={10}>
+              <Skeleton width="40%" height={14} />
+              <Skeleton width="55%" height={32} />
+              <Skeleton height={7} radius={4} />
+            </Stack>
+          ) : statsError && !stats ? (
+            <ErrorState message={statsError} onRetry={loadStats} />
+          ) : (
+            <>
+              <Row justify="space-between" align="center">
+                <Stack gap={2}>
+                  <AppText variant="caption" tone="muted">{t('thisWeek')}</AppText>
+                  <AppText variant="displayLg">{formatDuration(stats?.windowFocusMinutes ?? 0)}</AppText>
+                </Stack>
+                <Ionicons name="arrow-forward" size={18} color="#788BA2" />
+              </Row>
+              <View className="mt-3">
+                <ProgressBar value={goalMinutes ? Math.min(100, Math.round(todayMinutes / goalMinutes * 100)) : 0} height={6} />
+              </View>
+              <Row justify="space-between" align="center" className="mt-3">
+                <Row gap={6} align="center">
+                  <Ionicons name="flame-outline" size={16} color="#FF7849" />
+                  <AppText variant="caption" tone="muted">{stats?.currentStreak ?? 0} {t('dayStreak')}</AppText>
+                </Row>
+                <AppText variant="caption" tone="muted">{stats?.completedSessions ?? 0} {t('focusSessions')}</AppText>
+              </Row>
+            </>
+          )}
+        </HomeSurface>
       </View>
 
       {/* ===================== NEW: continue learning ===================== */}
@@ -613,7 +619,7 @@ export default function HomeScreen() {
           action={{ label: t('seeAll'), onPress: () => router.push('/courses') }}
         />
         {heroCourse ? (
-          <Glass
+          <HomeSurface
             onPress={() =>
               router.push({ pathname: '/course/[id]', params: { id: String(heroCourse.id) } })
             }
@@ -654,13 +660,13 @@ export default function HomeScreen() {
                 </Row>
               </Stack>
             ) : null}
-          </Glass>
+          </HomeSurface>
         ) : (
-          <Glass>
+          <HomeSurface>
             <AppText variant="bodySm" tone="muted" align="center">
               {t('noSuggestions')}
             </AppText>
-          </Glass>
+          </HomeSurface>
         )}
       </View>
 
@@ -693,14 +699,14 @@ export default function HomeScreen() {
       </View>
       {groups.length === 0 ? (
         <View className="px-5">
-          <Glass onPress={() => router.push('/groups')}>
+          <HomeSurface onPress={() => router.push('/groups')}>
             <Row align="center" gap={12}>
-              <Ionicons name="school-outline" size={22} color="#8A8F9C" />
+              <Ionicons name="school-outline" size={22} color="#788BA2" />
               <AppText variant="bodySm" tone="muted" style={{ flex: 1 }}>
                 {t('noGroups')}
               </AppText>
             </Row>
-          </Glass>
+          </HomeSurface>
         </View>
       ) : (
         <ScrollView

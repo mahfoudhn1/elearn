@@ -8,7 +8,7 @@ client can explain the number. ``now`` and the window are passed in.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from typing import Mapping
 
@@ -81,6 +81,24 @@ class ExamState:
 
 
 @dataclass(frozen=True)
+class CurriculumTopic:
+    """One curriculum topic, in the order a student should encounter it.
+
+    Supplied by the DB-facing adapter; the engine never queries the curriculum
+    itself. ``order`` is the topic's position within its chapter; the adapter
+    guarantees the per-subject tuple is already in study order (current topic
+    forward, active trimester only).
+    """
+
+    topic_id: str
+    subject_id: str
+    order: int
+    estimated_minutes: int = 60
+    trimester: int = 0
+    title: str = ""
+
+
+@dataclass(frozen=True)
 class MasteryTopicSummary:
     """A topic's mastery snapshot, supplied to the planner (Phase A7).
 
@@ -103,6 +121,9 @@ class StudentState:
     level: str = "default"
     subjects: tuple[SubjectState, ...] = ()
     exams: tuple[ExamState, ...] = ()
+    #: Ordered curriculum topics per subject (Phase 2). Empty = no curriculum
+    #: supplied, and the plan falls back to subject-level demand exactly.
+    curriculum_topics: Mapping[str, tuple[CurriculumTopic, ...]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -117,6 +138,79 @@ class DemandWindow:
 
 def _ordered_subjects(student_state: StudentState) -> list[SubjectState]:
     return sorted(student_state.subjects, key=lambda subject: subject.subject_id)
+
+
+def _distribute_topic_demand(
+    subject: SubjectState,
+    base_minutes: int,
+    student_state: StudentState,
+    reasons: list[Reason],
+    *,
+    activity_type: str = DemandActivity.STUDY,
+) -> list[DemandUnit]:
+    """Split ``base_minutes`` into ordered per-topic STUDY units.
+
+    The Algerian curriculum is the spine: topics are studied in chapter order,
+    starting from the student's current topic (``SubjectCurrentTopic``), and
+    only topics in the active trimester are eligible. When no curriculum is
+    supplied for the subject the whole demand stays subject-level
+    (``topic_id=None``) -- the plan is byte-identical to a pre-Phase-2 run.
+
+    The split is round-robin over the eligible topics so every one gets a
+    session before any topic gets a second one; the remainder goes to the
+    current topic. Every unit carries the subject's accumulated reasons plus a
+    ``CURRICULUM_TOPIC_ORDER`` reason naming the topic.
+    """
+    topics = list((student_state.curriculum_topics or {}).get(subject.subject_id, ()))
+    if not topics or base_minutes <= 0:
+        return [
+            DemandUnit(
+                subject_id=subject.subject_id,
+                activity_type=activity_type,
+                minutes=base_minutes,
+                due_by=None,
+                derived_from=None,
+                reasons=tuple(reasons),
+            )
+        ]
+
+    topic_reasons = [
+        Reason(
+            "CURRICULUM_TOPIC_ORDER",
+            {
+                "subject": subject.subject_id,
+                "eligible_topics": [topic.topic_id for topic in topics],
+                "current_topic": topics[0].topic_id,
+                "total_minutes": base_minutes,
+            },
+        )
+    ]
+
+    # Round-robin: each topic gets ``chunk`` minutes in turn until the demand is
+    # exhausted. The current topic (topics[0]) absorbs any final remainder so
+    # the student keeps moving forward rather than leaving a dangling partial.
+    per_topic = base_minutes // len(topics)
+    remainder = base_minutes % len(topics)
+    allocations = [per_topic] * len(topics)
+    if remainder:
+        allocations[0] += remainder
+
+    units: list[DemandUnit] = []
+    for topic, minutes in zip(topics, allocations):
+        if minutes <= 0:
+            continue
+        units.append(
+            DemandUnit(
+                subject_id=subject.subject_id,
+                activity_type=activity_type,
+                minutes=minutes,
+                due_by=None,
+                derived_from=f"curriculum:{topic.topic_id}",
+                topic_id=topic.topic_id,
+                reasons=tuple(reasons + topic_reasons),
+            )
+        )
+    return units
 
 
 def _instruction_credits(blocks, rules: PedagogyRules) -> dict[str, int]:
@@ -462,15 +556,8 @@ def compute_demand(
                         {"topics": mastered, "threshold": rules.mastery.high_threshold},
                     )
                 )
-            units.append(
-                DemandUnit(
-                    subject_id=subject.subject_id,
-                    activity_type=DemandActivity.STUDY,
-                    minutes=base,
-                    due_by=None,
-                    derived_from=None,
-                    reasons=tuple(reasons),
-                )
+            units.extend(
+                _distribute_topic_demand(subject, base, student_state, reasons)
             )
 
     # Revision demand for subjects with an exam in the window.

@@ -126,12 +126,12 @@ export default function ProfileScreen() {
               accessibilityRole="switch"
               accessibilityState={{ checked: isDark }}
               accessibilityLabel={isDark ? translate('darkMode') : translate('lightMode')}
-              className="mb-5 rounded-card border border-hairline bg-surface-2 p-4"
+              className="mb-5 rounded-card border border-line bg-surface-elevated p-4"
               style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
             >
               <Row justify="space-between" align="center">
                 <Row gap={12} align="center">
-                  <View className="h-10 w-10 items-center justify-center rounded-card bg-brand/15">
+                  <View className="h-10 w-10 items-center justify-center rounded-lg bg-surface-2">
                     <Ionicons name={isDark ? 'moon' : 'sunny'} size={18} color={tokens.brand} />
                   </View>
                   <Stack gap={2}>
@@ -176,8 +176,8 @@ export default function ProfileScreen() {
                     accessibilityRole="button"
                     accessibilityState={{ selected }}
                     accessibilityLabel={item.native}
-                    className={`flex-1 items-center rounded-card border py-3 ${
-                      selected ? 'border-brand/40 bg-brand/15' : 'border-hairline bg-surface-2'
+                    className={`flex-1 items-center rounded-lg border py-3 ${
+                      selected ? 'border-brand/35 bg-brand/10' : 'border-line bg-surface-elevated'
                     }`}
                     style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
                   >
@@ -231,7 +231,7 @@ export default function ProfileScreen() {
             <Stack gap={14}>
               {COMPLETED_COURSES.map((course) => (
                 <Row key={course.id} gap={12} align="center">
-                  <View className="h-10 w-10 items-center justify-center rounded-card bg-brand/15">
+                  <View className="h-10 w-10 items-center justify-center rounded-lg bg-surface-2">
                     <Ionicons name="ribbon-outline" size={18} color={tokens.brand} />
                   </View>
                   <Stack gap={2} className="flex-1">

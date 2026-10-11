@@ -1,4 +1,4 @@
-const { getDefaultConfig } = require('@expo/metro-config');
+const { getDefaultConfig } = require('expo/metro-config');
 const { withNativeWind } = require('nativewind/metro'); // 1. Import NativeWind's Metro wrapper
 
 const config = getDefaultConfig(__dirname);

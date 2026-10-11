@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "riffaaapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": false
     },
@@ -16,7 +15,6 @@
         "backgroundColor": "#273444",
         "foregroundImage": "./assets/images/icon.png"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.mahfoudhn.riffaaapp"
     },
@@ -25,6 +23,7 @@
       "favicon": "./assets/images/icon.png"
     },
     "plugins": [
+      "./plugins/withJitsiAndroid.js",
       "expo-router",
       [
         "expo-splash-screen",

@@ -62,16 +62,16 @@ export function Glass({
 
   const spec = glassLevels[theme]['glass-2'];
 
-  const blurred = !reduceGlass;
+  const blurred = elevated && !reduceGlass;
   const android = Platform.OS === 'android' && Boolean(blurTargetRef);
 
   const borderColor = useMemo(
-    () => (accent ? hexToRgba(tokens.brand, 0.4) : spec.border),
+    () => (accent ? hexToRgba(tokens.brand, 0.24) : spec.border),
     [accent, tokens.brand, spec.border],
   );
 
   const accentFill = useMemo(
-    () => hexToRgba(tokens.brand, theme === 'dark' ? 0.09 : 0.07),
+    () => hexToRgba(tokens.brand, theme === 'dark' ? 0.05 : 0.04),
     [tokens.brand, theme],
   );
 
@@ -128,7 +128,7 @@ export function Glass({
         />
 
         {/* Very subtle brand wash */}
-        {accent ? (
+        {accent && blurred ? (
           <View
             style={[
               StyleSheet.absoluteFill,

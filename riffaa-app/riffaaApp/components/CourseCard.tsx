@@ -16,7 +16,7 @@ interface CourseCardProps {
 }
 
 /**
- * Course card: a faux-glass surface with a 16:9 thumbnail, a subject-icon chip,
+ * Course card: a solid surface with a 16:9 thumbnail, a subject-icon chip,
  * teacher, up to three stat chips and a progress bar only when enrolled.
  * Locked courses keep the same layout and just gain a lock badge.
  */
@@ -34,7 +34,6 @@ export function CourseCard({ course, onPress, subject }: CourseCardProps) {
       variant="media"
       subject={subject ?? course.teacher?.teaching_subjects}
       onPress={onPress}
-      animateFloat
       className="mb-4"
     >
       <View style={{ width: '100%', aspectRatio: 16 / 9 }} className="bg-surface-2">

@@ -18,8 +18,8 @@ export interface IconButtonProps extends Omit<ViewProps, 'children'> {
 
 const VARIANT_CLASS: Record<IconButtonVariant, string> = {
   ghost: 'bg-transparent',
-  surface: 'bg-surface-2 border border-line',
-  brand: 'bg-brand/15 border border-brand/30',
+  surface: 'bg-surface-elevated border border-line',
+  brand: 'bg-brand/10 border border-brand/25',
   success: 'bg-success/15 border border-success/30',
   danger: 'bg-danger/15 border border-danger/30',
 };

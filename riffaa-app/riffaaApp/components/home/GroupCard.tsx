@@ -6,7 +6,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { useTranslation } from '../../hooks/useTranslation';
 import type { NormalizedGroup } from '../../utils/realData';
 import { AppText, Badge, Row } from '../ui';
-import { Glass } from '../ui/Glass';
+import { Card } from '../ui/Card';
 
 interface GroupCardProps {
   group: NormalizedGroup;
@@ -14,7 +14,7 @@ interface GroupCardProps {
 }
 
 /**
- * Wide group card (glass) for the home carousel: subject icon on the start
+ * Wide group card for the home carousel: subject icon on the start
  * side, live badge and member count on the end side, group and instructor as
  * the focal content. A live group also gets a green glow ring.
  */
@@ -26,7 +26,7 @@ export function GroupCard({ group, onPress }: GroupCardProps) {
   const studentCount = group.students_count ?? 0;
 
   return (
-    <Glass onPress={onPress} tint={tint.color} padded={false} className="w-72 flex-shrink-0">
+    <Card onPress={onPress} variant="list" className="w-72 flex-shrink-0">
       <View className="p-4">
         <Row justify="space-between" align="center" className="mb-3">
           <Row
@@ -43,7 +43,7 @@ export function GroupCard({ group, onPress }: GroupCardProps) {
             <Row
               gap={4}
               align="center"
-              className="rounded-full bg-white/10 px-2 py-0.5"
+              className="rounded-full bg-surface-2 px-2 py-0.5"
               accessibilityLabel={`${studentCount}`}
             >
               <Ionicons name="people-outline" size={12} color={tokens.inkMuted} />
@@ -62,6 +62,6 @@ export function GroupCard({ group, onPress }: GroupCardProps) {
           {group.teacher_name}
         </AppText>
       </View>
-    </Glass>
+    </Card>
   );
 }

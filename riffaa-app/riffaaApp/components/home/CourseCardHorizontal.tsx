@@ -7,7 +7,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { useTranslation } from '../../hooks/useTranslation';
 import type { Course } from '../../types';
 import { AppText, Badge, ProgressBar, Row, Stack } from '../ui';
-import { Glass } from '../ui/Glass';
+import { Card } from '../ui/Card';
 
 interface CourseCardHorizontalProps {
   course: Course;
@@ -17,7 +17,7 @@ interface CourseCardHorizontalProps {
 }
 
 /**
- * Compact horizontal course card (glass): thumbnail beside the title,
+ * Compact horizontal course card: thumbnail beside the title,
  * instructor, stat badges and a micro progress bar. The subject color is a
  * slim bar on the top edge.
  */
@@ -31,7 +31,7 @@ export function CourseCardHorizontal({ course, onPress, subject }: CourseCardHor
   const progress = course.progress;
 
   return (
-    <Glass onPress={onPress} tint={tint.color} padded={false} className="w-80 flex-shrink-0">
+    <Card onPress={onPress} variant="list" className="w-80 flex-shrink-0">
       <View className="p-4">
         <Row gap={12} align="flex-start">
           <View className="relative flex-shrink-0">
@@ -99,6 +99,6 @@ export function CourseCardHorizontal({ course, onPress, subject }: CourseCardHor
           </View>
         </Row>
       </View>
-    </Glass>
+    </Card>
   );
 }

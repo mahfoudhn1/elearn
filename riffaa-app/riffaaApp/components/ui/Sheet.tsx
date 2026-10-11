@@ -4,7 +4,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeVars } from '../../hooks/useTheme';
 import { useTranslation } from '../../hooks/useTranslation';
 import { AppText } from './AppText';
-import { GlassSurface } from './GlassSurface';
 import { IconButton } from './IconButton';
 import { Row } from './Row';
 
@@ -17,7 +16,7 @@ export interface SheetProps extends ViewProps {
 }
 
 /**
- * Bottom sheet built on RN `Modal` (no extra dependency): a `glass-2` panel
+ * Bottom sheet built on RN `Modal` (no extra dependency): a solid elevated panel
  * with a drag handle over a dimmed backdrop. Theme variables are re-applied
  * because native modals render outside the app's main view tree.
  */
@@ -44,11 +43,10 @@ export function Sheet({
           className="flex-1"
           style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
         />
-        <GlassSurface
+        <View
           {...rest}
-          level="glass-2"
           accessibilityViewIsModal
-          className={`rounded-t-[28px] rounded-b-none px-4 pt-3${className ? ` ${className}` : ''}`}
+          className={`rounded-t-2xl rounded-b-none border border-line bg-surface-elevated px-4 pt-3${className ? ` ${className}` : ''}`}
           style={[{ paddingBottom: insets.bottom + 16 }, style]}
         >
           <View className="mb-2 h-1 w-10 self-center rounded-full bg-line" />
@@ -64,7 +62,7 @@ export function Sheet({
             </Row>
           ) : null}
           {children}
-        </GlassSurface>
+        </View>
       </View>
     </Modal>
   );

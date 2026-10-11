@@ -24,9 +24,8 @@ export interface ScreenProps extends ViewProps {
 }
 
 /**
- * Transparent, safe-area aware screen container. The shared `AppBackground`
- * shows through; the bottom inset reserves room for the floating tab bar so
- * content scrolls under the glass and the last row stays reachable.
+ * Safe-area aware screen container. The shared navy backdrop shows through;
+ * bottom inset reserves room for the floating dock and its gesture-safe gap.
  */
 export function Screen({
   children,

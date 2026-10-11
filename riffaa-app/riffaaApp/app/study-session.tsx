@@ -67,7 +67,7 @@ export default function StudySessionScreen() {
           {title ? (
             <Card variant="list">
               <Row gap={10} align="center">
-                <Ionicons name="bookmark-outline" size={16} color={tokens.brand} />
+                <Ionicons name="bookmark-outline" size={16} color={tokens.inkMuted} />
                 <Stack gap={2} className="flex-1">
                   <AppText
                     variant="micro"
@@ -80,7 +80,7 @@ export default function StudySessionScreen() {
                     {title}
                   </AppText>
                 </Stack>
-                {subject ? <Badge label={subject} tone="brand" /> : null}
+                {subject ? <Badge label={subject} tone="neutral" /> : null}
               </Row>
 
               {targetMinutes ? (

@@ -49,7 +49,7 @@ const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 export function GlassSurface({
   level = 'glass-1',
   tone,
-  blur = true,
+  blur = false,
   radius,
   animateFloat = false,
   className,
@@ -123,7 +123,7 @@ export function GlassSurface({
           <View
             style={[StyleSheet.absoluteFill, { backgroundColor: spec.fill }]}
           />
-          {toneSpec ? (
+          {toneSpec && tone !== 'brand' ? (
             <View
               style={[StyleSheet.absoluteFill, { backgroundColor: toneSpec.fill }]}
             />
@@ -142,4 +142,3 @@ export function GlassSurface({
     </Animated.View>
   );
 }
-

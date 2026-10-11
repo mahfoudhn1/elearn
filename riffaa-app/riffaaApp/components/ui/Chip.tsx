@@ -50,7 +50,7 @@ export function Chip({
   );
 
   const classes = `h-11 items-center gap-1.5 rounded-pill border px-4 ${
-    selected ? 'bg-brand/15 border-brand/40' : 'bg-transparent border-hairline'
+    selected ? 'bg-brand/10 border-brand/30' : 'bg-transparent border-line'
   }${className ? ` ${className}` : ''}`;
 
   if (!onPress) {

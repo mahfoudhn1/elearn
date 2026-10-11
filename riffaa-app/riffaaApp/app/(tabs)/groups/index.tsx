@@ -9,7 +9,6 @@ import {
   Card,
   EmptyState,
   ErrorState,
-  GhostNumber,
   Row,
   ScreenHeader,
   Skeleton,
@@ -18,7 +17,6 @@ import {
 } from '../../../components/ui';
 import { subjectTint } from '../../../constants/subjects';
 import { useBottomInset } from '../../../hooks/useBottomInset';
-import { useDirection } from '../../../hooks/useDirection';
 import { useTheme } from '../../../hooks/useTheme';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { describeApiError } from '../../../services/api/client';
@@ -43,7 +41,6 @@ function combineDateTime(date: string, time: string): Date | null {
 export default function MyGroupsScreen() {
   const router = useRouter();
   const { tokens } = useTheme();
-  const { isRTL } = useDirection();
   const { t } = useTranslation();
   const bottomInset = useBottomInset();
 
@@ -160,25 +157,14 @@ export default function MyGroupsScreen() {
   );
 
   const header = (
-    <Card variant="hero" className="mb-4 overflow-hidden">
-      <GhostNumber
-        value={String(groups.length)}
-        size={112}
-        style={{
-          position: 'absolute',
-          top: -18,
-          ...(isRTL ? { left: -6 } : { right: -6 }),
-        }}
-      />
+      <Card variant="hero" className="mb-4 overflow-hidden">
       <AppText variant="micro" weight="medium" tone="muted" className="uppercase tracking-widest">
         {t('yourLearningGroups')}
       </AppText>
       <View className="mt-2">
-        <TwoToneNumber
-          value={String(groups.length)}
-          secondary={t('groups')}
-          variant="displayLg"
-        />
+        <Row gap={8} align="flex-end">
+          <TwoToneNumber value={String(groups.length)} secondary={t('groups')} variant="displayLg" />
+        </Row>
       </View>
       {totalUnread > 0 || soonestNext ? (
         <Row gap={8} wrap className="mt-3">

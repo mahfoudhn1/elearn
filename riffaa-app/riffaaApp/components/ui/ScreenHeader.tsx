@@ -6,7 +6,6 @@ import { useTheme } from '../../hooks/useTheme';
 import { useTranslation } from '../../hooks/useTranslation';
 import { AppText } from './AppText';
 import { DirIcon } from './DirIcon';
-import { GlassSurface } from './GlassSurface';
 import { Row } from './Row';
 
 export interface ScreenHeaderProps {
@@ -19,8 +18,8 @@ export interface ScreenHeaderProps {
   /** Large-title variant used by tab roots. */
   large?: boolean;
   /**
-   * Scroll offset of the screen's list/scroll view. When provided, a `glass-2`
-   * bar fades in behind the title after ~16px of scroll.
+   * Scroll offset of the screen's list/scroll view. When provided, a solid
+   * navy header fades in behind the title after ~16px of scroll.
    */
   scrollY?: Animated.Value;
   className?: string;
@@ -67,7 +66,7 @@ export function ScreenHeader({
             },
           ]}
         >
-          <GlassSurface level="glass-2" radius={0} className="flex-1" />
+          <View className="flex-1 border-b border-line bg-bg" />
         </Animated.View>
       ) : null}
       <Row gap={8} align="center" className={large ? 'min-h-[52px]' : 'min-h-[56px]'}>
@@ -83,7 +82,7 @@ export function ScreenHeader({
           </Pressable>
         ) : null}
         <View className="flex-1">
-          <AppText variant={large ? 'display' : 'title'} numberOfLines={1}>
+          <AppText variant={large ? 'display' : 'title'} weight={large ? 'semibold' : 'medium'} numberOfLines={1}>
             {title}
           </AppText>
           {subtitle ? (

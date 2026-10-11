@@ -19,13 +19,13 @@ export type CardVariant =
   | 'media';
 
 export interface CardProps extends ViewProps {
-  /** Glass density: default/list for content, raised/hero for focal elements. */
+/** Solid hierarchy: default/list for content, raised/hero for focal elements. */
   variant?: CardVariant;
-  /** Meaningful tint; `hero` defaults to `brand`. */
+  /** Optional semantic tint for a surface. */
   tone?: GlassTone;
   /** Free-text subject used to tint only the card border. */
   subject?: string | null;
-  /** Override the variant's blur default (`false` = faux glass, e.g. list rows). */
+  /** Opt into a subtle glass treatment for an exceptional surface. */
   blur?: boolean;
   /** Subtle float-in animation on mount. */
   animateFloat?: boolean;
@@ -38,22 +38,21 @@ const VARIANT: Record<
   CardVariant,
   { level: 'glass-1' | 'glass-2' | 'glass-3'; padding: string; blur: boolean }
 > = {
-  default: { level: 'glass-2', padding: 'p-5', blur: true },
-  raised: { level: 'glass-2', padding: 'p-6', blur: true },
+  default: { level: 'glass-3', padding: 'p-5', blur: false },
+  raised: { level: 'glass-3', padding: 'p-5', blur: false },
   dense: { level: 'glass-3', padding: 'p-4', blur: false },
-  hero: { level: 'glass-2', padding: 'p-6', blur: true },
-  nested: { level: 'glass-1', padding: 'p-4', blur: true },
-  list: { level: 'glass-1', padding: 'p-4', blur: false },
-  stat: { level: 'glass-2', padding: 'p-5', blur: false },
-  media: { level: 'glass-2', padding: 'p-0', blur: false },
+  hero: { level: 'glass-3', padding: 'p-5', blur: false },
+  nested: { level: 'glass-1', padding: 'p-4', blur: false },
+  list: { level: 'glass-3', padding: 'p-4', blur: false },
+  stat: { level: 'glass-3', padding: 'p-4', blur: false },
+  media: { level: 'glass-3', padding: 'p-0', blur: false },
 };
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 /**
- * Content surface built on `GlassSurface`. Cards rely on fill, border and a
- * soft shadow rather than heavy elevation; only `hero`/`raised` use a real blur
- * by default, which keeps every screen inside the blur budget.
+ * Solid, low-noise content surface. Glass remains an explicit opt-in through
+ * the `blur` prop; ordinary cards use semantic opaque fills and a restrained edge.
  */
 export function Card({
   variant = 'default',
@@ -69,7 +68,7 @@ export function Card({
   ...rest
 }: CardProps) {
   const config = VARIANT[variant];
-  const resolvedTone = tone ?? (variant === 'hero' ? 'brand' : undefined);
+  const resolvedTone = tone;
   const useBlur = blur ?? config.blur;
   const pressed = useSharedValue(0);
   const pressStyle = useAnimatedStyle(() => ({
@@ -77,7 +76,7 @@ export function Card({
   }));
 
   const borderStyle = subject
-    ? { borderColor: hexToRgba(subjectTint(subject).color, 0.35) }
+    ? { borderColor: hexToRgba(subjectTint(subject).color, 0.22) }
     : undefined;
 
   // Legacy callers pass their own padding; don't ship two conflicting utilities.
@@ -100,14 +99,7 @@ export function Card({
         }}
         style={[pressStyle, disabled ? { opacity: 0.5 } : null]}
       >
-        <GlassSurface
-          level={config.level}
-          tone={resolvedTone}
-          blur={useBlur}
-          animateFloat={animateFloat}
-          className={classes}
-          style={[borderStyle, style]}
-        >
+        <GlassSurface level={config.level} tone={resolvedTone} blur={useBlur} animateFloat={animateFloat} className={`rounded-card ${classes}`} style={[borderStyle, style]}>
           {children}
         </GlassSurface>
       </AnimatedPressable>
@@ -121,7 +113,7 @@ export function Card({
       tone={resolvedTone}
       blur={useBlur}
       animateFloat={animateFloat}
-      className={classes}
+      className={`rounded-card ${classes}`}
       style={[borderStyle, style]}
     >
       {children}

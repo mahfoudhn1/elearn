@@ -159,7 +159,7 @@ export function SmartPlanCard() {
 
         {/* Next Session Highlight */}
         {nextSession && tint ? (
-          <View className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-3.5">
+          <View className="mt-4 rounded-xl border border-line bg-surface-elevated p-3.5">
             <Row justify="space-between" align="center">
               <AppText variant="micro" tone="subtle" className="uppercase tracking-widest">
                 {t('plannerNextSession')}

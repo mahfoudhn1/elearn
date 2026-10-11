@@ -14,6 +14,7 @@ module.exports = {
         bg: "rgb(var(--c-bg) / <alpha-value>)",
         surface: {
           DEFAULT: "rgb(var(--c-surface) / <alpha-value>)",
+          elevated: "rgb(var(--c-surface-elevated) / <alpha-value>)",
           2: "rgb(var(--c-surface-2) / <alpha-value>)",
         },
         line: "rgb(var(--c-line) / <alpha-value>)",
@@ -21,6 +22,7 @@ module.exports = {
           DEFAULT: "rgb(var(--c-ink) / <alpha-value>)",
           muted: "rgb(var(--c-ink-muted) / <alpha-value>)",
           subtle: "rgb(var(--c-ink-subtle) / <alpha-value>)",
+          faint: "rgb(var(--c-ink-faint) / <alpha-value>)",
         },
         // Decorative ghost numerals + hairline connectors.
         ghost: "rgb(var(--c-ghost) / <alpha-value>)",
@@ -51,9 +53,9 @@ module.exports = {
         },
       },
       borderRadius: {
-        // Mirrors `radii` in theme/tokens.ts. Everything is rounded.
-        card: "28px",
-        hero: "32px",
+        // Mirrors `radii` in theme/tokens.ts.
+        card: "16px",
+        hero: "20px",
         pill: "999px",
       },
       fontFamily: {

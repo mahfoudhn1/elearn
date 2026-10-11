@@ -41,15 +41,15 @@ const VARIANT: Record<
   TextVariant,
   { fontSize: number; lineHeight: number; weight: TextWeight }
 > = {
-  micro: { fontSize: 11, lineHeight: 15, weight: 'medium' },
-  caption: { fontSize: 12, lineHeight: 16, weight: 'regular' },
-  bodySm: { fontSize: 14, lineHeight: 20, weight: 'regular' },
+  micro: { fontSize: 12, lineHeight: 17, weight: 'regular' },
+  caption: { fontSize: 13, lineHeight: 18, weight: 'regular' },
+  bodySm: { fontSize: 14, lineHeight: 21, weight: 'regular' },
   body: { fontSize: 16, lineHeight: 24, weight: 'regular' },
-  title: { fontSize: 18, lineHeight: 26, weight: 'medium' },
-  heading: { fontSize: 22, lineHeight: 30, weight: 'semibold' },
-  display: { fontSize: 28, lineHeight: 36, weight: 'light' },
-  displayLg: { fontSize: 34, lineHeight: 42, weight: 'light' },
-  timer: { fontSize: 48, lineHeight: 52, weight: 'light' },
+  title: { fontSize: 18, lineHeight: 26, weight: 'semibold' },
+  heading: { fontSize: 20, lineHeight: 29, weight: 'semibold' },
+  display: { fontSize: 26, lineHeight: 34, weight: 'semibold' },
+  displayLg: { fontSize: 36, lineHeight: 44, weight: 'semibold' },
+  timer: { fontSize: 48, lineHeight: 56, weight: 'medium' },
 };
 
 const TONE_CLASS: Record<TextTone, string> = {

@@ -10,6 +10,7 @@ from __future__ import annotations
 from datetime import date
 
 from django.db.models import Sum
+from django.utils import timezone
 
 from planner.engine import ExamState, HistorySummary, StudentState, SubjectState
 from planner.engine.demand import INSTRUCTION_KINDS
@@ -119,6 +120,91 @@ def _subject_state(
         coefficient_known=known,
         planning_mode=modes.get(subject, SubjectPlanningMode.Mode.AUTO),
     )
+
+
+def build_curriculum_topics(student) -> dict[str, tuple]:
+    """Ordered per-subject curriculum topics for the student's level/stream.
+
+    Returns ``{subject_id: (CurriculumTopic, ...)}``, ordered by chapter then
+    topic order, starting from the student's current topic
+    (``SubjectCurrentTopic``) when one is set. Only topics in the active
+    trimester are eligible. Empty when no curriculum is published for the
+    student's scope -- the planner then falls back to subject-level demand.
+    """
+    from planner.engine.demand import CurriculumTopic
+    from planner.models import AcademicPeriod, SubjectCurrentTopic, Topic
+
+    level = _level_for(student)
+    stream = getattr(getattr(student, "field_of_study", None), "name", "") or ""
+
+    # Active trimester: the one that contains today (or the latest one that has
+    # started, when today is before the first trimester).
+    today = timezone.now().date()
+    active_trimester = _active_trimester(today)
+
+    topics_by_subject: dict[str, list[Topic]] = {}
+    for topic in (
+        Topic.objects.filter(
+            chapter__curriculum__level=level,
+            chapter__curriculum__stream=stream,
+            chapter__curriculum__status=CurriculumVersion.Status.ACTIVE,
+            is_published=True,
+            trimester=active_trimester,
+        )
+        .select_related("chapter")
+        .order_by("chapter__order", "order", "id")
+    ):
+        topics_by_subject.setdefault(topic.chapter.subject, []).append(topic)
+
+    current_map = {
+        row.subject: row.topic_id
+        for row in SubjectCurrentTopic.objects.filter(student=student)
+    }
+
+    result: dict[str, tuple] = {}
+    for subject, topics in topics_by_subject.items():
+        ordered = list(topics)
+        current_pk = current_map.get(subject)
+        if current_pk is not None:
+            ordered.sort(key=lambda topic: (topic.pk != current_pk, topic.pk))
+        result[subject] = tuple(
+            CurriculumTopic(
+                topic_id=str(topic.pk),
+                subject_id=topic.chapter.subject,
+                order=topic.order,
+                estimated_minutes=topic.estimated_minutes,
+                trimester=topic.trimester,
+                title=topic.title_fr or topic.title_ar or "",
+            )
+            for topic in ordered
+        )
+    return result
+
+
+def _active_trimester(today) -> int:
+    from planner.models import AcademicPeriod
+
+    period = (
+        AcademicPeriod.objects.filter(
+            kind=AcademicPeriod.Kind.TRIMESTER,
+            start_date__lte=today,
+            end_date__gte=today,
+        )
+        .order_by("-start_date")
+        .first()
+    )
+    if period is not None:
+        # The trimester's position is its order among the year's trimesters.
+        siblings = list(
+            AcademicPeriod.objects.filter(
+                kind=AcademicPeriod.Kind.TRIMESTER,
+                academic_year=period.academic_year_id,
+            ).order_by("start_date")
+        )
+        for index, sibling in enumerate(siblings, start=1):
+            if sibling.pk == period.pk:
+                return index
+    return 1
 
 
 def build_student_state(student) -> StudentState:

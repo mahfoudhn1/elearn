@@ -18,7 +18,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '../ui/AppText';
 import type { IoniconName } from '../ui/types';
-import { Glass } from '../ui/Glass';
 
 import {
   TAB_BAR_BOTTOM_GAP,
@@ -266,7 +265,7 @@ export function FloatingTabBar({
 }: TabBarProps) {
   const insets = useSafeAreaInsets();
 
-  const { theme, tokens, reduceGlass } = useTheme();
+  const { theme, tokens } = useTheme();
   const { isRTL } = useDirection();
   const rowDirection = useRowDirection();
 
@@ -371,17 +370,13 @@ export function FloatingTabBar({
 
   const capsuleFill = useMemo(
     () =>
-      theme === 'dark'
-        ? `${tokens.brand}22`
-        : `${tokens.brand}18`,
+      theme === 'dark' ? `${tokens.brand}18` : `${tokens.brand}12`,
     [theme, tokens.brand],
   );
 
   const capsuleBorder = useMemo(
     () =>
-      theme === 'dark'
-        ? `${tokens.brand}42`
-        : `${tokens.brand}32`,
+      theme === 'dark' ? `${tokens.brand}28` : `${tokens.brand}22`,
     [theme, tokens.brand],
   );
 
@@ -395,11 +390,17 @@ export function FloatingTabBar({
         bottom,
       }}
     >
-      <Glass
-        padded={false}
-        radius={30}
-        elevated
-        highlight
+      <View
+        className="overflow-hidden rounded-2xl border"
+        style={{
+          backgroundColor: theme === 'dark' ? '#101C2C' : '#FFFFFF',
+          borderColor: theme === 'dark' ? '#304158' : '#D9E2EC',
+          shadowColor: '#000000',
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: theme === 'dark' ? 0.26 : 0.12,
+          shadowRadius: 20,
+          elevation: 8,
+        }}
       >
         <View
           style={{
@@ -421,47 +422,13 @@ export function FloatingTabBar({
                     TAB_BAR_HEIGHT +
                     8 -
                     CAPSULE_INSET * 2,
-                  borderRadius: 22,
+                   borderRadius: 14,
                   backgroundColor: capsuleFill,
                   borderWidth: 1,
                   borderColor: capsuleBorder,
                 },
               ]}
             >
-              {/* Internal light reflection */}
-              <View
-                pointerEvents="none"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 12,
-                  right: 12,
-                  height: 1,
-                  backgroundColor:
-                    theme === 'dark'
-                      ? 'rgba(255,255,255,0.14)'
-                      : 'rgba(255,255,255,0.55)',
-                }}
-              />
-
-              {/* Brand glow */}
-              {!reduceGlass ? (
-                <View
-                  pointerEvents="none"
-                  style={{
-                    position: 'absolute',
-                    top: -12,
-                    left: '20%',
-                    right: '20%',
-                    height: 30,
-                    borderRadius: 30,
-                    backgroundColor:
-                      theme === 'dark'
-                        ? `${tokens.brand}10`
-                        : `${tokens.brand}08`,
-                  }}
-                />
-              ) : null}
             </Animated.View>
           ) : null}
 
@@ -529,7 +496,7 @@ export function FloatingTabBar({
             })}
           </View>
         </View>
-      </Glass>
+      </View>
     </View>
   );
 }
