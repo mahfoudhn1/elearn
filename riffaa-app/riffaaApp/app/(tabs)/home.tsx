@@ -31,19 +31,16 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { useTheme } from '../../hooks/useTheme';
 import { useUnreadNotificationsCount } from '../../hooks/useUnreadCounts';
 import { useCourses } from '../../hooks/useCourses';
+import { useSchedule } from '../../hooks/queries';
 import { describeApiError } from '../../services/api/client';
-import type { ScheduleItem } from '../../services/api/schedule';
 import type { StudyStats } from '../../services/api/tracking';
 import {
   getGroupClassSchedules,
-  getSchedules,
   getStudentGroups,
   getStudyStats,
 } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
-import { usePlannerStore } from '../../store/plannerStore';
 import { formatTime } from '../../utils/format';
-import { activityKey } from '../../utils/plannerReasons';
 import {
   getArrayFromPayload,
   normalizeGroup,
@@ -92,6 +89,7 @@ interface MergedEntry {
   isSmartPlan?: boolean;
   groupId?: string;
   scheduleItemId?: string;
+  plannedSessionId?: string;
 }
 
 interface UpNext {
@@ -103,6 +101,7 @@ interface UpNext {
   isSmartPlan?: boolean;
   groupId?: string;
   scheduleItemId?: string;
+  plannedSessionId?: string;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -154,33 +153,20 @@ export default function HomeScreen() {
   const unreadNotifications = useUnreadNotificationsCount();
   const { data: courses = [] } = useCourses();
 
-  const [items, setItems] = useState<ScheduleItem[]>([]);
+  const { data: scheduleEntries = [], isLoading: sharedScheduleLoading, isError: sharedScheduleError, refetch: refetchSchedule } = useSchedule();
   const [classSessions, setClassSessions] = useState<NormalizedSchedule[]>([]);
   const [groups, setGroups] = useState<NormalizedGroup[]>([]);
   const [stats, setStats] = useState<StatsWithGoal | null>(null);
   const [now, setNow] = useState(() => new Date());
 
-  const [scheduleLoading, setScheduleLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(true);
-  const [scheduleError, setScheduleError] = useState<string | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
 
-  const plannedSessions = usePlannerStore((state) => state.sessions);
-  const loadPlanner = usePlannerStore((state) => state.loadCurrent);
-
   const loadSchedule = useCallback(async () => {
-    setScheduleError(null);
-    const [personal, classes, groupList] = await Promise.allSettled([
-      getSchedules(),
+    const [classes, groupList] = await Promise.allSettled([
       getGroupClassSchedules(),
       getStudentGroups(),
     ]);
-
-    if (personal.status === 'fulfilled') {
-      setItems(personal.value);
-    } else {
-      setScheduleError(describeApiError(personal.reason) || t('loadScheduleError'));
-    }
 
     if (classes.status === 'fulfilled') {
       setClassSessions(
@@ -192,8 +178,7 @@ export default function HomeScreen() {
       setGroups(getArrayFromPayload(groupList.value).map((group) => normalizeGroup(group)));
     }
 
-    setScheduleLoading(false);
-  }, [t]);
+  }, []);
 
   const loadStats = useCallback(async () => {
     setStatsError(null);
@@ -207,20 +192,17 @@ export default function HomeScreen() {
   }, [t]);
 
   const refresh = useCallback(() => {
-    setScheduleLoading(true);
     setStatsLoading(true);
     void loadSchedule();
     void loadStats();
-    void loadPlanner();
-  }, [loadSchedule, loadStats, loadPlanner]);
+  }, [loadSchedule, loadStats]);
 
   // Refetch on focus, so returning from the create screen shows the new item.
   useFocusEffect(
     useCallback(() => {
       loadSchedule();
       loadStats();
-      void loadPlanner();
-    }, [loadSchedule, loadStats, loadPlanner]),
+    }, [loadSchedule, loadStats]),
   );
 
   // Live/soon state is time-relative; refresh it without a full data fetch.
@@ -231,15 +213,18 @@ export default function HomeScreen() {
 
   const upNext = useMemo<UpNext>(() => {
     const entries: MergedEntry[] = [
-      ...items.map((item) => ({
-        start: item.start_datetime ? new Date(item.start_datetime) : null,
-        end: item.end_datetime ? new Date(item.end_datetime) : null,
-        title: item.title,
-        subtitle: item.subject || '',
+      ...scheduleEntries
+        .filter((entry) => entry.status !== 'CANCELLED' && entry.status !== 'SKIPPED')
+        .map((entry) => ({
+        start: entry.start ? new Date(entry.start) : null,
+        end: entry.end ? new Date(entry.end) : null,
+        title: entry.title,
+        subtitle: entry.subject || '',
         isClass: false,
-        isSmartPlan: false,
-        scheduleItemId: String(item.id),
-      })),
+        isSmartPlan: entry.source === 'PLANNER',
+        scheduleItemId: entry.scheduleItemId ?? undefined,
+        plannedSessionId: entry.plannedSessionId ?? undefined,
+        })),
       ...classSessions.map((session) => ({
         start: combineDateTime(session.date, session.startTime),
         end: combineDateTime(session.date, session.endTime),
@@ -249,17 +234,6 @@ export default function HomeScreen() {
         isSmartPlan: false,
         groupId: session.groupId || undefined,
       })),
-      ...plannedSessions
-        .filter((s) => s.state !== 'CANCELLED' && s.state !== 'SKIPPED')
-        .map((s) => ({
-          start: s.start_dt ? new Date(s.start_dt) : null,
-          end: s.end_dt ? new Date(s.end_dt) : null,
-          title: s.subject,
-          subtitle: `${t('plannerSmartPlan')} · ${t(activityKey(s.activity_type))}`,
-          isClass: false,
-          isSmartPlan: true,
-          scheduleItemId: s.personal_item ?? undefined,
-        })),
     ];
 
     const merged = entries
@@ -279,6 +253,7 @@ export default function HomeScreen() {
         isSmartPlan: live.isSmartPlan,
         groupId: live.groupId,
         scheduleItemId: live.scheduleItemId,
+        plannedSessionId: live.plannedSessionId,
       };
     }
 
@@ -293,6 +268,7 @@ export default function HomeScreen() {
         isSmartPlan: next.isSmartPlan,
         groupId: next.groupId,
         scheduleItemId: next.scheduleItemId,
+        plannedSessionId: next.plannedSessionId,
       };
     }
 
@@ -304,7 +280,7 @@ export default function HomeScreen() {
       isClass: false,
       isSmartPlan: false,
     };
-  }, [items, classSessions, plannedSessions, now, t]);
+  }, [scheduleEntries, classSessions, now, t]);
 
   const openHeroAction = useCallback(() => {
     if (upNext.kind === 'empty') {
@@ -321,6 +297,7 @@ export default function HomeScreen() {
     }
     const params: Record<string, string> = { title: upNext.title };
     if (upNext.scheduleItemId) params.scheduleItemId = upNext.scheduleItemId;
+    if (upNext.plannedSessionId) params.plannedSessionId = upNext.plannedSessionId;
     if (upNext.subtitle) params.subject = upNext.subtitle;
     router.push({ pathname: '/study-session', params });
   }, [router, upNext]);
@@ -390,7 +367,7 @@ export default function HomeScreen() {
       scroll
       padded={false}
       edges={{ top: true }}
-      refreshing={scheduleLoading || statsLoading}
+      refreshing={sharedScheduleLoading || statsLoading}
       onRefresh={refresh}
     >
       {/* ===================== KEPT: promo pill + greeting ===================== */}
@@ -509,16 +486,16 @@ export default function HomeScreen() {
 
       {/* ===================== NEW: up next (compact row) ===================== */}
       <View className="mt-4 px-5">
-        {scheduleLoading && upNext.kind === 'empty' ? (
+        {sharedScheduleLoading && upNext.kind === 'empty' ? (
           <HomeSurface>
             <Skeleton width="50%" height={16} />
             <View className="mt-3">
               <Skeleton width="75%" height={12} />
             </View>
           </HomeSurface>
-        ) : scheduleError ? (
+        ) : sharedScheduleError ? (
           <HomeSurface>
-            <ErrorState message={scheduleError} onRetry={loadSchedule} />
+            <ErrorState message={t('loadScheduleError')} onRetry={() => void refetchSchedule()} />
           </HomeSurface>
         ) : (
           <HomeSurface onPress={openHeroAction} padded={false}>

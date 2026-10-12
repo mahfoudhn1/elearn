@@ -10,6 +10,7 @@ from .models import (
     LearningObjective,
     PedagogyRuleSet,
     PlannedSession,
+    PlannedSessionEvent,
     PlannerExam,
     SessionTombstone,
     StudentPlannerProfile,
@@ -19,6 +20,7 @@ from .models import (
     SubjectImportance,
     SubjectPlanningMode,
     SubjectConfidence,
+    SubjectProficiency,
     Topic,
 )
 
@@ -85,6 +87,24 @@ class SubjectConfidenceAdmin(admin.ModelAdmin):
     list_filter = ("level", "subject")
     search_fields = ("student__user__username", "subject")
     raw_id_fields = ("student",)
+
+
+@admin.register(SubjectProficiency)
+class SubjectProficiencyAdmin(admin.ModelAdmin):
+    list_display = ("student", "subject", "score", "level", "calculation_version", "computed_at")
+    list_filter = ("level", "calculation_version")
+    search_fields = ("student__user__username", "subject")
+    readonly_fields = ("evidence_count", "evidence_snapshot", "computed_at", "updated_at")
+    raw_id_fields = ("student",)
+
+
+@admin.register(PlannedSessionEvent)
+class PlannedSessionEventAdmin(admin.ModelAdmin):
+    list_display = ("student", "planned_session", "kind", "from_state", "to_state", "occurred_at")
+    list_filter = ("kind", "occurred_at")
+    search_fields = ("student__user__username", "planned_session__subject")
+    readonly_fields = tuple(field.name for field in PlannedSessionEvent._meta.fields)
+    raw_id_fields = ("student", "planned_session")
 
 
 @admin.register(PlannerExam)

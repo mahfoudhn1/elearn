@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, View } from 'react-native';
 
@@ -38,6 +39,7 @@ import {
 export default function DiagnosticScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [attempt, setAttempt] = useState<StartedAttempt | null>(null);
   const [question, setQuestion] = useState<ServedQuestion | null>(null);
@@ -53,6 +55,11 @@ export default function DiagnosticScreen() {
       const next = await nextQuestion(active.id);
       if (next.stopped) {
         await submitAttempt(active.id);
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['planner'] }),
+          queryClient.invalidateQueries({ queryKey: ['planner', 'subject-proficiency'] }),
+          queryClient.invalidateQueries({ queryKey: ['assessment'] }),
+        ]);
         router.replace({
           pathname: '/assessment/results/[attemptId]',
           params: { attemptId: active.id },
@@ -64,7 +71,7 @@ export default function DiagnosticScreen() {
       setNumeric('');
       setAsked(next.asked_count ?? 0);
     },
-    [router],
+    [queryClient, router],
   );
 
   const boot = useCallback(async () => {

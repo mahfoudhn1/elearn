@@ -11,7 +11,7 @@ export const queryKeys = {
     ['course-materials', String(id)] as const,
   survey: (id: number | string | undefined) => ['survey', String(id)] as const,
 
-  schedule: (query: Record<string, unknown> = {}) => ['schedule', query] as const,
+  schedule: () => ['schedule'] as const,
   scheduleItem: (id: number | string) => ['schedule-item', String(id)] as const,
 
   groups: () => ['groups'] as const,
@@ -55,4 +55,7 @@ export const queryKeys = {
     ['assessment', 'mastery', 'topics', subject ?? 'all'] as const,
   flashcardStats: () => ['assessment', 'flashcards', 'stats'] as const,
   subjectPlanning: () => ['planner', 'subject-planning'] as const,
+  plannerSessionEvents: (sessionId: string | undefined) =>
+    ['planner', 'session-events', String(sessionId ?? '')] as const,
+  subjectProficiency: () => ['planner', 'subject-proficiency'] as const,
 } as const;

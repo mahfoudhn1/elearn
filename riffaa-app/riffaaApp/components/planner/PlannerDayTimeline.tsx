@@ -9,6 +9,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 import type { PlannedSession } from '../../services/api/planner';
 import type { ScheduleItem } from '../../services/api/schedule';
 import { activityKey, blockKindKey } from '../../utils/plannerReasons';
+import { formatTime } from '../../utils/format';
 
 export type TimelineEntryType = 'PLAN' | 'CLASS' | 'TASK';
 
@@ -28,9 +29,8 @@ export interface TimelineEntry {
 }
 
 function formatMin(minute: number): string {
-  return `${Math.floor(minute / 60)
-    .toString()
-    .padStart(2, '0')}:${(minute % 60).toString().padStart(2, '0')}`;
+  const date = new Date(2024, 0, 1, Math.floor(minute / 60), minute % 60);
+  return formatTime(date);
 }
 
 const TimelineRow = memo(function TimelineRow({
@@ -53,7 +53,10 @@ const TimelineRow = memo(function TimelineRow({
   if (entry.session) {
     const session = entry.session;
     const tint = subjectTint(session.subject);
-    const duration = Math.max(1, entry.endMin - entry.startMin);
+    const duration = Math.max(
+      1,
+      session.focus_minutes ?? entry.endMin - entry.startMin,
+    );
 
     return (
       <Pressable
@@ -100,7 +103,7 @@ const TimelineRow = memo(function TimelineRow({
                 </AppText>
                 <View className="h-1 w-1 rounded-full bg-ink-subtle" />
                 <AppText variant="caption" tone="muted">
-                  {t('plannerDuration', { minutes: duration })}
+                  {t('plannerFocusDuration', { minutes: duration })}
                 </AppText>
               </Row>
             </Stack>
@@ -277,4 +280,3 @@ export function PlannerDayTimeline({
     />
   );
 }
-

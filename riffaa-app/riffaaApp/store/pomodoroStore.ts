@@ -30,6 +30,7 @@ export interface PomodoroSource {
   title?: string | null;
   isScheduled?: boolean;
   scheduleItemId?: string | null;
+  plannedSessionId?: string | null;
   groupId?: string | null;
 }
 
@@ -92,6 +93,7 @@ function withSession(session: StudySession | null) {
           courseUuid: open.course_uuid,
           isScheduled: open.is_scheduled,
           scheduleItemId: open.schedule_item,
+          plannedSessionId: open.planned_session,
           groupId: open.group,
         } as PomodoroSource
       : null,
@@ -136,6 +138,7 @@ export const usePomodoroStore = create<PomodoroState>()(
         const session = await startStudySession({
           subject: source.subject ?? null,
           schedule_item: source.scheduleItemId ?? null,
+          planned_session: source.plannedSessionId ?? null,
           group: source.groupId ?? null,
           source_type: source.type,
           source_id: source.id ?? source.scheduleItemId ?? requestId,

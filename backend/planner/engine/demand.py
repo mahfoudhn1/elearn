@@ -156,9 +156,11 @@ def _distribute_topic_demand(
     supplied for the subject the whole demand stays subject-level
     (``topic_id=None``) -- the plan is byte-identical to a pre-Phase-2 run.
 
-    The split is round-robin over the eligible topics so every one gets a
-    session before any topic gets a second one; the remainder goes to the
-    current topic. Every unit carries the subject's accumulated reasons plus a
+    Demand is consumed sequentially in curriculum order. Each unit is sized to
+    fit a 60-90 minute focus block where possible, rather than spreading a
+    weekly budget into tiny amounts across the entire annual course. Any
+    remainder too small to form a block remains explicit unmet demand in the
+    allocator. Every unit carries the subject's accumulated reasons plus a
     ``CURRICULUM_TOPIC_ORDER`` reason naming the topic.
     """
     topics = list((student_state.curriculum_topics or {}).get(subject.subject_id, ()))
@@ -186,19 +188,21 @@ def _distribute_topic_demand(
         )
     ]
 
-    # Round-robin: each topic gets ``chunk`` minutes in turn until the demand is
-    # exhausted. The current topic (topics[0]) absorbs any final remainder so
-    # the student keeps moving forward rather than leaving a dangling partial.
-    per_topic = base_minutes // len(topics)
-    remainder = base_minutes % len(topics)
-    allocations = [per_topic] * len(topics)
-    if remainder:
-        allocations[0] += remainder
+    block_count = base_minutes // 60
+    if block_count and base_minutes // block_count <= 90:
+        quotient, remainder = divmod(base_minutes, block_count)
+        allocations = [quotient + (index < remainder) for index in range(block_count)]
+    else:
+        allocations = [90] if base_minutes > 90 else []
+        remaining = base_minutes - sum(allocations)
+        if remaining:
+            allocations.append(remaining)
 
     units: list[DemandUnit] = []
-    for topic, minutes in zip(topics, allocations):
-        if minutes <= 0:
-            continue
+    for index, minutes in enumerate(allocations):
+        if index >= len(topics):
+            break
+        topic = topics[index]
         units.append(
             DemandUnit(
                 subject_id=subject.subject_id,

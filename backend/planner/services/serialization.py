@@ -39,6 +39,7 @@ def serialize_engine_output(output) -> dict:
                 "date": session.date.isoformat(),
                 "start_min": session.start_min,
                 "end_min": session.end_min,
+                "focus_minutes": session.focus_minutes,
                 "subject_id": session.subject_id,
                 "activity_type": session.activity_type,
                 "reasons": serialize_reasons(session.reasons),

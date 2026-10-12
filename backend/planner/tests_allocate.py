@@ -173,6 +173,75 @@ class PropertyTests(SimpleTestCase):
         math_sessions = [s for s in output.sessions if s.subject_id == MATH]
         self.assertGreater(len(math_sessions), 1)
 
+    def test_study_block_uses_focus_duration_and_places_pomodoro_breaks(self):
+        demand = DemandUnit(MATH, DemandActivity.STUDY, 95, None, None)
+        inputs = full_input(demands=(demand,), lessons=(), busy=())
+
+        output = generate_plan(inputs, RULES, NOW)
+
+        self.assertEqual(len(output.sessions), 1)
+        session = output.sessions[0]
+        self.assertEqual(session.focus_minutes, 60)
+        self.assertEqual(session.end_min - session.start_min, 70)
+        self.assertEqual(output.diagnostics["placed_minutes"], 60)
+        self.assertEqual(output.diagnostics["occupied_minutes"], 70)
+        self.assertEqual(sum(item.minutes for item in output.unmet), 35)
+        self.assertEqual(
+            session.focus_minutes + sum(item.minutes for item in output.unmet),
+            demand.minutes,
+        )
+
+    def test_curriculum_demands_are_placed_in_topic_order(self):
+        demands = tuple(
+            DemandUnit(
+                MATH,
+                DemandActivity.STUDY,
+                75,
+                None,
+                f"curriculum:topic-{index}",
+                topic_id=f"topic-{index}",
+            )
+            for index in range(1, 5)
+        )
+        inputs = full_input(demands=demands, lessons=(), busy=())
+
+        output = generate_plan(inputs, RULES, NOW)
+
+        self.assertEqual(
+            [session.topic_id for session in output.sessions],
+            [f"topic-{index}" for index in range(1, 5)],
+        )
+
+    def test_curriculum_topics_use_earliest_feasible_slots_in_order(self):
+        demands = tuple(
+            DemandUnit(
+                MATH,
+                DemandActivity.STUDY,
+                75,
+                None,
+                f"curriculum:topic-{index}",
+                topic_id=f"topic-{index}",
+            )
+            for index in range(1, 5)
+        )
+        inputs = full_input(
+            demands=demands,
+            lessons=(),
+            busy=(),
+            profile=PlannerPreferences(daily_study_target_minutes=75),
+        )
+
+        output = generate_plan(inputs, RULES, NOW)
+
+        self.assertEqual(
+            [session.topic_id for session in output.sessions],
+            [f"topic-{index}" for index in range(1, 5)],
+        )
+        self.assertEqual(
+            [session.date for session in output.sessions],
+            sorted(session.date for session in output.sessions),
+        )
+
 
 class ScenarioTests(SimpleTestCase):
     def test_full_example(self):

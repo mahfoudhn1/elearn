@@ -120,13 +120,20 @@ def _local_minute(moment: datetime, tz: ZoneInfo) -> tuple[date, int]:
     return local.date(), local.hour * 60 + local.minute
 
 
-def _build_preferences(profile: StudentPlannerProfile) -> PlannerPreferences:
+def _build_preferences(profile: StudentPlannerProfile, student) -> PlannerPreferences:
+    from schedule.models import PomodoroSettings
+
+    pomodoro = PomodoroSettings.objects.filter(user=student.user).first()
     return PlannerPreferences(
         preferred_period=profile.preferred_period,
         session_length_preference=profile.session_length_preference,
         max_focus_minutes=profile.max_focus_minutes,
         daily_study_target_minutes=profile.daily_study_target_minutes,
         completion_factor=1.0,
+        pomodoro_focus_minutes=pomodoro.focus_minutes if pomodoro else 25,
+        pomodoro_short_break_minutes=pomodoro.short_break_minutes if pomodoro else 5,
+        pomodoro_long_break_minutes=pomodoro.long_break_minutes if pomodoro else 15,
+        pomodoros_until_long_break=pomodoro.pomodoros_until_long_break if pomodoro else 4,
     )
 
 
@@ -283,6 +290,7 @@ def _mirror_session(session: PlannedSession, tz: ZoneInfo) -> None:
             "priority": PersonalScheduleItem.Priority.MEDIUM,
             "start_datetime": session.start_dt,
             "end_datetime": session.end_dt,
+            "estimated_duration_minutes": session.focus_minutes,
             "subject": session.subject,
             "source": PersonalScheduleItem.Source.PLANNER,
             "activity_type": session.activity_type,
@@ -409,7 +417,7 @@ def build_engine_context(student, window, now, profile=None) -> EngineContext:
         )
 
     engine_input = EngineInput(
-        profile=_build_preferences(profile),
+        profile=_build_preferences(profile, student),
         days=days,
         busy_blocks=busy_blocks,
         demands=demands,
@@ -466,6 +474,10 @@ def generate_plan_for_student(student, window, trigger, now, force: bool = False
             "session_length_preference": profile.session_length_preference,
             "max_focus_minutes": profile.max_focus_minutes,
             "daily_study_target_minutes": profile.daily_study_target_minutes,
+            "pomodoro_focus_minutes": engine_input.profile.pomodoro_focus_minutes,
+            "pomodoro_short_break_minutes": engine_input.profile.pomodoro_short_break_minutes,
+            "pomodoro_long_break_minutes": engine_input.profile.pomodoro_long_break_minutes,
+            "pomodoros_until_long_break": engine_input.profile.pomodoros_until_long_break,
         },
         "rules_version": engine_rules.version,
         "pedagogy_version": pedagogy_rules.version,
@@ -482,19 +494,33 @@ def generate_plan_for_student(student, window, trigger, now, force: bool = False
     if latest is not None and latest.input_hash == input_hash and not force:
         return GenerateResult(plan=latest, created=False, added=[], removed=[], moved=[])
 
-    replaceable = PlannedSession.objects.filter(
+    replaceable = list(PlannedSession.objects.filter(
         student=student,
         state=PlannedSession.State.PLANNED,
         origin=PlannedSession.Origin.SYSTEM,
         is_locked=False,
         start_dt__gt=now_dt,
-    )
+    ))
     old_slots = [_slot_repr(session, tz) for session in replaceable]
-    replaceable_uuids = list(replaceable.values_list("uuid", flat=True))
+    replaceable_uuids = [session.uuid for session in replaceable]
+    from planner.services.lifecycle import record_planned_session_event
+
+    for old_session in replaceable:
+        record_planned_session_event(
+            student=student,
+            planned_session=old_session,
+            kind="CANCELLED",
+            from_state=old_session.state,
+            to_state=PlannedSession.State.CANCELLED,
+            metadata={"reason": "REGENERATED", "trigger": trigger},
+            occurred_at=now_dt,
+        )
     PersonalScheduleItem.objects.filter(
         planned_session_id__in=replaceable_uuids
     ).update(status=PersonalScheduleItem.Status.CANCELLED)
-    replaceable.update(state=PlannedSession.State.CANCELLED)
+    PlannedSession.objects.filter(pk__in=[session.pk for session in replaceable]).update(
+        state=PlannedSession.State.CANCELLED
+    )
 
     engine_started = monotonic()
     output = generate_plan(engine_input, engine_rules, today)
@@ -508,6 +534,47 @@ def generate_plan_for_student(student, window, trigger, now, force: bool = False
         input_hash=input_hash,
         rule_set=rule_set,
         trigger=trigger,
+        input_snapshot={
+            "profile": {
+                "level": profile.level,
+                "stream": profile.stream,
+                "preferred_period": profile.preferred_period,
+                "session_length_preference": profile.session_length_preference,
+                "max_focus_minutes": profile.max_focus_minutes,
+                "daily_study_target_minutes": profile.daily_study_target_minutes,
+                "pomodoro_focus_minutes": engine_input.profile.pomodoro_focus_minutes,
+                "pomodoro_short_break_minutes": engine_input.profile.pomodoro_short_break_minutes,
+                "pomodoro_long_break_minutes": engine_input.profile.pomodoro_long_break_minutes,
+                "pomodoros_until_long_break": engine_input.profile.pomodoros_until_long_break,
+            },
+            "rules_version": engine_rules.version,
+            "pedagogy_version": pedagogy_rules.version,
+            "demands": [
+                {
+                    "subject": demand.subject_id,
+                    "activity_type": demand.activity_type,
+                    "minutes": demand.minutes,
+                    "topic_id": demand.topic_id,
+                    "derived_from": demand.derived_from,
+                }
+                for demand in demands
+            ],
+        },
+        engine_diagnostics=dict(output.diagnostics),
+        unmet_demand=[
+            {
+                "subject": item.subject_id,
+                "activity_type": item.activity_type,
+                "minutes": item.minutes,
+                "due_by": item.due_by.isoformat() if item.due_by else None,
+                "derived_from": item.derived_from,
+                "reasons": [
+                    {"code": reason.code, "params": dict(reason.params)}
+                    for reason in item.reasons
+                ],
+            }
+            for item in output.unmet
+        ],
     )
 
     new_slots = []
@@ -522,10 +589,19 @@ def generate_plan_for_student(student, window, trigger, now, force: bool = False
             topic_id=_topic_pk(session_dto.topic_id),
             start_dt=start_dt,
             end_dt=end_dt,
+            focus_minutes=session_dto.focus_minutes,
             reasons=[
                 {"code": reason.code, "params": dict(reason.params)}
                 for reason in session_dto.reasons
             ],
+        )
+        record_planned_session_event(
+            student=student,
+            planned_session=session,
+            kind="GENERATED",
+            to_state=session.state,
+            metadata={"generation_id": str(plan.uuid), "trigger": trigger},
+            occurred_at=now_dt,
         )
         if session.activity_type in ("EXERCISES", "REVIEW"):
             _attach_practice_quiz_quietly(session)
@@ -614,6 +690,9 @@ def move_session(student, session_uuid, *, start_dt=None, end_dt=None, is_locked
     new_end = end_dt if end_dt is not None else session.end_dt
     _validate_move(student, profile, session, new_start, new_end, tz)
 
+    old_start = session.start_dt
+    old_end = session.end_dt
+    old_locked = session.is_locked
     session.start_dt = new_start
     session.end_dt = new_end
     session.origin = PlannedSession.Origin.STUDENT
@@ -621,6 +700,23 @@ def move_session(student, session_uuid, *, start_dt=None, end_dt=None, is_locked
         session.is_locked = is_locked
     session.save(update_fields=["start_dt", "end_dt", "origin", "is_locked", "updated_at"])
     _mirror_session(session, tz)
+    from planner.services.lifecycle import record_planned_session_event
+
+    record_planned_session_event(
+        student=student,
+        planned_session=session,
+        kind="MOVED",
+        from_state=session.state,
+        to_state=session.state,
+        metadata={
+            "old_start": old_start.isoformat(),
+            "old_end": old_end.isoformat(),
+            "new_start": new_start.isoformat(),
+            "new_end": new_end.isoformat(),
+            "was_locked": old_locked,
+            "is_locked": session.is_locked,
+        },
+    )
     return session
 
 
@@ -628,10 +724,22 @@ def set_lock(student, session_uuid, locked: bool):
     session = PlannedSession.objects.filter(student=student, uuid=session_uuid).first()
     if session is None:
         raise SessionMoveError("session", "NOT_FOUND", "Session not found.")
+    old_locked = session.is_locked
     if locked:
         session.origin = PlannedSession.Origin.STUDENT
     session.is_locked = locked
     session.save(update_fields=["is_locked", "origin", "updated_at"])
+    if old_locked != locked:
+        from planner.services.lifecycle import record_planned_session_event
+
+        record_planned_session_event(
+            student=student,
+            planned_session=session,
+            kind="LOCKED" if locked else "UNLOCKED",
+            from_state=session.state,
+            to_state=session.state,
+            metadata={"is_locked": locked},
+        )
     return session
 
 
@@ -640,9 +748,19 @@ def skip_session(student, session_uuid):
     session = PlannedSession.objects.filter(student=student, uuid=session_uuid).first()
     if session is None:
         raise SessionMoveError("session", "NOT_FOUND", "Session not found.")
+    old_state = session.state
     session.state = PlannedSession.State.SKIPPED
     session.origin = PlannedSession.Origin.STUDENT
     session.save(update_fields=["state", "origin", "updated_at"])
+    from planner.services.lifecycle import record_planned_session_event
+
+    record_planned_session_event(
+        student=student,
+        planned_session=session,
+        kind="SKIPPED",
+        from_state=old_state,
+        to_state=session.state,
+    )
     if session.personal_item_id:
         PersonalScheduleItem.objects.filter(pk=session.personal_item_id).update(
             status=PersonalScheduleItem.Status.CANCELLED
@@ -672,8 +790,19 @@ def delete_session(student, session_uuid, reason: str = ""):
             "source_session": session,
         },
     )
+    old_state = session.state
     session.state = PlannedSession.State.CANCELLED
     session.save(update_fields=["state", "updated_at"])
+    from planner.services.lifecycle import record_planned_session_event
+
+    record_planned_session_event(
+        student=student,
+        planned_session=session,
+        kind="CANCELLED",
+        from_state=old_state,
+        to_state=session.state,
+        metadata={"reason": reason},
+    )
     if session.personal_item_id:
         PersonalScheduleItem.objects.filter(pk=session.personal_item_id).update(
             status=PersonalScheduleItem.Status.CANCELLED

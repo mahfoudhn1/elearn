@@ -5,16 +5,24 @@ import {
   createSchedule,
   deleteSchedule,
   getSchedules,
+  normalizeScheduleEntries,
   updateSchedule,
   type SchedulePayload,
   type ScheduleQuery,
 } from '../../services/api/schedule';
+import { getCurrentPlan } from '../../services/api/planner';
 import { queryKeys } from './queryKeys';
 
 export function useSchedule(query: ScheduleQuery = {}) {
   return useQuery({
-    queryKey: queryKeys.schedule(query as Record<string, unknown>),
-    queryFn: () => getSchedules(query),
+    queryKey: queryKeys.schedule(),
+    queryFn: async () => {
+      const [scheduleItems, { sessions }] = await Promise.all([
+        getSchedules(query),
+        getCurrentPlan({ from: query.start, to: query.end }),
+      ]);
+      return normalizeScheduleEntries(scheduleItems, sessions);
+    },
   });
 }
 

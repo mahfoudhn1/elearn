@@ -35,6 +35,7 @@ from .pedagogy import (
     load_pedagogy_rules,
 )
 from .priority import RankedDemand, rank_demands, tier_for
+from .proficiency import PROFICIENCY_MULTIPLIERS, proficiency_level
 from .rules import EngineRules, load_rules
 from .tiers import (
     CORE,
@@ -94,6 +95,8 @@ __all__ = [
     "load_rules",
     "merge_blocks",
     "rank_demands",
+    "proficiency_level",
+    "PROFICIENCY_MULTIPLIERS",
     "session_length_for",
     "sort_blocks",
     "tier_for",

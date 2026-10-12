@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, View } from 'react-native';
 
@@ -51,6 +52,7 @@ export default function QuizPlayerScreen() {
   const { t, locale } = useTranslation();
   const { tokens } = useTheme();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const params = useLocalSearchParams<{ quizId?: string; kind?: string }>();
   const quizId = typeof params.quizId === 'string' ? params.quizId : '';
 
@@ -172,6 +174,11 @@ export default function QuizPlayerScreen() {
     submittedRef.current = true;
     try {
       await submitAttempt(attempt.id);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['planner'] }),
+        queryClient.invalidateQueries({ queryKey: ['planner', 'subject-proficiency'] }),
+        queryClient.invalidateQueries({ queryKey: ['assessment'] }),
+      ]);
       router.replace({
         pathname: '/assessment/results/[attemptId]',
         params: { attemptId: attempt.id },
@@ -180,7 +187,7 @@ export default function QuizPlayerScreen() {
       submittedRef.current = false;
       Alert.alert(t('assessmentError'));
     }
-  }, [attempt, router, t]);
+  }, [attempt, queryClient, router, t]);
 
   // Auto-submit when the timer runs out.
   useEffect(() => {

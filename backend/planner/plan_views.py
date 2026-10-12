@@ -14,11 +14,12 @@ from rest_framework.views import APIView
 
 from courses.permissions import get_student
 
-from .models import PlannedSession, StudyPlan
+from .models import PlannedSession, PlannedSessionEvent, StudyPlan
 from .permissions import HasStudentProfile
 from .serializers import (
     GeneratePlanInputSerializer,
     PlannedSessionSerializer,
+    PlannedSessionEventSerializer,
     SessionMoveInputSerializer,
     StudyPlanSerializer,
 )
@@ -134,6 +135,23 @@ class SessionSkipView(APIView):
         except plan_service.SessionMoveError as exc:
             raise ValidationError({exc.field: [exc.message], "reason": [exc.code]}) from exc
         return Response(PlannedSessionSerializer(session).data)
+
+
+class SessionEventsView(APIView):
+    """Read-only lifecycle history for a session owned by the caller."""
+
+    permission_classes = [IsAuthenticated, HasStudentProfile]
+
+    def get(self, request, pk):
+        student = get_student(request.user)
+        session = PlannedSession.objects.filter(student=student, uuid=pk).first()
+        if session is None:
+            raise ValidationError({"session": ["Not found."]})
+        events = PlannedSessionEvent.objects.filter(
+            student=student,
+            planned_session=session,
+        )
+        return Response(PlannedSessionEventSerializer(events, many=True).data)
 
 
 class SessionPracticeQuizView(APIView):

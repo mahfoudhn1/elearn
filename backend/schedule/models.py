@@ -171,6 +171,13 @@ class StudySession(UUIDModel):
         on_delete=models.SET_NULL,
         related_name="study_sessions",
     )
+    planned_session = models.ForeignKey(
+        "planner.PlannedSession",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="study_sessions",
+    )
     source_type = models.CharField(max_length=32, null=True, blank=True)
     source_id = models.CharField(max_length=64, null=True, blank=True)
     course_uuid = models.UUIDField(null=True, blank=True)

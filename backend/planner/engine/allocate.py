@@ -26,6 +26,10 @@ class PlannerPreferences:
     max_focus_minutes: int | None = None
     daily_study_target_minutes: int | None = None
     completion_factor: float = 1.0
+    pomodoro_focus_minutes: int = 25
+    pomodoro_short_break_minutes: int = 5
+    pomodoro_long_break_minutes: int = 15
+    pomodoros_until_long_break: int = 4
 
 
 @dataclass(frozen=True)
@@ -70,6 +74,8 @@ class PlannedSessionDTO:
     source_demand_ids: tuple[str, ...]
     #: Topic the session targets (mastery/flashcard demand); None for subject-level.
     topic_id: str | None = None
+    #: Focus minutes; start/end also include the Pomodoro breaks inside the block.
+    focus_minutes: int = 0
 
 
 @dataclass(frozen=True)
@@ -95,6 +101,10 @@ class Candidate:
     start_min: int
     end_min: int
     chunk_minutes: int
+
+    @property
+    def occupied_minutes(self) -> int:
+        return self.end_min - self.start_min
 
 
 @dataclass(frozen=True)
@@ -195,6 +205,20 @@ def session_length_for(
     return max(rules.grid_minutes, (length // rules.grid_minutes) * rules.grid_minutes)
 
 
+def pomodoro_break_minutes(focus_minutes: int, profile: PlannerPreferences) -> int:
+    """Pomodoro break time between focus intervals, excluding a final break."""
+    focus_interval = max(1, profile.pomodoro_focus_minutes)
+    interval_count = max(1, profile.pomodoros_until_long_break)
+    completed_intervals = max(0, (focus_minutes - 1) // focus_interval)
+    total = 0
+    for interval in range(1, completed_intervals + 1):
+        if interval % interval_count == 0:
+            total += profile.pomodoro_long_break_minutes
+        else:
+            total += profile.pomodoro_short_break_minutes
+    return total
+
+
 def _demand_id(demand: DemandUnit, index: int) -> str:
     due = demand.due_by.isoformat() if demand.due_by is not None else ""
     return f"{demand.subject_id}|{demand.activity_type}|{due}|{demand.derived_from or ''}#{index}"
@@ -245,6 +269,8 @@ def _best_candidate(
     tombstoned,
     history=None,
     recent_topics=None,
+    not_before=None,
+    sequential_curriculum=False,
 ):
     grid = rules.grid_minutes
     min_break = rules.allocation.min_break_minutes
@@ -258,8 +284,12 @@ def _best_candidate(
         cap = capacity[day_date]
         for segment in free_by_day[day_date]:
             start = _ceil_grid(segment[0], grid)
-            while start + chunk <= segment[1]:
-                candidate = Candidate(day_date, start, start + chunk, chunk)
+            occupied = chunk + pomodoro_break_minutes(chunk, profile)
+            while start + occupied <= segment[1]:
+                if not_before is not None and (day_date, start) < not_before:
+                    start += grid
+                    continue
+                candidate = Candidate(day_date, start, start + occupied, chunk)
                 if _hard_valid(candidate, day, chunk, cap, used_today, placed, tombstoned, min_break):
                     band_penalty = (
                         history.band_penalty(
@@ -291,7 +321,11 @@ def _best_candidate(
                         topic_recency=topic_recency,
                     )
                     terms = explain_score(candidate, context, rules)
-                    key = (-terms["total"], day_date, start)
+                    key = (
+                        (day_date, -terms["total"], start)
+                        if sequential_curriculum
+                        else (-terms["total"], day_date, start)
+                    )
                     if best_key is None or key < best_key:
                         best_key = key
                         best = (candidate, terms)
@@ -338,26 +372,76 @@ def generate_plan(inputs: EngineInput, rules: EngineRules, now: date) -> EngineO
         tier_by_subject=inputs.tier_by_subject,
         weakness_by_subject=inputs.weakness_by_subject,
     )
+    curriculum_order = {
+        (demand.subject_id, demand.activity_type, demand.derived_from): index
+        for index, demand in enumerate(inputs.demands)
+        if demand.derived_from and demand.derived_from.startswith("curriculum:")
+    }
+    ranked.sort(
+        key=lambda item: (
+            item.sort_key[:7],
+            (
+                0,
+                curriculum_order[
+                    (
+                        item.demand.subject_id,
+                        item.demand.activity_type,
+                        item.demand.derived_from,
+                    )
+                ],
+            )
+            if (
+                item.demand.subject_id,
+                item.demand.activity_type,
+                item.demand.derived_from,
+            )
+            in curriculum_order
+            else (1, item.sort_key[7:]),
+        )
+    )
 
     sessions: list[PlannedSessionDTO] = []
     placed: list[PlannedSessionDTO] = []
     unmet: list[UnmetDemand] = []
+    curriculum_cursor: dict[tuple[str, str], tuple[date, int]] = {}
 
     for index, ranked_demand in enumerate(ranked):
         demand = ranked_demand.demand
         if demand.minutes <= 0:
             continue
-        remaining = _ceil_grid(demand.minutes, grid)
+        remaining = demand.minutes
         session_length = session_length_for(
             inputs.profile, rules, inputs.history, demand.subject_id, demand.activity_type
         )
+        if demand.activity_type == DemandActivity.STUDY:
+            session_length = max(60, min(90, session_length))
         demand_id = _demand_id(demand, index)
 
         while remaining > 0:
-            chunk = min(session_length, remaining)
-            if chunk >= grid:
-                chunk = (chunk // grid) * grid
+            is_curriculum_block = bool(
+                demand.derived_from
+                and demand.derived_from.startswith("curriculum:")
+                and 60 <= remaining <= 90
+            )
+            chunk = remaining if is_curriculum_block else min(session_length, remaining)
             if chunk <= 0:
+                break
+            if demand.activity_type == DemandActivity.STUDY and chunk < 60:
+                unmet.append(
+                    UnmetDemand(
+                        subject_id=demand.subject_id,
+                        activity_type=demand.activity_type,
+                        minutes=remaining,
+                        due_by=demand.due_by,
+                        derived_from=demand.derived_from,
+                        reasons=(
+                            Reason(
+                                "BELOW_MINIMUM_BLOCK",
+                                {"remaining_minutes": remaining, "minimum_focus_minutes": 60},
+                            ),
+                        ),
+                    )
+                )
                 break
 
             result = _best_candidate(
@@ -375,6 +459,10 @@ def generate_plan(inputs: EngineInput, rules: EngineRules, now: date) -> EngineO
                 inputs.tombstoned_slots,
                 inputs.history,
                 inputs.recent_topics,
+                curriculum_cursor.get((demand.subject_id, demand.activity_type))
+                if demand.derived_from and demand.derived_from.startswith("curriculum:")
+                else None,
+                bool(demand.derived_from and demand.derived_from.startswith("curriculum:")),
             )
             if result is None:
                 reasons = [
@@ -398,6 +486,11 @@ def generate_plan(inputs: EngineInput, rules: EngineRules, now: date) -> EngineO
                 break
 
             candidate, terms = result
+            if demand.derived_from and demand.derived_from.startswith("curriculum:"):
+                curriculum_cursor[(demand.subject_id, demand.activity_type)] = (
+                    candidate.date,
+                    candidate.end_min,
+                )
             session = PlannedSessionDTO(
                 date=candidate.date,
                 start_min=candidate.start_min,
@@ -412,12 +505,15 @@ def generate_plan(inputs: EngineInput, rules: EngineRules, now: date) -> EngineO
                             "priority_score": ranked_demand.score,
                             "score_total": terms["total"],
                             "session_length": session_length,
+                            "focus_minutes": chunk,
+                            "pomodoro_break_minutes": pomodoro_break_minutes(chunk, inputs.profile),
                             "topic": demand.topic_id,
                         },
                     ),
                 ),
                 source_demand_ids=(demand_id,),
                 topic_id=demand.topic_id,
+                focus_minutes=chunk,
             )
             sessions.append(session)
             placed.append(session)
@@ -431,7 +527,12 @@ def generate_plan(inputs: EngineInput, rules: EngineRules, now: date) -> EngineO
         "demand_units": len(inputs.demands),
         "sessions": len(sessions),
         "unmet": len(unmet),
-        "placed_minutes": sum(item.end_min - item.start_min for item in sessions),
+        "placed_minutes": sum(item.focus_minutes for item in sessions),
+        "placed_focus_minutes": sum(item.focus_minutes for item in sessions),
+        "occupied_minutes": sum(item.end_min - item.start_min for item in sessions),
+        "pomodoro_break_minutes": sum(
+            item.end_min - item.start_min - item.focus_minutes for item in sessions
+        ),
         "used_minutes_by_day": {day.isoformat(): used[day] for day in sorted(used)},
         "capacity_minutes_by_day": {day.isoformat(): capacity[day] for day in sorted(capacity)},
     }

@@ -45,6 +45,7 @@ export interface StudySession {
   status: SessionStatus;
   subject: string | null;
   schedule_item: string | null;
+  planned_session: string | null;
   schedule_item_title: string | null;
   group: string | null;
   source_type: "SCHEDULE" | "COURSE_LESSON" | "LIVE_STREAM" | "UNSCHEDULED" | null;
@@ -189,6 +190,8 @@ export interface StartStudySessionPayload {
   subject?: string | null;
   /** UUID of the linked schedule item; attributes the time to that task/exam. */
   schedule_item?: string | null;
+  /** UUID of the smart plan session, linked directly for lifecycle tracking. */
+  planned_session?: string | null;
   group?: string | null;
   planned_pomodoros?: number | null;
   notes?: string | null;

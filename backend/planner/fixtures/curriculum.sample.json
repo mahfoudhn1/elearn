@@ -1,42 +1,58 @@
 {
-  "meta": {
-    "description": "FAKE sample for testing a 3AS Mathematics stream scope. NOT real Algerian program content.",
-    "verified": false
-  },
-  "academic_year": "2099-2100",
-  "level": "3AS_PLACEHOLDER",
-  "stream": "MATHEMATICS_PLACEHOLDER",
+  "academic_year": "2026-2027",
+  "level": "3M",
+  "stream": "رياضيات",
   "status": "DRAFT",
   "verified": false,
-  "source_note": "FICTIONAL TEST DATA ONLY. Not sourced from or representative of the Algerian Ministry curriculum.",
+  "source_note": "التوزيع السنوي - 3M رياضيات 2026-2027",
   "chapters": [
     {
       "subject": "رياضيات",
       "order": 1,
-      "title_ar": "فصل تجريبي",
-      "title_fr": "PLACEHOLDER Chapter 1",
-      "weight": 4,
+      "title_ar": "الاشتقاقية والاستمرارية",
+      "title_fr": "Dérivation et continuité",
+      "weight": 1.0,
       "topics": [
         {
           "order": 1,
-          "trimester": 1,
-          "title_ar": "موضوع تجريبي",
-          "title_fr": "PLACEHOLDER Topic 1.1",
-          "title_en": "Placeholder lesson 1.1",
-          "estimated_minutes": 90,
-          "is_published": false,
-          "objectives": [
-            { "text_ar": "هدف تجريبي", "text_fr": "PLACEHOLDER objective 1.1.a" }
-          ]
+          "title_ar": "التذكير بالنتائج المحصلة في السنة الثانية: العدد المشتق والمماس، تعريف استمرار دالة على مجال",
+          "title_fr": "Rappels de 2e année : nombre dérivé et tangente, définition de la continuité sur un intervalle",
+          "objectives": []
         },
         {
           "order": 2,
-          "trimester": 1,
-          "title_ar": "موضوع تجريبي",
-          "title_fr": "PLACEHOLDER Topic 1.2",
-          "title_en": "Placeholder lesson 1.2",
-          "estimated_minutes": 60,
-          "is_published": false,
+          "title_ar": "مبرهنة القيم المتوسطة واستعمالها في إثبات وجود حلول للمعادلة f(x)=k",
+          "title_fr": "Théorème des valeurs intermédiaires et application à l'existence de solutions de f(x)=k",
+          "objectives": []
+        },
+        {
+          "order": 3,
+          "title_ar": "حساب مشتق دالة مركبة، المشتقات المتتابعة",
+          "title_fr": "Dérivée d'une fonction composée, dérivées successives",
+          "objectives": []
+        },
+        {
+          "order": 4,
+          "title_ar": "استعمال المشتقات لدراسة خواص دالة والمنحنى الممثل لها (اتجاه تغير دالة، التقريب الخطي، نقطة الانعطاف)",
+          "title_fr": "Utilisation des dérivées pour étudier une fonction et sa courbe (sens de variation, approximation affine, point d'inflexion)",
+          "objectives": []
+        },
+        {
+          "order": 5,
+          "title_ar": "تابع استعمال المشتقات لدراسة خواص دالة والمنحنى الممثل لها",
+          "title_fr": "Suite de l'utilisation des dérivées pour étudier une fonction et sa courbe",
+          "objectives": []
+        },
+        {
+          "order": 6,
+          "title_ar": "توظيف المشتقات لحل مشكلات (دراسة اتجاه تغير دوال كثيرات حدود، ناطقة، صماء)",
+          "title_fr": "Application des dérivées à la résolution de problèmes (variations des fonctions polynômes, rationnelles et irrationnelles)",
+          "objectives": []
+        },
+        {
+          "order": 7,
+          "title_ar": "توظيف المشتقات لدراسة الدوال المثلثية، وحل معادلات تفاضلية من الشكل y'=f(x) حيث f دالة مألوفة",
+          "title_fr": "Application des dérivées à l'étude des fonctions trigonométriques et résolution d'équations différentielles y' = f(x) où f est une fonction usuelle",
           "objectives": []
         }
       ]
@@ -44,18 +60,635 @@
     {
       "subject": "رياضيات",
       "order": 2,
-      "title_ar": "فصل تجريبي",
-      "title_fr": "PLACEHOLDER Chapter 2",
-      "weight": 2,
+      "title_ar": "الدالة الأسية",
+      "title_fr": "Fonction exponentielle",
+      "weight": 1.0,
       "topics": [
         {
           "order": 1,
-          "trimester": 2,
-          "title_ar": "موضوع تجريبي",
-          "title_fr": "PLACEHOLDER Topic 2.1",
-          "title_en": "Placeholder lesson 2.1",
-          "estimated_minutes": 120,
-          "is_published": false,
+          "title_ar": "نشاط، تعريف وخواص الدالة الأسية x ↦ exp(x)",
+          "title_fr": "Activité, définition et propriétés de la fonction exponentielle x ↦ exp(x)",
+          "objectives": []
+        },
+        {
+          "order": 2,
+          "title_ar": "حل معادلات ومتراجحات باستعمال خواص الدالة الأسية",
+          "title_fr": "Résolution d'équations et d'inéquations à l'aide des propriétés de la fonction exponentielle",
+          "objectives": []
+        },
+        {
+          "order": 3,
+          "title_ar": "توظيف خواص دوال أسية x ↦ e^(kx)",
+          "title_fr": "Application des propriétés des fonctions x ↦ e^(kx)",
+          "objectives": []
+        },
+        {
+          "order": 4,
+          "title_ar": "دراسة الدالة exp(u)",
+          "title_fr": "Étude de la fonction exp(u)",
+          "objectives": []
+        }
+      ]
+    },
+    {
+      "subject": "رياضيات",
+      "order": 3,
+      "title_ar": "الدالة اللوغاريتمية",
+      "title_fr": "Fonction logarithme",
+      "weight": 1.0,
+      "topics": [
+        {
+          "order": 1,
+          "title_ar": "الدوال اللوغاريتمية: تعريف وخواص الدالة اللوغاريتمية النيبيرية",
+          "title_fr": "Fonctions logarithmes : définition et propriétés du logarithme népérien",
+          "objectives": []
+        },
+        {
+          "order": 2,
+          "title_ar": "حل معادلات ومتراجحات باستعمال خواص الدالة اللوغاريتمية النيبيرية",
+          "title_fr": "Résolution d'équations et d'inéquations à l'aide des propriétés du logarithme népérien",
+          "objectives": []
+        },
+        {
+          "order": 3,
+          "title_ar": "دراسة الدالة ln(u)، تعريف اللوغاريتم العشري",
+          "title_fr": "Étude de la fonction ln(u), définition du logarithme décimal",
+          "objectives": []
+        },
+        {
+          "order": 4,
+          "title_ar": "حل معادلات تفاضلية من الشكل y' = ay + b",
+          "title_fr": "Résolution d'équations différentielles y' = ay + b",
+          "objectives": []
+        }
+      ]
+    },
+    {
+      "subject": "رياضيات",
+      "order": 4,
+      "title_ar": "النهايات والتزايد المقارن",
+      "title_fr": "Limites et croissance comparée",
+      "weight": 1.0,
+      "topics": [
+        {
+          "order": 1,
+          "title_ar": "حساب نهاية منتهية أو غير منتهية لدالة عند الحدود، تعريف المستقيمات المقاربة الموازية للمحورين",
+          "title_fr": "Calcul de limites finies ou infinies aux bornes de l'ensemble de définition, asymptotes parallèles aux axes",
+          "objectives": []
+        },
+        {
+          "order": 2,
+          "title_ar": "حساب نهاية باستعمال المبرهنات المتعلقة بالعمليات على النهايات أو المقارنة وتركيب دالتين",
+          "title_fr": "Calcul de limites à l'aide des théorèmes sur les opérations, de comparaison et de composition",
+          "objectives": []
+        },
+        {
+          "order": 3,
+          "title_ar": "حساب نهاية باستعمال المقارنة أو الحصر ومركب دالتين",
+          "title_fr": "Calcul de limites par comparaison ou encadrement, et composée de deux fonctions",
+          "objectives": []
+        },
+        {
+          "order": 4,
+          "title_ar": "دراسة السلوك التقاربي لدالة، المستقيم المقارب المائل",
+          "title_fr": "Étude du comportement asymptotique d'une fonction, asymptote oblique",
+          "objectives": []
+        },
+        {
+          "order": 5,
+          "title_ar": "دوال القوى والجذور النونية وتوظيف خواصها",
+          "title_fr": "Fonctions puissances et racines n-ièmes, et application de leurs propriétés",
+          "objectives": []
+        },
+        {
+          "order": 6,
+          "title_ar": "التزايد المقارن للدوال الأسية ودوال القوى واللوغاريتمات",
+          "title_fr": "Croissance comparée des fonctions exponentielles, puissances et logarithmes",
+          "objectives": []
+        },
+        {
+          "order": 7,
+          "title_ar": "تطبيقات على النهايات الأسية واللوغاريتمية",
+          "title_fr": "Applications aux limites exponentielles et logarithmiques",
+          "objectives": []
+        }
+      ]
+    },
+    {
+      "subject": "رياضيات",
+      "order": 5,
+      "title_ar": "دراسة الدوال",
+      "title_fr": "Étude des fonctions",
+      "weight": 1.0,
+      "topics": [
+        {
+          "order": 1,
+          "title_ar": "دراسة دوال كثيرات حدود، ناطقة، صماء، مثلثية، دوال القوى وحل مشكلات باستعمالها",
+          "title_fr": "Étude de fonctions polynômes, rationnelles, irrationnelles, trigonométriques, puissances, et résolution de problèmes",
+          "objectives": []
+        },
+        {
+          "order": 2,
+          "title_ar": "دراسة دوال أسية، اللوغاريتم، دوال القوى وحل مشكلات باستعمالها، حل مسائل الاستمثال بهذه الدوال",
+          "title_fr": "Étude des fonctions exponentielles, logarithmes, puissances, et problèmes d'optimisation",
+          "objectives": []
+        }
+      ]
+    },
+    {
+      "subject": "رياضيات",
+      "order": 6,
+      "title_ar": "المتتاليات العددية",
+      "title_fr": "Suites numériques",
+      "weight": 1.0,
+      "topics": [
+        {
+          "order": 1,
+          "title_ar": "توليد متتالية عددية: استعمال التمثيل البياني لتخمين سلوك ونهاية متتالية عددية",
+          "title_fr": "Génération d'une suite numérique : utilisation de la représentation graphique pour conjecturer son comportement et sa limite",
+          "objectives": []
+        },
+        {
+          "order": 2,
+          "title_ar": "استعمال التمثيل البياني لتخمين سلوك ونهاية متتالية عددية",
+          "title_fr": "Utilisation de la représentation graphique pour conjecturer le comportement et la limite d'une suite",
+          "objectives": []
+        },
+        {
+          "order": 3,
+          "title_ar": "التذكير بالمتتالية الحسابية والمتتالية الهندسية من خلال أنشطة وتطبيقات",
+          "title_fr": "Rappels sur les suites arithmétiques et géométriques à travers des activités et applications",
+          "objectives": []
+        },
+        {
+          "order": 4,
+          "title_ar": "الاستدلال بالتراجع: إثبات خاصية بالتراجع",
+          "title_fr": "Raisonnement par récurrence : démonstration d'une propriété",
+          "objectives": []
+        },
+        {
+          "order": 5,
+          "title_ar": "خواص المتتاليات: دراسة سلوك ونهاية متتالية",
+          "title_fr": "Propriétés des suites : étude du comportement et de la limite d'une suite",
+          "objectives": []
+        },
+        {
+          "order": 6,
+          "title_ar": "المتتاليتان المتجاورتان: تعريف ومفهوم متتاليتين متجاورتين",
+          "title_fr": "Suites adjacentes : définition et notion",
+          "objectives": []
+        },
+        {
+          "order": 7,
+          "title_ar": "حل مشكلات توظف فيها المتتاليات والبرهان بالتراجع",
+          "title_fr": "Résolution de problèmes faisant intervenir des suites et démonstration par récurrence",
+          "objectives": []
+        }
+      ]
+    },
+    {
+      "subject": "رياضيات",
+      "order": 7,
+      "title_ar": "الدوال الأصلية والحساب التكاملي",
+      "title_fr": "Primitives et calcul intégral",
+      "weight": 1.0,
+      "topics": [
+        {
+          "order": 1,
+          "title_ar": "تعريف دالة أصلية لدالة على مجال، والخواص",
+          "title_fr": "Définition d'une primitive d'une fonction sur un intervalle, et propriétés",
+          "objectives": []
+        },
+        {
+          "order": 2,
+          "title_ar": "أمثلة لدوال أصلية",
+          "title_fr": "Exemples de primitives",
+          "objectives": []
+        },
+        {
+          "order": 3,
+          "title_ar": "تعيين الدالة الأصلية التي تأخذ قيمة y0 من أجل قيمة x0 للمتغير",
+          "title_fr": "Détermination de la primitive qui prend la valeur y0 pour x0",
+          "objectives": []
+        },
+        {
+          "order": 4,
+          "title_ar": "حل معادلات تفاضلية من الشكل y'=f(x) و y=f(x) حيث f دالة مألوفة",
+          "title_fr": "Résolution d'équations différentielles y' = f(x) où f est une fonction usuelle",
+          "objectives": []
+        },
+        {
+          "order": 5,
+          "title_ar": "الحساب التكاملي: المقاربة والتعريف",
+          "title_fr": "Calcul intégral : approche et définition",
+          "objectives": []
+        },
+        {
+          "order": 6,
+          "title_ar": "الحساب التكاملي: تعريف، خواص، حساب مساحات سطوح مستوية، توظيف خواص التكامل لحساب مساحة سطح معطى",
+          "title_fr": "Calcul intégral : définition, propriétés, calcul d'aires de surfaces planes, application au calcul de l'aire d'une surface donnée",
+          "objectives": []
+        },
+        {
+          "order": 7,
+          "title_ar": "مفهوم القيمة المتوسطة لدالة على مجال وحصرها",
+          "title_fr": "Notion de valeur moyenne d'une fonction sur un intervalle et encadrement",
+          "objectives": []
+        },
+        {
+          "order": 8,
+          "title_ar": "استعمال التكامل بالتجزئة",
+          "title_fr": "Intégration par parties",
+          "objectives": []
+        },
+        {
+          "order": 9,
+          "title_ar": "توظيف الحساب التكاملي لحساب دوال أصلية",
+          "title_fr": "Application du calcul intégral au calcul de primitives",
+          "objectives": []
+        },
+        {
+          "order": 10,
+          "title_ar": "حساب حجم لمجسمات بسيطة",
+          "title_fr": "Calcul du volume de solides simples",
+          "objectives": []
+        },
+        {
+          "order": 11,
+          "title_ar": "توظيف الحساب التكاملي لحل مشكلات بسيطة",
+          "title_fr": "Application du calcul intégral à la résolution de problèmes simples",
+          "objectives": []
+        }
+      ]
+    },
+    {
+      "subject": "رياضيات",
+      "order": 8,
+      "title_ar": "الأعداد والحساب",
+      "title_fr": "Arithmétique",
+      "weight": 1.0,
+      "topics": [
+        {
+          "order": 1,
+          "title_ar": "القسمة الإقليدية في Z: إثبات أن عددا صحيحا يقسم عددا صحيحا آخر",
+          "title_fr": "Division euclidienne dans Z : démontrer qu'un entier en divise un autre",
+          "objectives": []
+        },
+        {
+          "order": 2,
+          "title_ar": "استعمال خواص قابلية القسمة في Z",
+          "title_fr": "Utilisation des propriétés de divisibilité dans Z",
+          "objectives": []
+        },
+        {
+          "order": 3,
+          "title_ar": "استعمال خوارزمية إقليدس لتعيين القاسم المشترك الأكبر والقواسم المشتركة لعددين طبيعيين",
+          "title_fr": "Utilisation de l'algorithme d'Euclide pour déterminer le PGCD et les diviseurs communs de deux entiers naturels",
+          "objectives": []
+        },
+        {
+          "order": 4,
+          "title_ar": "حل مشكلات بتوظيف خواص القاسم المشترك الأكبر",
+          "title_fr": "Résolution de problèmes à l'aide des propriétés du PGCD",
+          "objectives": []
+        },
+        {
+          "order": 5,
+          "title_ar": "الموافقات في Z: تعاريف وخواص",
+          "title_fr": "Congruences dans Z : définitions et propriétés",
+          "objectives": []
+        },
+        {
+          "order": 6,
+          "title_ar": "التعداد: نشر عدد طبيعي وفق أساس",
+          "title_fr": "Numération : écriture d'un entier naturel en base donnée",
+          "objectives": []
+        },
+        {
+          "order": 7,
+          "title_ar": "الانتقال من نظام أساسه α إلى نظام أساسه β",
+          "title_fr": "Passage du système de base α au système de base β",
+          "objectives": []
+        },
+        {
+          "order": 8,
+          "title_ar": "الأعداد الأولية: التعرف على أولية عدد طبيعي",
+          "title_fr": "Nombres premiers : reconnaître un nombre premier",
+          "objectives": []
+        },
+        {
+          "order": 9,
+          "title_ar": "استعمال تحليل عدد طبيعي إلى جداء عوامل أولية لتعيين مضاعفاته وقواسمه",
+          "title_fr": "Décomposition en facteurs premiers pour déterminer les multiples et diviseurs",
+          "objectives": []
+        },
+        {
+          "order": 10,
+          "title_ar": "استعمال تحليل عدد طبيعي إلى جداء عوامل أولية لتعيين المضاعف المشترك الأصغر والقاسم المشترك الأكبر",
+          "title_fr": "Décomposition en facteurs premiers pour déterminer le PPCM et le PGCD",
+          "objectives": []
+        },
+        {
+          "order": 11,
+          "title_ar": "استعمال العلاقة بين المضاعف المشترك الأصغر والقاسم المشترك الأكبر",
+          "title_fr": "Utilisation de la relation entre PPCM et PGCD",
+          "objectives": []
+        },
+        {
+          "order": 12,
+          "title_ar": "استعمال خواص المضاعف المشترك الأصغر",
+          "title_fr": "Utilisation des propriétés du PPCM",
+          "objectives": []
+        },
+        {
+          "order": 13,
+          "title_ar": "مبرهنة بيزو: استعمال مبرهنة بيزو",
+          "title_fr": "Théorème de Bézout : application",
+          "objectives": []
+        },
+        {
+          "order": 14,
+          "title_ar": "مبرهنة غوص: استعمال مبرهنة غوص ونتائجها",
+          "title_fr": "Théorème de Gauss : application et conséquences",
+          "objectives": []
+        },
+        {
+          "order": 15,
+          "title_ar": "حل مسائل في الحساب",
+          "title_fr": "Résolution de problèmes d'arithmétique",
+          "objectives": []
+        }
+      ]
+    },
+    {
+      "subject": "رياضيات",
+      "order": 9,
+      "title_ar": "الإحصاء والاحتمالات",
+      "title_fr": "Statistiques et probabilités",
+      "weight": 1.0,
+      "topics": [
+        {
+          "order": 1,
+          "title_ar": "الاحتمالات المتساوية على مجموعة منتهية: إيجاد قانون احتمال لمتغير عشوائي",
+          "title_fr": "Probabilités équiprobables sur un ensemble fini : déterminer la loi d'une variable aléatoire",
+          "objectives": []
+        },
+        {
+          "order": 2,
+          "title_ar": "حل مسائل في الاحتمالات توظف المتغيرات العشوائية، قانون احتمالها، التباين، الانحراف المعياري والأمل",
+          "title_fr": "Résolution de problèmes de probabilités : variables aléatoires, loi, variance, écart-type et espérance",
+          "objectives": []
+        },
+        {
+          "order": 3,
+          "title_ar": "العد باستخدام المبدأ الأساسي للعد (المجموع والجداء)، وتنظيم معطيات من أجل عدها",
+          "title_fr": "Dénombrement avec le principe fondamental (somme et produit), organisation des données pour les compter",
+          "objectives": []
+        },
+        {
+          "order": 4,
+          "title_ar": "استخراج بعض قوانين التحليل التوفيقي (القوائم، الترتيبات، التبديلات، التوفيقات)",
+          "title_fr": "Établissement de formules de dénombrement (listes, arrangements, permutations, combinaisons)",
+          "objectives": []
+        },
+        {
+          "order": 5,
+          "title_ar": "حل مسائل في العد باستعمال قوانين التحليل التوفيقي",
+          "title_fr": "Résolution de problèmes de dénombrement avec les formules combinatoires",
+          "objectives": []
+        },
+        {
+          "order": 6,
+          "title_ar": "دستور ثنائي الحد",
+          "title_fr": "Formule du binôme de Newton",
+          "objectives": []
+        },
+        {
+          "order": 7,
+          "title_ar": "الاحتمالات الشرطية: الأحداث المستقلة (تعاريف، خواص، دستور الاحتمالات الكلية، النمذجة)",
+          "title_fr": "Probabilités conditionnelles : événements indépendants (définitions, propriétés, probabilités totales, modélisation)",
+          "objectives": []
+        },
+        {
+          "order": 8,
+          "title_ar": "توظيف دستور الاحتمالات الكلية لحل مسائل في الاحتمالات تتعلق بسحب أكثر من وعاء",
+          "title_fr": "Application de la formule des probabilités totales aux tirages dans plusieurs urnes",
+          "objectives": []
+        },
+        {
+          "order": 9,
+          "title_ar": "نمذجة وضعيات بالاعتماد على التجارب المرجعية للسحب أو الإلقاء",
+          "title_fr": "Modélisation de situations à partir d'expériences de référence (tirages ou lancers)",
+          "objectives": []
+        }
+      ]
+    },
+    {
+      "subject": "رياضيات",
+      "order": 10,
+      "title_ar": "الأعداد المركبة والتحويلات النقطية",
+      "title_fr": "Nombres complexes et transformations du plan",
+      "weight": 1.0,
+      "topics": [
+        {
+          "order": 1,
+          "title_ar": "المجموعة C: إجراء العمليات الحسابية على الأعداد المركبة",
+          "title_fr": "L'ensemble C : opérations sur les nombres complexes",
+          "objectives": []
+        },
+        {
+          "order": 2,
+          "title_ar": "مرافق وطويلة عدد مركب: استعمال خواص مرافق عدد مركب، حساب طويلة عدد مركب",
+          "title_fr": "Conjugué et module d'un complexe : propriétés et calcul du module",
+          "objectives": []
+        },
+        {
+          "order": 3,
+          "title_ar": "حل معادلة من الشكل z² = z0 حيث z0 عدد مركب معلوم",
+          "title_fr": "Résolution de l'équation z² = z0 où z0 est un complexe connu",
+          "objectives": []
+        },
+        {
+          "order": 4,
+          "title_ar": "حل في C معادلات من الدرجة الثانية ذات معاملات حقيقية",
+          "title_fr": "Résolution dans C d'équations du second degré à coefficients réels",
+          "objectives": []
+        },
+        {
+          "order": 5,
+          "title_ar": "حل في C معادلات يؤول حلها إلى حل معادلة من الدرجة الثانية ذات معاملات حقيقية",
+          "title_fr": "Résolution dans C d'équations se ramenant à une équation du second degré à coefficients réels",
+          "objectives": []
+        },
+        {
+          "order": 6,
+          "title_ar": "الشكل المثلثي لعدد مركب غير معدوم: حساب عمدة لعدد مركب غير معدوم",
+          "title_fr": "Forme trigonométrique d'un complexe non nul : calcul d'un argument",
+          "objectives": []
+        },
+        {
+          "order": 7,
+          "title_ar": "الانتقال من الشكل الجبري إلى الشكل المثلثي والعكس",
+          "title_fr": "Passage de la forme algébrique à la forme trigonométrique et inversement",
+          "objectives": []
+        },
+        {
+          "order": 8,
+          "title_ar": "ترميز أولر: كتابة عدد مركب غير معدوم على الشكل الأسي",
+          "title_fr": "Notation d'Euler : écriture d'un complexe non nul sous forme exponentielle",
+          "objectives": []
+        },
+        {
+          "order": 9,
+          "title_ar": "التفسير الهندسي لطويلة وعمدة عدد مركب، التعبير عن خواص أشكال هندسية باستعمال الأعداد المركبة",
+          "title_fr": "Interprétation géométrique du module et de l'argument, propriétés de figures géométriques avec les complexes",
+          "objectives": []
+        },
+        {
+          "order": 10,
+          "title_ar": "توظيف خواص الطويلة والعمدة لحل مسائل في الأعداد المركبة وفي الهندسة",
+          "title_fr": "Application des propriétés du module et de l'argument à des problèmes sur les complexes et la géométrie",
+          "objectives": []
+        },
+        {
+          "order": 11,
+          "title_ar": "دستور موافر: توظيف دستور موافر لحل مسائل في الأعداد المركبة وفي الهندسة",
+          "title_fr": "Formule de Moivre : application à des problèmes sur les complexes et la géométrie",
+          "objectives": []
+        },
+        {
+          "order": 12,
+          "title_ar": "التحويلات النقطية المألوفة (الانسحاب، التحاكي، الدوران): تعيين الكتابة المركبة والتعرف على تحويل انطلاقا منها",
+          "title_fr": "Transformations usuelles (translation, homothétie, rotation) : écriture complexe et reconnaissance",
+          "objectives": []
+        },
+        {
+          "order": 13,
+          "title_ar": "حل مسائل هندسية تتطلب استعمال انسحابات، تحاكيات أو دورانات بواسطة الأعداد المركبة",
+          "title_fr": "Résolution de problèmes géométriques utilisant translations, homothéties et rotations via les complexes",
+          "objectives": []
+        },
+        {
+          "order": 14,
+          "title_ar": "توظيف الأعداد المركبة لبرهان خواص الانسحاب، الدوران والتحاكي",
+          "title_fr": "Utilisation des complexes pour démontrer les propriétés de translation, rotation et homothétie",
+          "objectives": []
+        },
+        {
+          "order": 15,
+          "title_ar": "التشابهات المستوية المباشرة: تعريف، الكتابة المركبة، تركيب تشابهين مباشرين، خواص",
+          "title_fr": "Similitudes directes planes : définition, écriture complexe, composition de deux similitudes directes, propriétés",
+          "objectives": []
+        },
+        {
+          "order": 16,
+          "title_ar": "التعبير عن تشابه مباشر بالأعداد المركبة",
+          "title_fr": "Expression d'une similitude directe à l'aide des complexes",
+          "objectives": []
+        },
+        {
+          "order": 17,
+          "title_ar": "تركيب تشابهين مباشرين",
+          "title_fr": "Composition de deux similitudes directes",
+          "objectives": []
+        },
+        {
+          "order": 18,
+          "title_ar": "تعيين التحليل القانوني لتشابه مباشر بواسطة الأعداد المركبة وتوظيفه",
+          "title_fr": "Détermination de la forme réduite d'une similitude directe à l'aide des complexes, et application",
+          "objectives": []
+        },
+        {
+          "order": 19,
+          "title_ar": "توظيف خواص التشابهات المباشرة لحل مسائل هندسية",
+          "title_fr": "Application des propriétés des similitudes directes à la résolution de problèmes géométriques",
+          "objectives": []
+        },
+        {
+          "order": 20,
+          "title_ar": "أنشطة حول تحويلات نقطية كتابتها المركبة z' = az + b",
+          "title_fr": "Activités sur les transformations ponctuelles d'écriture complexe z' = az + b",
+          "objectives": []
+        }
+      ]
+    },
+    {
+      "subject": "رياضيات",
+      "order": 11,
+      "title_ar": "الهندسة في الفضاء",
+      "title_fr": "Géométrie dans l'espace",
+      "weight": 1.0,
+      "topics": [
+        {
+          "order": 1,
+          "title_ar": "استعمال الأشعة لإثبات توازي شعاعين واستقامية ثلاث نقط، والبرهان على أن أشعة من نفس المستوي",
+          "title_fr": "Utilisation des vecteurs pour prouver le parallélisme de deux vecteurs, l'alignement de trois points et la coplanarité de vecteurs",
+          "objectives": []
+        },
+        {
+          "order": 2,
+          "title_ar": "التعليم في الفضاء: تعليم نقطة، تعيين معادلة مستو موازٍ لأحد مستويات الإحداثيات، تعيين معادلات مستقيم معرّف بنقطة وشعاع توجيه",
+          "title_fr": "Repérage dans l'espace : repérer un point, équation d'un plan parallèle à un plan de coordonnées, équations d'une droite définie par un point et un vecteur directeur",
+          "objectives": []
+        },
+        {
+          "order": 3,
+          "title_ar": "إثبات أن أشعة معطاة تنتمي إلى نفس المستوي",
+          "title_fr": "Démontrer que des vecteurs donnés appartiennent au même plan",
+          "objectives": []
+        },
+        {
+          "order": 4,
+          "title_ar": "المسافة بين نقطتين: استعمال مبرهنة فيثاغورث ودستور المسافة لتعيين معادلات سطح كرة، الأسطوانة الدورانية، المخروط الدوراني",
+          "title_fr": "Distance entre deux points : théorème de Pythagore et formule de distance pour les équations de la sphère, du cylindre et du cône de révolution",
+          "objectives": []
+        },
+        {
+          "order": 5,
+          "title_ar": "توظيف الجداء السلمي لإثبات التعامد (تعامد مستقيمين، تعامد مستويين، تعامد مستقيم ومستو)",
+          "title_fr": "Utilisation du produit scalaire pour prouver l'orthogonalité (droites, plans, droite et plan)",
+          "objectives": []
+        },
+        {
+          "order": 6,
+          "title_ar": "الجداء السلمي وتطبيقاته: التعريف والعبارة التحليلية، توظيف الجداء السلمي لتعيين معادلة مستو",
+          "title_fr": "Produit scalaire et applications : définition, expression analytique, équation d'un plan",
+          "objectives": []
+        },
+        {
+          "order": 7,
+          "title_ar": "توظيف الجداء السلمي لحساب المسافة بين نقطة ومستو",
+          "title_fr": "Utilisation du produit scalaire pour calculer la distance entre un point et un plan",
+          "objectives": []
+        },
+        {
+          "order": 8,
+          "title_ar": "توظيف الجداء السلمي لتعيين مجموعات نقط",
+          "title_fr": "Utilisation du produit scalaire pour déterminer des ensembles de points",
+          "objectives": []
+        },
+        {
+          "order": 9,
+          "title_ar": "المستقيمات والمستويات في الفضاء: استعمال التمثيلات الوسيطية أو التمييز بالمرجح لحل مسائل الاستقامية والتلاقي وانتماء أربع نقط إلى نفس المستوي",
+          "title_fr": "Droites et plans dans l'espace : représentations paramétriques ou barycentres pour l'alignement, la concourance et la coplanarité de quatre points",
+          "objectives": []
+        },
+        {
+          "order": 10,
+          "title_ar": "الانتقال من جملة معادلتين لمستقيم أو معادلة مستو إلى تمثيل وسيطي والعكس",
+          "title_fr": "Passage d'un système de deux équations d'une droite ou d'une équation de plan à une représentation paramétrique, et inversement",
+          "objectives": []
+        },
+        {
+          "order": 11,
+          "title_ar": "الأوضاع النسبية لمستقيمات و/أو لمستويات في الفضاء: تحديد الوضع النسبي لمستويين، لمستقيم ومستو، لمستقيمين",
+          "title_fr": "Positions relatives de droites et/ou plans dans l'espace : deux plans, une droite et un plan, deux droites",
+          "objectives": []
+        },
+        {
+          "order": 12,
+          "title_ar": "الأوضاع النسبية لمستقيمات و/أو لمستويات في الفضاء: تعيين تقاطع مستويين، مستقيم ومستو، مستقيمين، وتقاطع ثلاثة مستويات",
+          "title_fr": "Positions relatives de droites et/ou plans dans l'espace : intersection de deux plans, d'une droite et d'un plan, de deux droites, et de trois plans",
           "objectives": []
         }
       ]

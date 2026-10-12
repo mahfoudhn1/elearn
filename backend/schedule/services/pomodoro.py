@@ -15,6 +15,7 @@ from django.db.models import Min, Sum
 from django.utils import timezone
 
 from ..models import PersonalScheduleItem, PomodoroInterval, PomodoroSettings, StudySession
+from planner.models import PlannedSession
 from .localtime import local_date_for
 from .productivity import ProductivityService
 
@@ -86,6 +87,7 @@ class PomodoroService:
         *,
         subject=None,
         schedule_item: PersonalScheduleItem | None = None,
+        planned_session: PlannedSession | None = None,
         group=None,
         planned_pomodoros=None,
         notes=None,
@@ -106,6 +108,14 @@ class PomodoroService:
         # student out of ever starting another.
         self.get_active_session()
 
+        if planned_session is not None:
+            if planned_session.student.user_id != self.user.pk:
+                raise PomodoroError("This planned session belongs to another student.")
+            if schedule_item is not None and planned_session.personal_item_id != schedule_item.pk:
+                raise PomodoroError("The planned session and schedule item do not match.")
+            schedule_item = schedule_item or planned_session.personal_item
+            subject = subject or planned_session.subject
+
         if schedule_item is not None:
             subject = subject or schedule_item.subject
             group = group or schedule_item.group
@@ -120,6 +130,7 @@ class PomodoroService:
                 session = StudySession.objects.create(
                     user=self.user,
                     schedule_item=schedule_item,
+                    planned_session=planned_session,
                     source_type=source_type or ("SCHEDULE" if schedule_item else "UNSCHEDULED"),
                     source_id=source_id or (str(schedule_item.uuid) if schedule_item else None),
                     course_uuid=course_uuid,
@@ -146,6 +157,19 @@ class PomodoroService:
                     started_at=now,
                     last_resumed_at=now,
                 )
+                if planned_session is not None:
+                    from planner.services.lifecycle import record_planned_session_event
+
+                    record_planned_session_event(
+                        student=planned_session.student,
+                        planned_session=planned_session,
+                        study_session=session,
+                        kind="STARTED",
+                        from_state=planned_session.state,
+                        to_state=planned_session.state,
+                        metadata={"timer_status": session.status},
+                        occurred_at=now,
+                    )
         except IntegrityError as exc:
             if request_id is not None:
                 existing = StudySession.objects.filter(
@@ -388,7 +412,7 @@ class PomodoroService:
         Best-effort and idempotent: a failure here must not fail the Pomodoro
         close. Only runs when the session is linked to a planner item.
         """
-        if session.schedule_item_id is None:
+        if session.planned_session_id is None and session.schedule_item_id is None:
             return
         try:
             from planner.services.history_service import (

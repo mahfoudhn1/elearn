@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
@@ -64,6 +65,7 @@ export default function FlashcardsScreen() {
   const { t, locale } = useTranslation();
   const { tokens } = useTheme();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [deck, setDeck] = useState<DueCard[] | null>(null);
   const [index, setIndex] = useState(0);
@@ -133,6 +135,11 @@ export default function FlashcardsScreen() {
       // Fire-and-forget flush; offline items stay queued.
       void flushFlashcardQueue().then(async (result) => {
         if (result.sent.length > 0) {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['planner'] }),
+            queryClient.invalidateQueries({ queryKey: ['planner', 'subject-proficiency'] }),
+            queryClient.invalidateQueries({ queryKey: ['assessment'] }),
+          ]);
           const nextStats = await getFlashcardStats().catch(() => null);
           if (nextStats) setStats(nextStats);
         }

@@ -26,6 +26,7 @@ from .models import (
     CommitmentException,
     PedagogyRuleSet,
     PlannedSession,
+    PlannedSessionEvent,
     PlannerExam,
     SessionTombstone,
     StudentPlannerProfile,
@@ -241,6 +242,9 @@ class StudyPlanSerializer(UUIDModelSerializer):
             "input_hash",
             "rule_set",
             "trigger",
+            "input_snapshot",
+            "engine_diagnostics",
+            "unmet_demand",
             "created_at",
         ]
         read_only_fields = fields
@@ -259,6 +263,7 @@ class PlannedSessionSerializer(UUIDModelSerializer):
             "practice_quiz",
             "start_dt",
             "end_dt",
+            "focus_minutes",
             "origin",
             "state",
             "is_locked",
@@ -276,6 +281,7 @@ class PlannedSessionSerializer(UUIDModelSerializer):
             "activity_type",
             "topic",
             "practice_quiz",
+            "focus_minutes",
             "origin",
             "state",
             "reasons",
@@ -284,6 +290,21 @@ class PlannedSessionSerializer(UUIDModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+
+class PlannedSessionEventSerializer(UUIDModelSerializer):
+    class Meta:
+        model = PlannedSessionEvent
+        fields = [
+            "id",
+            "kind",
+            "from_state",
+            "to_state",
+            "study_session_uuid",
+            "occurred_at",
+            "metadata",
+        ]
+        read_only_fields = fields
 
 
 class GeneratePlanInputSerializer(serializers.Serializer):

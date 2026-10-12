@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, View } from 'react-native';
@@ -38,9 +39,10 @@ import {
   type OnboardingState,
   type PlannedSession,
 } from '../../services/api/planner';
-import type { ScheduleItem } from '../../services/api/schedule';
+import type { ScheduleEntry, ScheduleItem } from '../../services/api/schedule';
 import { startPlannerQueue, usePlannerStore } from '../../store/plannerStore';
 import { formatDate } from '../../utils/format';
+import { currentLocale } from '../../services/i18n';
 
 type ScheduleViewMode = 'all' | 'plan' | 'tasks' | 'classes';
 
@@ -109,9 +111,10 @@ function busyEntriesForDay(state: OnboardingState | null, iso: string): Timeline
     const end = timeToMinutes(raw.end_time as string);
     if (start == null || end == null) continue;
     const dayOfWeek = String(raw.day_of_week ?? '').toLowerCase();
+    const locale = currentLocale() === 'ar' ? 'ar-DZ' : currentLocale() === 'fr' ? 'fr-FR' : 'en-GB';
     const matches =
       dayOfWeek ===
-        new Date(`${iso}T00:00:00`).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase() ||
+        new Date(`${iso}T00:00:00`).toLocaleDateString(locale, { weekday: 'long' }).toLowerCase() ||
       raw.scheduled_date === iso;
     if (!matches) continue;
     entries.push({
@@ -150,6 +153,7 @@ export default function ScheduleScreen() {
   const { isRTL } = useDirection();
   const { t } = useTranslation();
   const { start } = usePomodoro();
+  const queryClient = useQueryClient();
 
   const todayIso = toDayIso(new Date());
   const [selectedDate, setSelectedDate] = useState(todayIso);
@@ -157,7 +161,6 @@ export default function ScheduleScreen() {
 
   // Planner store bindings
   const plan = usePlannerStore((state) => state.plan);
-  const sessions = usePlannerStore((state) => state.sessions);
   const lastDiff = usePlannerStore((state) => state.lastDiff);
   const loadCurrent = usePlannerStore((state) => state.loadCurrent);
   const generate = usePlannerStore((state) => state.generate);
@@ -198,31 +201,32 @@ export default function ScheduleScreen() {
   // React-query owns fetching/refetching-on-focus; mutations invalidate it.
   const { data, isLoading, isError, error, refetch } = useSchedule();
   const { update, remove } = useScheduleMutations();
-  const items = useMemo<ScheduleItem[]>(() => (Array.isArray(data) ? data : []), [data]);
+
+  // The planner mirrors every smart-plan session into a PersonalScheduleItem
+  // (source=PLANNER server-side), so `schedule/` returns them next to the
+  // manual tasks. Those mirrors are already rendered from the planner store,
+  // so drop them here and let the smart plan be the single source for planned
+  // sessions -- otherwise each one shows up twice in the agenda.
+  const entries = useMemo<ScheduleEntry[]>(() => (Array.isArray(data) ? data : []), [data]);
 
   const weekDates = useMemo(() => getWeekDates(selectedDate), [selectedDate]);
 
-  const dayItems = useMemo(
-    () =>
-      items
-        .filter((item) => item.start_datetime?.slice(0, 10) === selectedDate)
-        .sort((a, b) => a.start_datetime.localeCompare(b.start_datetime)),
-    [items, selectedDate],
+  const dayEntries = useMemo(
+    () => entries.filter((entry) => entry.start.slice(0, 10) === selectedDate),
+    [entries, selectedDate],
   );
 
-  const todayItems = useMemo(
-    () =>
-      items
-        .filter((item) => item.start_datetime?.slice(0, 10) === todayIso)
-        .sort((a, b) => a.start_datetime.localeCompare(b.start_datetime)),
-    [items, todayIso],
+  const todayEntries = useMemo(
+    () => entries.filter((entry) => entry.start.slice(0, 10) === todayIso),
+    [entries, todayIso],
   );
 
   const summary = useMemo(() => {
-    const total = items.length;
-    const done = items.filter((item) => item.status === 'COMPLETED').length;
-    return { total, done, today: todayItems.length };
-  }, [items, todayItems]);
+    const manual = entries.filter((entry) => entry.source === 'MANUAL');
+    const total = manual.length;
+    const done = manual.filter((entry) => entry.status === 'COMPLETED').length;
+    return { total, done, today: todayEntries.length };
+  }, [entries, todayEntries]);
 
   const toggleComplete = (item: ScheduleItem) => {
     const nextStatus = item.status === 'COMPLETED' ? 'TODO' : 'COMPLETED';
@@ -243,27 +247,24 @@ export default function ScheduleScreen() {
       result.push(...busy);
     }
 
-    // 2. Smart Planned study sessions
+    // 2. Normalized planner rows from the shared schedule query
     if (view === 'all' || view === 'plan') {
-      const planned = sessions
-        .filter(
-          (s) =>
-            s.state !== 'CANCELLED' &&
-            toDayIso(new Date(s.start_dt)) === selectedDate,
-        )
-        .map((s): TimelineEntry => {
-          const startDate = new Date(s.start_dt);
-          const endDate = new Date(s.end_dt);
+      const planned = dayEntries
+        .filter((entry) => entry.source === 'PLANNER' && entry.plannedSession)
+        .filter((entry) => entry.status !== 'CANCELLED')
+        .map((entry): TimelineEntry => {
+          const startDate = new Date(entry.start);
+          const endDate = new Date(entry.end);
           return {
-            key: `session-${s.id}`,
+            key: entry.id,
             entryType: 'PLAN',
-            kind: s.activity_type,
-            title: s.subject,
-            subject: s.subject,
+            kind: entry.topic ?? 'STUDY',
+            title: entry.title,
+            subject: entry.subject,
             startMin: dateToMinutes(startDate),
             endMin: dateToMinutes(endDate),
-            locked: s.is_locked,
-            session: s,
+            locked: Boolean(entry.plannedSession?.is_locked),
+            session: entry.plannedSession ?? undefined,
           };
         });
       result.push(...planned);
@@ -271,11 +272,14 @@ export default function ScheduleScreen() {
 
     // 3. Manual Tasks
     if (view === 'all' || view === 'tasks') {
-      const tasks = dayItems.map((item): TimelineEntry => {
-        const startDate = new Date(item.start_datetime);
-        const endDate = new Date(item.end_datetime);
+      const tasks = dayEntries
+        .filter((entry) => entry.source === 'MANUAL' && entry.scheduleItem)
+        .map((entry): TimelineEntry => {
+        const item = entry.scheduleItem as ScheduleItem;
+        const startDate = new Date(entry.start);
+        const endDate = new Date(entry.end);
         return {
-          key: `task-${item.id}`,
+          key: entry.id,
           entryType: 'TASK',
           kind: item.item_type,
           title: item.title,
@@ -287,12 +291,12 @@ export default function ScheduleScreen() {
           task: item,
           completed: item.status === 'COMPLETED',
         };
-      });
+        });
       result.push(...tasks);
     }
 
     return result.sort((a, b) => a.startMin - b.startMin);
-  }, [view, onboarding, selectedDate, sessions, dayItems]);
+  }, [view, onboarding, selectedDate, dayEntries]);
 
   const handleStartSession = async (session: PlannedSession) => {
     setActiveSession(null);
@@ -301,6 +305,7 @@ export default function ScheduleScreen() {
         type: 'SCHEDULE',
         id: session.id,
         scheduleItemId: session.personal_item ?? undefined,
+        plannedSessionId: session.id,
         subject: session.subject,
         title: session.subject,
         isScheduled: true,
@@ -319,15 +324,17 @@ export default function ScheduleScreen() {
         window_end: addDays(selectedDate, 6),
         trigger: 'MANUAL',
       });
+      await queryClient.invalidateQueries({ queryKey: ['schedule'] });
     } catch {
       Alert.alert(t('error'), t('serverUnreachable'));
     } finally {
       setRegenerating(false);
     }
-  }, [generate, selectedDate, t]);
+  }, [generate, queryClient, selectedDate, t]);
 
   const onMoveSession = (session: PlannedSession, startIso: string, endIso: string) => {
     moveLocal(session.id, startIso, endIso);
+    void queryClient.invalidateQueries({ queryKey: ['schedule'] });
     setActiveSession(null);
   };
 
@@ -429,10 +436,11 @@ export default function ScheduleScreen() {
                             </AppText>
                             <AppText variant="bodySm" tone="muted">
                               {t('plannerTodayScheduled', {
-                                count: sessions.filter(
-                                  (s) =>
-                                    s.state !== 'CANCELLED' &&
-                                    toDayIso(new Date(s.start_dt)) === selectedDate,
+                                count: entries.filter(
+                                  (entry) =>
+                                    entry.source === 'PLANNER' &&
+                                    entry.status !== 'CANCELLED' &&
+                                    toDayIso(new Date(entry.start)) === selectedDate,
                                 ).length,
                               })}
                             </AppText>
@@ -584,14 +592,17 @@ export default function ScheduleScreen() {
         onMove={onMoveSession}
         onLockToggle={(session) => {
           lockLocal(session.id, !session.is_locked);
+          void queryClient.invalidateQueries({ queryKey: ['schedule'] });
           setActiveSession(null);
         }}
         onSkip={(session) => {
           skipLocal(session.id);
+          void queryClient.invalidateQueries({ queryKey: ['schedule'] });
           setActiveSession(null);
         }}
         onDelete={(session) => {
           deleteLocal(session.id);
+          void queryClient.invalidateQueries({ queryKey: ['schedule'] });
           setActiveSession(null);
         }}
       />

@@ -18,7 +18,7 @@ import {
   Stack,
 } from '../components/ui';
 import { useSchedule } from '../hooks/queries';
-import type { ScheduleItem } from '../services/api/schedule';
+import type { ScheduleEntry } from '../services/api/schedule';
 import { useTheme } from '../hooks/useTheme';
 import { useTranslation } from '../hooks/useTranslation';
 
@@ -37,17 +37,19 @@ export default function StudySessionScreen() {
     scheduleItemId?: string;
     subject?: string;
     title?: string;
+    plannedSessionId?: string;
     plannedPomodoros?: string;
   }>();
   // Once a session is running, the server is the source of truth for what is
   // being studied; route params only fill in the gap before it starts.
   const scheduleItemId = activeSession?.schedule_item ?? params.scheduleItemId ?? null;
+  const plannedSessionId = activeSession?.planned_session ?? params.plannedSessionId ?? null;
 
   // Fresh item data so tracked minutes update the moment a session is recorded.
   const { data: schedule } = useSchedule();
   const item = useMemo(() => {
-    const items = (schedule as ScheduleItem[] | undefined) ?? [];
-    return items.find((entry) => String(entry.id) === scheduleItemId);
+    const entries = (schedule as ScheduleEntry[] | undefined) ?? [];
+    return entries.find((entry) => entry.scheduleItemId === scheduleItemId)?.scheduleItem ?? null;
   }, [schedule, scheduleItemId]);
 
   const title = item?.title ?? activeSession?.schedule_item_title ?? params.title ?? null;
@@ -109,6 +111,7 @@ export default function StudySessionScreen() {
                 subject,
                 title,
                 isScheduled: Boolean(scheduleItemId),
+                plannedSessionId,
               }}
             />
           ) : null}

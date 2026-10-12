@@ -64,7 +64,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='topic',
-            constraint=models.CheckConstraint(condition=models.Q(('trimester__gte', 1), ('trimester__lte', 3)), name='planner_topic_trimester_range'),
+            constraint=models.CheckConstraint(check=models.Q(('trimester__gte', 1), ('trimester__lte', 3)), name='planner_topic_trimester_range'),
         ),
         migrations.AddField(
             model_name='subjectcurrenttopic',

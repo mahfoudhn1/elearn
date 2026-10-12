@@ -77,12 +77,14 @@ def build_history_summary_for_student(
     )
 
     records: list[HistoryRecord] = []
+    record_index_by_session_id: dict[int, int] = {}
     record_index_by_item: dict[int, int] = {}
     for session in planned_sessions:
-        planned_minutes = int((session.end_dt - session.start_dt).total_seconds() // 60)
+        planned_minutes = session.focus_minutes
         day, minute = _local(session.start_dt, tz)
         if session.personal_item_id:
             record_index_by_item[session.personal_item_id] = len(records)
+        record_index_by_session_id[session.pk] = len(records)
         records.append(
             HistoryRecord(
                 subject_id=session.subject,
@@ -97,12 +99,20 @@ def build_history_summary_for_student(
             )
         )
 
-    # Attach actual minutes/pomodoros from study sessions linked to the mirrors.
-    if record_index_by_item:
-        for study in StudySession.objects.filter(
-            schedule_item_id__in=record_index_by_item
-        ):
-            index = record_index_by_item[study.schedule_item_id]
+    # Prefer the direct planned-session relation; old rows fall back to mirrors.
+    if record_index_by_item or record_index_by_session_id:
+        from django.db.models import Q
+
+        linked_studies = StudySession.objects.filter(
+            Q(planned_session_id__in=record_index_by_session_id)
+            | Q(schedule_item_id__in=record_index_by_item)
+        ).order_by("started_at", "id")
+        for study in linked_studies:
+            index = record_index_by_session_id.get(study.planned_session_id)
+            if index is None:
+                index = record_index_by_item.get(study.schedule_item_id)
+            if index is None:
+                continue
             records[index] = _with_actual(records[index], study)
 
     # Unlinked closed study sessions still inform "STUDY" history.
@@ -111,6 +121,7 @@ def build_history_summary_for_student(
         local_date__gte=window_start,
         local_date__lte=window_end,
         status__in=_TERMINAL,
+        planned_session__isnull=True,
         schedule_item__isnull=True,
         subject__isnull=False,
     ).exclude(subject=""):
@@ -149,26 +160,59 @@ def _with_actual(record: HistoryRecord, study) -> HistoryRecord:
 
 def sync_planned_session_from_study_session(study_session) -> PlannedSession | None:
     """Update the linked PlannedSession state when a Pomodoro session closes."""
-    if study_session.schedule_item_id is None:
-        return None
-    planned = PlannedSession.objects.filter(personal_item_id=study_session.schedule_item_id).first()
+    planned = study_session.planned_session
+    if planned is None and study_session.schedule_item_id is not None:
+        planned = PlannedSession.objects.filter(
+            personal_item_id=study_session.schedule_item_id
+        ).first()
     if planned is None or planned.state != PlannedSession.State.PLANNED:
         return None
 
     rules = _active_pedagogy_rules().history
-    planned_minutes = max(
-        1, int((planned.end_dt - planned.start_dt).total_seconds() // 60)
-    )
+    planned_minutes = max(1, planned.focus_minutes)
     actual_minutes = int(study_session.total_focus_seconds // 60)
     ratio = actual_minutes / planned_minutes
 
+    old_state = planned.state
     if ratio >= rules.done_threshold_ratio:
         planned.state = PlannedSession.State.DONE
+        event_kind = "COMPLETED"
     elif ratio >= rules.partial_threshold_ratio:
         planned.state = PlannedSession.State.PARTIAL
+        event_kind = "PARTIAL"
     else:
+        from planner.services.lifecycle import record_planned_session_event
+
+        record_planned_session_event(
+            student=planned.student,
+            planned_session=planned,
+            study_session=study_session,
+            kind="PARTIAL",
+            from_state=old_state,
+            to_state=old_state,
+            metadata={
+                "actual_focus_minutes": actual_minutes,
+                "planned_focus_minutes": planned_minutes,
+                "completion_ratio": ratio,
+            },
+        )
         return planned
     planned.save(update_fields=["state", "updated_at"])
+    from planner.services.lifecycle import record_planned_session_event
+
+    record_planned_session_event(
+        student=planned.student,
+        planned_session=planned,
+        study_session=study_session,
+        kind=event_kind,
+        from_state=old_state,
+        to_state=planned.state,
+        metadata={
+            "actual_focus_minutes": actual_minutes,
+            "planned_focus_minutes": planned_minutes,
+            "completion_ratio": ratio,
+        },
+    )
     _mirror_practice_evidence(planned, ratio)
     return planned
 
@@ -192,9 +236,25 @@ def _mirror_practice_evidence(planned: PlannedSession, ratio: float) -> None:
 def mark_missed_sessions(now=None) -> int:
     """Mark past PLANNED sessions as MISSED. Returns how many were updated."""
     now = now or timezone.now()
-    return PlannedSession.objects.filter(
+    missed = list(PlannedSession.objects.filter(
         state=PlannedSession.State.PLANNED, end_dt__lt=now
-    ).update(state=PlannedSession.State.MISSED)
+    ))
+    if not missed:
+        return 0
+    from planner.services.lifecycle import record_planned_session_event
+
+    for session in missed:
+        record_planned_session_event(
+            student=session.student,
+            planned_session=session,
+            kind="MISSED",
+            from_state=session.state,
+            to_state=PlannedSession.State.MISSED,
+            occurred_at=now,
+        )
+    return PlannedSession.objects.filter(pk__in=[session.pk for session in missed]).update(
+        state=PlannedSession.State.MISSED
+    )
 
 
 def history_rules() -> HistoryRules:

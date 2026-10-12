@@ -744,6 +744,8 @@ class TopicMastery(UUIDModel):
     rules_version = models.PositiveIntegerField(default=1)
     #: Structured engine reasons (list of ``{code, params}``).
     reasons = models.JSONField(default=list, blank=True)
+    #: Evidence identities/sources and timestamps considered in the last calculation.
+    evidence_snapshot = models.JSONField(default=list, blank=True)
 
     class Meta:
         ordering = ["student", "topic", "id"]

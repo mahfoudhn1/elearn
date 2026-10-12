@@ -16,6 +16,7 @@ from django.contrib.postgres.fields import RangeOperators
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
 from core.models import UUIDModel
 
@@ -419,6 +420,45 @@ class SubjectConfidence(UUIDModel):
         return f"{self.student_id} {self.subject}: {self.level}"
 
 
+class SubjectProficiency(UUIDModel):
+    """Latest score-derived proficiency, with the calculation inputs versioned."""
+
+    class Level(models.TextChoices):
+        WEAK = "WEAK", "Weak"
+        AVERAGE = "AVERAGE", "Average"
+        STRONG = "STRONG", "Strong"
+
+    student = models.ForeignKey(
+        "users.Student",
+        on_delete=models.CASCADE,
+        related_name="subject_proficiencies",
+    )
+    subject = models.CharField(max_length=150)
+    score = models.PositiveSmallIntegerField()
+    level = models.CharField(max_length=8, choices=Level.choices)
+    calculation_version = models.CharField(max_length=32)
+    evidence_count = models.PositiveIntegerField(default=0)
+    evidence_snapshot = models.JSONField(default=list, blank=True)
+    computed_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["student", "subject"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["student", "subject"],
+                name="planner_one_proficiency_per_student_subject",
+            ),
+            models.CheckConstraint(
+                check=Q(score__gte=0) & Q(score__lte=100),
+                name="planner_subject_proficiency_score_range",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.student_id} {self.subject}: {self.level} ({self.score})"
+
+
 class PlannerExam(UUIDModel):
     """A dated exam a student is preparing for.
 
@@ -664,6 +704,9 @@ class StudyPlan(UUIDModel):
         related_name="study_plans",
     )
     trigger = models.CharField(max_length=16, choices=Trigger.choices, default=Trigger.MANUAL)
+    input_snapshot = models.JSONField(default=dict, blank=True)
+    engine_diagnostics = models.JSONField(default=dict, blank=True)
+    unmet_demand = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -725,6 +768,8 @@ class PlannedSession(UUIDModel):
     )
     start_dt = models.DateTimeField()
     end_dt = models.DateTimeField()
+    # Focus time excludes Pomodoro breaks included between start_dt and end_dt.
+    focus_minutes = models.PositiveSmallIntegerField(default=60)
     origin = models.CharField(max_length=8, choices=Origin.choices, default=Origin.SYSTEM)
     state = models.CharField(max_length=10, choices=State.choices, default=State.PLANNED)
     is_locked = models.BooleanField(default=False)
@@ -779,6 +824,51 @@ class PlannedSession(UUIDModel):
 
     def __str__(self) -> str:
         return f"{self.student_id} {self.subject} {self.start_dt:%Y-%m-%d %H:%M}"
+
+
+class PlannedSessionEvent(UUIDModel):
+    """Append-only lifecycle record for a planned study block."""
+
+    class Kind(models.TextChoices):
+        GENERATED = "GENERATED", "Generated"
+        MOVED = "MOVED", "Moved"
+        LOCKED = "LOCKED", "Locked"
+        UNLOCKED = "UNLOCKED", "Unlocked"
+        STARTED = "STARTED", "Started"
+        PARTIAL = "PARTIAL", "Partially completed"
+        COMPLETED = "COMPLETED", "Completed"
+        SKIPPED = "SKIPPED", "Skipped"
+        CANCELLED = "CANCELLED", "Cancelled"
+        MISSED = "MISSED", "Missed"
+
+    student = models.ForeignKey(
+        "users.Student",
+        on_delete=models.CASCADE,
+        related_name="planned_session_events",
+    )
+    planned_session = models.ForeignKey(
+        PlannedSession,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="events",
+    )
+    study_session_uuid = models.UUIDField(null=True, blank=True, db_index=True)
+    kind = models.CharField(max_length=12, choices=Kind.choices)
+    from_state = models.CharField(max_length=10, blank=True, default="")
+    to_state = models.CharField(max_length=10, blank=True, default="")
+    occurred_at = models.DateTimeField(default=timezone.now, db_index=True)
+    metadata = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        ordering = ["occurred_at", "id"]
+        indexes = [
+            models.Index(fields=["student", "occurred_at"]),
+            models.Index(fields=["planned_session", "occurred_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.student_id} {self.kind} planned-session={self.planned_session_id}"
 
 
 class SessionTombstone(UUIDModel):

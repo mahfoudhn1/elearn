@@ -9,6 +9,7 @@ import { subjectTint } from '../../constants/subjects';
 import { usePomodoro } from '../../hooks/usePomodoro';
 import { useTheme } from '../../hooks/useTheme';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useSchedule } from '../../hooks/queries';
 import type { PlannedSession } from '../../services/api/planner';
 import { usePlannerStore } from '../../store/plannerStore';
 import { formatTime } from '../../utils/format';
@@ -25,19 +26,18 @@ export function SmartPlanCard() {
   const { t } = useTranslation();
   const { tokens } = useTheme();
   const { start } = usePomodoro();
+  const { data: scheduleEntries = [] } = useSchedule();
 
   const plan = usePlannerStore((state) => state.plan);
-  const sessions = usePlannerStore((state) => state.sessions);
 
   const todayIso = useMemo(() => localDateIso(new Date()), []);
   const now = useMemo(() => new Date(), []);
 
-  const todaySessions = useMemo(() => {
-    return sessions.filter((s) => {
-      if (s.state === 'CANCELLED') return false;
-      return localDateIso(new Date(s.start_dt)) === todayIso;
-    }).sort((a, b) => a.start_dt.localeCompare(b.start_dt));
-  }, [sessions, todayIso]);
+  const todaySessions = useMemo(() => scheduleEntries
+    .filter((entry) => entry.source === 'PLANNER' && entry.plannedSession)
+    .filter((entry) => entry.status !== 'CANCELLED' && localDateIso(new Date(entry.start)) === todayIso)
+    .sort((a, b) => a.start.localeCompare(b.start))
+    .map((entry) => entry.plannedSession!), [scheduleEntries, todayIso]);
 
   const completedSessions = useMemo(
     () => todaySessions.filter((s) => s.state === 'DONE'),
@@ -55,7 +55,7 @@ export function SmartPlanCard() {
   const totalMinutes = useMemo(() => {
     return todaySessions.reduce((acc, s) => {
       const diff = new Date(s.end_dt).getTime() - new Date(s.start_dt).getTime();
-      return acc + Math.round(diff / 60_000);
+      return acc + (s.focus_minutes ?? Math.round(diff / 60_000));
     }, 0);
   }, [todaySessions]);
 
@@ -65,6 +65,7 @@ export function SmartPlanCard() {
         type: 'SCHEDULE',
         id: session.id,
         scheduleItemId: session.personal_item ?? undefined,
+        plannedSessionId: session.id,
         subject: session.subject,
         title: session.subject,
         isScheduled: true,

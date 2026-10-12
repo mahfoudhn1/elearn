@@ -132,7 +132,7 @@ def build_curriculum_topics(student) -> dict[str, tuple]:
     student's scope -- the planner then falls back to subject-level demand.
     """
     from planner.engine.demand import CurriculumTopic
-    from planner.models import AcademicPeriod, SubjectCurrentTopic, Topic
+    from planner.models import AcademicPeriod, CurriculumVersion, SubjectCurrentTopic, Topic
 
     level = _level_for(student)
     stream = getattr(getattr(student, "field_of_study", None), "name", "") or ""
@@ -160,13 +160,22 @@ def build_curriculum_topics(student) -> dict[str, tuple]:
         row.subject: row.topic_id
         for row in SubjectCurrentTopic.objects.filter(student=student)
     }
+    mastered_topic_ids = set(
+        StudentTopicProgress.objects.filter(
+            student=student,
+            status=StudentTopicProgress.Status.MASTERED,
+        ).values_list("topic_id", flat=True)
+    )
 
     result: dict[str, tuple] = {}
     for subject, topics in topics_by_subject.items():
-        ordered = list(topics)
         current_pk = current_map.get(subject)
-        if current_pk is not None:
-            ordered.sort(key=lambda topic: (topic.pk != current_pk, topic.pk))
+        current_index = next(
+            (index for index, topic in enumerate(topics) if topic.pk == current_pk),
+            None,
+        )
+        ordered = topics[current_index:] + topics[:current_index] if current_index else list(topics)
+        ordered = [topic for topic in ordered if topic.pk not in mastered_topic_ids]
         result[subject] = tuple(
             CurriculumTopic(
                 topic_id=str(topic.pk),

@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { AppState } from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { usePomodoroStore, attachPomodoroNetworkRetry } from '../store/pomodoroStore';
@@ -18,11 +20,22 @@ export function PomodoroRuntime() {
   const notifiedEndRef = useRef<number | null>(null);
   const advancingRef = useRef(false);
   const lastSessionIdRef = useRef<string | null>(null);
+  const lastPlannedSessionIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!hydrated) return;
     attachPomodoroNetworkRetry();
     void reconcile();
+    const appState = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void reconcile();
+    });
+    const network = NetInfo.addEventListener((state) => {
+      if (state.isConnected && state.isInternetReachable !== false) void reconcile();
+    });
+    return () => {
+      appState.remove();
+      network();
+    };
   }, [hydrated, reconcile]);
 
   useEffect(() => {
@@ -99,11 +112,20 @@ export function PomodoroRuntime() {
   useEffect(() => {
     if (activeSession) {
       lastSessionIdRef.current = activeSession.id;
+      lastPlannedSessionIdRef.current = activeSession.planned_session;
       return;
     }
     if (!lastSessionIdRef.current) return;
     lastSessionIdRef.current = null;
+    const plannedSessionId = lastPlannedSessionIdRef.current;
+    lastPlannedSessionIdRef.current = null;
     void queryClient.invalidateQueries({ queryKey: ['schedule'] });
+    void queryClient.invalidateQueries({ queryKey: ['planner'] });
+    if (plannedSessionId) {
+      void queryClient.invalidateQueries({
+        queryKey: ['planner', 'session-events', plannedSessionId],
+      });
+    }
     void queryClient.invalidateQueries({ queryKey: ['study-stats'] });
     void queryClient.invalidateQueries({ queryKey: ['analytics'] });
     void queryClient.invalidateQueries({ queryKey: ['goals'] });

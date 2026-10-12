@@ -206,6 +206,12 @@ class PomodoroSettingsView(generics.RetrieveUpdateAPIView):
     def perform_update(self, serializer):
         instance = serializer.instance
         previous = (instance.timezone_offset_minutes, instance.daily_goal_minutes)
+        previous_pomodoro = (
+            instance.focus_minutes,
+            instance.short_break_minutes,
+            instance.long_break_minutes,
+            instance.pomodoros_until_long_break,
+        )
         preferences = serializer.save()
 
         # Both of these change what past rollups mean: the offset moves which
@@ -214,6 +220,22 @@ class PomodoroSettingsView(generics.RetrieveUpdateAPIView):
         if (preferences.timezone_offset_minutes, preferences.daily_goal_minutes) != previous:
             service = ProductivityService(self.request.user, preferences=preferences)
             service.recompute_range(*service.default_window())
+
+        current_pomodoro = (
+            preferences.focus_minutes,
+            preferences.short_break_minutes,
+            preferences.long_break_minutes,
+            preferences.pomodoros_until_long_break,
+        )
+        student = getattr(self.request.user, "student", None)
+        if student is not None and current_pomodoro != previous_pomodoro:
+            from planner.services import replan_service
+
+            replan_service.request_replan(
+                student,
+                replan_service.ReplanTrigger.AVAILABILITY,
+                force=True,
+            )
 
 
 class StudySessionViewSet(
@@ -281,6 +303,7 @@ class StudySessionViewSet(
             session = PomodoroService(request.user).start(
                 subject=data.get("subject"),
                 schedule_item=data.get("schedule_item"),
+                planned_session=data.get("planned_session"),
                 group=data.get("group"),
                 planned_pomodoros=data.get("planned_pomodoros"),
                 notes=data.get("notes"),

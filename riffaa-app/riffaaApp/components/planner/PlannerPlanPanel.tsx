@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, View } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -7,6 +8,7 @@ import { AppText, Badge, Button, Card, Row, Stack } from '../ui';
 import { useTheme } from '../../hooks/useTheme';
 import { useTranslation } from '../../hooks/useTranslation';
 import { usePomodoro } from '../../hooks/usePomodoro';
+import { useSchedule } from '../../hooks/queries';
 import {
   getOnboardingState,
   getWeeklyReport,
@@ -20,6 +22,7 @@ import {
 import { PlannerDayTimeline, type TimelineEntry } from './PlannerDayTimeline';
 import { SessionActionsSheet } from './SessionActionsSheet';
 import { UnmetBanner, type UnmetDemandItem } from './UnmetBanner';
+import { currentLocale } from '../../services/i18n';
 
 function localDateIso(value: Date): string {
   return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(
@@ -70,8 +73,9 @@ function busyEntriesForDay(state: OnboardingState | null, iso: string): Timeline
     const end = timeToMinutes(raw.end_time as string);
     if (start == null || end == null) continue;
     const dayOfWeek = String(raw.day_of_week ?? '').toLowerCase();
+    const locale = currentLocale() === 'ar' ? 'ar-DZ' : currentLocale() === 'fr' ? 'fr-FR' : 'en-GB';
     const matches =
-      dayOfWeek === new Date(`${iso}T00:00:00`).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase() ||
+      dayOfWeek === new Date(`${iso}T00:00:00`).toLocaleDateString(locale, { weekday: 'long' }).toLowerCase() ||
       raw.scheduled_date === iso;
     if (!matches) continue;
     entries.push({
@@ -112,9 +116,10 @@ export function PlannerPlanPanel({ selectedDate }: { selectedDate: string }) {
   const { t } = useTranslation();
   const { tokens } = useTheme();
   const { start } = usePomodoro();
+  const queryClient = useQueryClient();
+  const { data: scheduleEntries = [] } = useSchedule();
 
   const plan = usePlannerStore((state) => state.plan);
-  const sessions = usePlannerStore((state) => state.sessions);
   const pending = usePlannerStore((state) => state.pending);
   const lastDiff = usePlannerStore((state) => state.lastDiff);
   const loadCurrent = usePlannerStore((state) => state.loadCurrent);
@@ -154,16 +159,15 @@ export function PlannerPlanPanel({ selectedDate }: { selectedDate: string }) {
 
   const entries = useMemo<TimelineEntry[]>(() => {
     const busyEntries = busyEntriesForDay(onboarding, selectedDate);
-    const plannedEntries: TimelineEntry[] = sessions
-      .filter(
-        (session) =>
-          session.state !== 'CANCELLED' && localDateIso(new Date(session.start_dt)) === selectedDate,
-      )
-      .map((session) => {
-        const startDate = new Date(session.start_dt);
-        const endDate = new Date(session.end_dt);
+    const plannedEntries: TimelineEntry[] = scheduleEntries
+      .filter((entry) => entry.source === 'PLANNER' && entry.plannedSession)
+      .filter((entry) => entry.status !== 'CANCELLED' && localDateIso(new Date(entry.start)) === selectedDate)
+      .map((entry) => {
+        const session = entry.plannedSession!;
+        const startDate = new Date(entry.start);
+        const endDate = new Date(entry.end);
         return {
-          key: `session-${session.id}`,
+          key: entry.id,
           kind: session.activity_type,
           title: session.subject,
           startMin: startDate.getHours() * 60 + startDate.getMinutes(),
@@ -173,7 +177,7 @@ export function PlannerPlanPanel({ selectedDate }: { selectedDate: string }) {
         };
       });
     return [...busyEntries, ...plannedEntries].sort((a, b) => a.startMin - b.startMin);
-  }, [onboarding, sessions, selectedDate]);
+  }, [onboarding, scheduleEntries, selectedDate]);
 
   const stale = pending.length > 0;
 
@@ -185,12 +189,13 @@ export function PlannerPlanPanel({ selectedDate }: { selectedDate: string }) {
         window_end: addDays(selectedDate, 6),
         trigger: 'MANUAL',
       });
+      await queryClient.invalidateQueries({ queryKey: ['schedule'] });
     } catch {
       Alert.alert(t('error'), t('serverUnreachable'));
     } finally {
       setBusy(false);
     }
-  }, [generate, selectedDate, t]);
+  }, [generate, queryClient, selectedDate, t]);
 
   const confirmReset = useCallback(() => {
     Alert.alert(t('plannerResetTitle'), t('plannerResetConfirm'), [
@@ -201,15 +206,17 @@ export function PlannerPlanPanel({ selectedDate }: { selectedDate: string }) {
         onPress: () => {
           setResetting(true);
           resetPlan()
+            .then(() => queryClient.invalidateQueries({ queryKey: ['schedule'] }))
             .catch(() => Alert.alert(t('error'), t('serverUnreachable')))
             .finally(() => setResetting(false));
         },
       },
     ]);
-  }, [resetPlan, t]);
+  }, [queryClient, resetPlan, t]);
 
   const onMove = (session: PlannedSession, startIso: string, endIso: string) => {
     moveLocal(session.id, startIso, endIso);
+    void queryClient.invalidateQueries({ queryKey: ['schedule'] });
     setActive(null);
   };
 
@@ -220,6 +227,7 @@ export function PlannerPlanPanel({ selectedDate }: { selectedDate: string }) {
         type: 'SCHEDULE',
         id: session.id,
         scheduleItemId: session.personal_item ?? undefined,
+        plannedSessionId: session.id,
         subject: session.subject,
         title: session.subject,
         isScheduled: true,
@@ -354,14 +362,17 @@ export function PlannerPlanPanel({ selectedDate }: { selectedDate: string }) {
         onMove={onMove}
         onLockToggle={(session) => {
           lockLocal(session.id, !session.is_locked);
+          void queryClient.invalidateQueries({ queryKey: ['schedule'] });
           setActive(null);
         }}
         onSkip={(session) => {
           skipLocal(session.id);
+          void queryClient.invalidateQueries({ queryKey: ['schedule'] });
           setActive(null);
         }}
         onDelete={(session) => {
           deleteLocal(session.id);
+          void queryClient.invalidateQueries({ queryKey: ['schedule'] });
           setActive(null);
         }}
       />

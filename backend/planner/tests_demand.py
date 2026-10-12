@@ -15,6 +15,7 @@ from planner.engine import (
     compute_demand,
     load_pedagogy_rules,
 )
+from planner.engine.demand import CurriculumTopic
 
 NOW = date(2099, 1, 1)
 WINDOW = DemandWindow(start=NOW, end=NOW + timedelta(days=6))
@@ -98,6 +99,29 @@ class DemandBaseTests(SimpleTestCase):
         unit = _study_unit(compute_demand(state, [], HistorySummary(), self.rules, WINDOW, NOW))
         codes = {reason.code for reason in unit.reasons}
         self.assertIn("WEEKLY_TARGET", codes)
+
+    def test_curriculum_demand_advances_sequentially_without_splitting_across_course(self):
+        topics = tuple(
+            CurriculumTopic(
+                topic_id=f"topic-{index}",
+                subject_id=SUBJECT,
+                order=index,
+                estimated_minutes=60,
+            )
+            for index in range(1, 99)
+        )
+        state = StudentState(
+            level="default",
+            subjects=(_subject(),),
+            curriculum_topics={SUBJECT: topics},
+        )
+
+        units = compute_demand(state, [], HistorySummary(), self.rules, WINDOW, NOW)
+        study_units = [unit for unit in units if unit.activity_type == DemandActivity.STUDY]
+
+        self.assertEqual([unit.topic_id for unit in study_units], [f"topic-{i}" for i in range(1, 6)])
+        self.assertEqual([unit.minutes for unit in study_units], [60] * 5)
+        self.assertEqual(sum(unit.minutes for unit in study_units), 300)
 
 
 class DemandExamTests(SimpleTestCase):

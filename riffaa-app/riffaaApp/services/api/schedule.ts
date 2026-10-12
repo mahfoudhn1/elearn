@@ -1,4 +1,5 @@
 import { apiClient } from "./client";
+import type { PlannedSession } from "./planner";
 
 /**
  * Personal study schedule: tasks and exams a student books for themselves.
@@ -22,10 +23,30 @@ export type ScheduleStatus =
   | "CANCELLED"
   | "UPCOMING"
   | "MISSED";
+export type ScheduleSource = "MANUAL" | "PLANNER";
+
+/** The single row shape consumed by the Expo schedule surfaces. */
+export interface ScheduleEntry {
+  id: string;
+  source: ScheduleSource;
+  title: string;
+  subject: string | null;
+  topic: string | null;
+  status: ScheduleStatus | PlannedSession["state"];
+  start: string;
+  end: string;
+  focusMinutes: number | null;
+  scheduleItemId: string | null;
+  plannedSessionId: string | null;
+  plannedSession: PlannedSession | null;
+  scheduleItem: ScheduleItem | null;
+}
 
 /** A schedule item exactly as the API returns it. */
 export interface ScheduleItem {
   id: string;
+  source?: ScheduleSource;
+  planned_session_id?: string | null;
   title: string;
   description: string | null;
   item_type: ScheduleItemType;
@@ -140,6 +161,65 @@ export async function getSchedules(query: ScheduleQuery = {}) {
     return response.data;
   }
   return response.data?.results || [];
+}
+
+/**
+ * Merge the legacy personal schedule and planner responses into the UI row
+ * contract. Planner mirrors are deliberately never rendered as manual rows,
+ * even when the related planner session is old or cancelled.
+ */
+export function normalizeScheduleEntries(
+  scheduleItems: ScheduleItem[],
+  plannedSessions: PlannedSession[],
+): ScheduleEntry[] {
+  const plannerById = new Map(plannedSessions.map((session) => [String(session.id), session]));
+  const plannerByPersonalItem = new Map(
+    plannedSessions
+      .filter((session) => session.personal_item)
+      .map((session) => [String(session.personal_item), session]),
+  );
+
+  const planned = plannedSessions.map((session): ScheduleEntry => ({
+    id: `planner-${session.id}`,
+    source: "PLANNER",
+    title: session.subject,
+    subject: session.subject,
+    topic: session.activity_type,
+    status: session.state,
+    start: session.start_dt,
+    end: session.end_dt,
+    focusMinutes: session.focus_minutes ?? null,
+    scheduleItemId: session.personal_item,
+    plannedSessionId: String(session.id),
+    plannedSession: session,
+    scheduleItem: null,
+  }));
+
+  const manual = scheduleItems
+    .filter((item) => item.source !== "PLANNER")
+    .filter((item) => {
+      const linkedSession = item.planned_session_id
+        ? plannerById.get(String(item.planned_session_id))
+        : plannerByPersonalItem.get(String(item.id));
+      return !linkedSession;
+    })
+    .map((item): ScheduleEntry => ({
+      id: `schedule-${item.id}`,
+      source: "MANUAL",
+      title: item.title,
+      subject: item.subject,
+      topic: item.item_type,
+      status: item.status,
+      start: item.start_datetime,
+      end: item.end_datetime,
+      focusMinutes: item.estimated_duration_minutes,
+      scheduleItemId: String(item.id),
+      plannedSessionId: item.planned_session_id ?? null,
+      plannedSession: null,
+      scheduleItem: item,
+    }));
+
+  return [...planned, ...manual].sort((a, b) => a.start.localeCompare(b.start));
 }
 /** Today's items only -- served by a dedicated endpoint, no client filtering. */
 export async function getTodaySchedules() {
@@ -265,4 +345,3 @@ export function countRecurringOccurrences(days: number[], weeks: number): number
   if (days.length === 0) return 1;
   return Math.min(days.length * Math.max(weeks, 1), MAX_RECURRING_ITEMS);
 }
-

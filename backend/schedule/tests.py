@@ -6,6 +6,8 @@ from rest_framework.test import APITestCase
 
 from tracking.models import ActivityEvent, DailyActivity
 from users.models import User
+from planner import factories as planner_factories
+from planner.models import PlannedSession, StudyPlan, PlannedSessionEvent
 
 from .models import PersonalScheduleItem, PomodoroInterval
 
@@ -40,6 +42,99 @@ class StudySessionUUIDActionTests(APITestCase):
 		)
 		self.assertEqual(finish_response.status_code, 200)
 		self.assertEqual(finish_response.data["status"], "COMPLETED")
+
+	def test_schedule_api_exposes_planner_mirror_identity(self):
+		now = timezone.now()
+		manual = PersonalScheduleItem.objects.create(
+			user=self.user,
+			title="Manual task",
+			item_type=PersonalScheduleItem.ItemType.TASK,
+			status=PersonalScheduleItem.Status.TODO,
+			start_datetime=now,
+			end_datetime=now + timedelta(hours=1),
+		)
+		mirror_uuid = "3d6d97be-5217-4c80-88e0-29323d4a74f0"
+		mirror = PersonalScheduleItem.objects.create(
+			user=self.user,
+			title="Smart plan block",
+			item_type=PersonalScheduleItem.ItemType.TASK,
+			status=PersonalScheduleItem.Status.TODO,
+			start_datetime=now + timedelta(hours=2),
+			end_datetime=now + timedelta(hours=3),
+			source=PersonalScheduleItem.Source.PLANNER,
+			planned_session_id=mirror_uuid,
+		)
+
+		response = self.client.get(reverse("personal-schedule-list"))
+
+		self.assertEqual(response.status_code, 200)
+		items = {item["id"]: item for item in response.data}
+		self.assertIn(str(manual.uuid), items)
+		self.assertEqual(items[str(manual.uuid)]["source"], "MANUAL")
+		self.assertEqual(items[str(mirror.uuid)]["source"], "PLANNER")
+		self.assertEqual(items[str(mirror.uuid)]["planned_session_id"], mirror_uuid)
+
+	def test_timer_links_directly_to_owned_planned_session(self):
+		student = planner_factories.make_student(user=self.user)
+		plan = StudyPlan.objects.create(
+			student=student,
+			version=1,
+			window_start=timezone.localdate(),
+			window_end=timezone.localdate(),
+			input_hash="timer-link-test",
+		)
+		planned = PlannedSession.objects.create(
+			plan=plan,
+			student=student,
+			subject="رياضيات",
+			activity_type="STUDY",
+			start_dt=timezone.now(),
+			end_dt=timezone.now() + timedelta(minutes=70),
+			focus_minutes=60,
+		)
+
+		response = self.client.post(
+			reverse("study-session-list"),
+			{"planned_session": str(planned.uuid)},
+			format="json",
+		)
+
+		self.assertEqual(response.status_code, 201, response.data)
+		self.assertEqual(response.data["planned_session"], str(planned.uuid))
+		self.assertTrue(
+			PlannedSessionEvent.objects.filter(
+				planned_session=planned,
+				study_session_uuid=response.data["id"],
+				kind=PlannedSessionEvent.Kind.STARTED,
+			).exists()
+		)
+
+	def test_timer_rejects_another_students_planned_session(self):
+		owner = planner_factories.make_student()
+		plan = StudyPlan.objects.create(
+			student=owner,
+			version=1,
+			window_start=timezone.localdate(),
+			window_end=timezone.localdate(),
+			input_hash="timer-owner-test",
+		)
+		planned = PlannedSession.objects.create(
+			plan=plan,
+			student=owner,
+			subject="رياضيات",
+			activity_type="STUDY",
+			start_dt=timezone.now(),
+			end_dt=timezone.now() + timedelta(minutes=70),
+			focus_minutes=60,
+		)
+
+		response = self.client.post(
+			reverse("study-session-list"),
+			{"planned_session": str(planned.uuid)},
+			format="json",
+		)
+
+		self.assertEqual(response.status_code, 400)
 
 
 class StudySessionTrackingMirrorTests(APITestCase):

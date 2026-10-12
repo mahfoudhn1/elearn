@@ -52,6 +52,8 @@ export interface PlannedSession {
   activity_type: PlannerActivityType | string;
   start_dt: string;
   end_dt: string;
+  /** Planned focus duration; the calendar span also includes Pomodoro breaks. */
+  focus_minutes?: number;
   origin: PlannerSessionOrigin;
   state: PlannerSessionState;
   is_locked: boolean;
@@ -60,6 +62,41 @@ export interface PlannedSession {
   replaced_by: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export type PlannedSessionEventKind =
+  | "GENERATED"
+  | "MOVED"
+  | "LOCKED"
+  | "UNLOCKED"
+  | "STARTED"
+  | "PARTIAL"
+  | "COMPLETED"
+  | "SKIPPED"
+  | "CANCELLED"
+  | "MISSED"
+  | string;
+
+export interface PlannedSessionEvent {
+  id: string;
+  kind: PlannedSessionEventKind;
+  from_state: string;
+  to_state: string;
+  study_session_uuid: string | null;
+  occurred_at: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface SubjectProficiency {
+  id: string;
+  subject: string;
+  score: number;
+  level: "WEAK" | "AVERAGE" | "STRONG" | string;
+  evidence_count: number;
+  calculation_version: string;
+  computed_at: string;
+  updated_at: string;
+  evidence_snapshot?: unknown[];
 }
 
 export interface PlanDiff {
@@ -197,6 +234,26 @@ export async function getCurrentPlan(params: { from?: string; to?: string } = {}
     "planner/plans/current/",
     { params },
   );
+  return response.data;
+}
+
+/** Read-only lifecycle history for a student-owned planned session. */
+export async function getPlannedSessionEvents(
+  sessionId: string,
+): Promise<PlannedSessionEvent[]> {
+  const response = await apiClient.get<PlannedSessionEvent[]>(
+    `planner/sessions/${sessionId}/events/`,
+  );
+  return response.data;
+}
+
+/**
+ * Reserved for the authenticated student-scoped proficiency endpoint.
+ * The backend endpoint is not available yet, so callers should keep this
+ * query disabled until it is exposed rather than treating a 404 as no data.
+ */
+export async function getSubjectProficiency(): Promise<SubjectProficiency[]> {
+  const response = await apiClient.get<SubjectProficiency[]>("planner/proficiency/");
   return response.data;
 }
 

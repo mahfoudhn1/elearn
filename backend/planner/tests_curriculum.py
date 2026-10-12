@@ -1,6 +1,7 @@
 """Curriculum models/import + optional topic wiring tests."""
 
 from datetime import date, datetime, time, timedelta, timezone as dt_timezone
+import json
 from pathlib import Path
 
 from django.core.management import call_command
@@ -9,7 +10,11 @@ from django.test import SimpleTestCase, TestCase
 from django.utils import timezone
 
 from planner import factories
-from planner.adapters.demand_inputs import build_student_state, build_recent_topics
+from planner.adapters.demand_inputs import (
+    build_curriculum_topics,
+    build_recent_topics,
+    build_student_state,
+)
 from planner.engine import (
     DayContext,
     DemandActivity,
@@ -27,6 +32,7 @@ from planner.models import (
     LearningObjective,
     PlannerExam,
     StudentTopicProgress,
+    SubjectCurrentTopic,
     Topic,
 )
 from schedule.models import PersonalScheduleItem, StudySession
@@ -37,22 +43,38 @@ RULES = load_rules()
 
 class CurriculumImportTests(TestCase):
     def test_json_import_creates_unverified_curriculum_and_is_idempotent(self):
+        fixture = json.loads(
+            (Path(__file__).parent / "fixtures" / "curriculum.sample.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        expected_topics = [
+            topic
+            for chapter in fixture["chapters"]
+            for topic in chapter.get("topics", [])
+        ]
+        expected_objectives = sum(len(topic.get("objectives", [])) for topic in expected_topics)
+
         call_command("import_curriculum", create_year=True)
-        year = AcademicYear.objects.get(label="2099-2100")
-        curriculum = CurriculumVersion.objects.get(academic_year=year)
+        year = AcademicYear.objects.get(label=fixture["academic_year"])
+        curriculum = CurriculumVersion.objects.get(
+            academic_year=year,
+            level=fixture.get("level", ""),
+            stream=fixture.get("stream", ""),
+        )
         self.assertFalse(curriculum.verified)
-        self.assertEqual(Chapter.objects.count(), 2)
-        self.assertEqual(Topic.objects.count(), 3)
-        self.assertEqual(LearningObjective.objects.count(), 1)
+        self.assertEqual(Chapter.objects.count(), len(fixture["chapters"]))
+        self.assertEqual(Topic.objects.count(), len(expected_topics))
+        self.assertEqual(LearningObjective.objects.count(), expected_objectives)
         topic = Topic.objects.order_by("chapter__order", "order").first()
         self.assertEqual(topic.trimester, 1)
-        self.assertEqual(topic.estimated_minutes, 90)
+        self.assertEqual(topic.estimated_minutes, expected_topics[0].get("estimated_minutes", 60))
         self.assertFalse(topic.is_published)
 
         call_command("import_curriculum", create_year=True)
-        self.assertEqual(Chapter.objects.count(), 2)
-        self.assertEqual(Topic.objects.count(), 3)
-        self.assertEqual(LearningObjective.objects.count(), 1)
+        self.assertEqual(Chapter.objects.count(), len(fixture["chapters"]))
+        self.assertEqual(Topic.objects.count(), len(expected_topics))
+        self.assertEqual(LearningObjective.objects.count(), expected_objectives)
 
     def test_csv_import(self):
         csv_path = Path("/tmp/planner_curriculum_sample.csv")
@@ -102,6 +124,76 @@ class RecentTopicTests(TestCase):
         )
         recent = build_recent_topics(self.student)
         self.assertEqual(recent[str(self.topic.pk)], date(2099, 9, 7))
+
+    def test_curriculum_topics_skip_mastered_and_keep_order_from_current_topic(self):
+        level = self.student.grade.school_level.name
+        stream = self.student.field_of_study.name
+        academic_year = factories.make_academic_year()
+        curriculum = CurriculumVersion.objects.create(
+            academic_year=academic_year,
+            level=level,
+            stream=stream,
+            status=CurriculumVersion.Status.ACTIVE,
+        )
+        chapter = Chapter.objects.create(curriculum=curriculum, subject=MATH, order=1)
+        topics = [
+            Topic.objects.create(
+                chapter=chapter,
+                order=order,
+                trimester=1,
+                is_published=True,
+                title_ar=f"Topic {order}",
+            )
+            for order in range(1, 5)
+        ]
+        StudentTopicProgress.objects.create(
+            student=self.student,
+            topic=topics[0],
+            status=StudentTopicProgress.Status.MASTERED,
+        )
+        SubjectCurrentTopic.objects.create(
+            student=self.student,
+            subject=MATH,
+            topic=topics[2],
+        )
+
+        ordered = build_curriculum_topics(self.student)[MATH]
+
+        self.assertEqual([item.topic_id for item in ordered], [str(topics[2].pk), str(topics[3].pk), str(topics[1].pk)])
+
+    def test_mastered_current_topic_continues_forward(self):
+        level = self.student.grade.school_level.name
+        stream = self.student.field_of_study.name
+        curriculum = CurriculumVersion.objects.create(
+            academic_year=factories.make_academic_year(),
+            level=level,
+            stream=stream,
+            status=CurriculumVersion.Status.ACTIVE,
+        )
+        chapter = Chapter.objects.create(curriculum=curriculum, subject=MATH, order=1)
+        topics = [
+            Topic.objects.create(
+                chapter=chapter,
+                order=order,
+                trimester=1,
+                is_published=True,
+                title_ar=f"Topic {order}",
+            )
+            for order in range(1, 5)
+        ]
+        StudentTopicProgress.objects.create(
+            student=self.student,
+            topic=topics[1],
+            status=StudentTopicProgress.Status.MASTERED,
+        )
+        SubjectCurrentTopic.objects.create(student=self.student, subject=MATH, topic=topics[1])
+
+        ordered = build_curriculum_topics(self.student)[MATH]
+
+        self.assertEqual(
+            [item.topic_id for item in ordered],
+            [str(topics[2].pk), str(topics[3].pk), str(topics[0].pk)],
+        )
 
 
 class TopicScoringTests(SimpleTestCase):

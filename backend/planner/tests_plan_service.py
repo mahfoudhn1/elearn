@@ -10,6 +10,7 @@ from planner import factories
 from planner.adapters import collect_busy_blocks
 from planner.models import (
     PlannedSession,
+    PlannedSessionEvent,
     SessionTombstone,
     StudyPlan,
     SubjectConfig,
@@ -58,6 +59,15 @@ class PlanServiceTests(TestCase):
             self.assertEqual(item.source, PersonalScheduleItem.Source.PLANNER)
             self.assertEqual(item.planned_session_id, session.uuid)
             self.assertEqual(item.start_datetime, session.start_dt)
+            self.assertTrue(
+                PlannedSessionEvent.objects.filter(
+                    planned_session=session,
+                    kind=PlannedSessionEvent.Kind.GENERATED,
+                ).exists()
+            )
+        self.assertIn("demands", result.plan.input_snapshot)
+        self.assertEqual(result.plan.engine_diagnostics["sessions"], len(sessions))
+        self.assertIsInstance(result.plan.unmet_demand, list)
 
     def test_same_inputs_do_not_create_a_new_version(self):
         first = self._generate()

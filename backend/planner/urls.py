@@ -16,6 +16,7 @@ from .plan_views import (
     PlanDiffView,
     PlanGenerateView,
     SessionDetailView,
+    SessionEventsView,
     SessionPracticeQuizView,
     SessionSkipView,
     WeeklyReportView,
@@ -48,6 +49,7 @@ urlpatterns = [
     path("plans/<uuid:pk>/diff/", PlanDiffView.as_view(), name="planner-plan-diff"),
     path("sessions/<uuid:pk>/", SessionDetailView.as_view(), name="planner-session-detail"),
     path("sessions/<uuid:pk>/skip/", SessionSkipView.as_view(), name="planner-session-skip"),
+    path("sessions/<uuid:pk>/events/", SessionEventsView.as_view(), name="planner-session-events"),
     path(
         "sessions/<uuid:pk>/practice-quiz/",
         SessionPracticeQuizView.as_view(),

@@ -85,6 +85,9 @@ def _topic_evidence(student, topic) -> list[Evidence]:
             "difficulty",
             "occurred_at",
             "source",
+            "source_ref_type",
+            "source_ref_id",
+            "uuid",
             "question_id",
             "weight_modifier",
         )
@@ -126,6 +129,16 @@ def recompute_topic_mastery(
             "last_evidence_at": result.last_evidence_at,
             "computed_at": now,
             "rules_version": rules_version,
+            "evidence_snapshot": [
+                {
+                    "id": str(row.uuid),
+                    "source": row.source,
+                    "source_ref_type": row.source_ref_type,
+                    "source_ref_id": row.source_ref_id,
+                    "occurred_at": row.occurred_at.isoformat(),
+                }
+                for row in evidence
+            ],
             "reasons": [
                 {"code": reason.code, "params": dict(reason.params)}
                 for reason in result.reasons

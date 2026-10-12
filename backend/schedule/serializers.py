@@ -3,6 +3,7 @@ from rest_framework import serializers
 from core.serializers import UUIDModelSerializer, UUIDRelatedField
 
 from groups.models import Group
+from planner.models import PlannedSession
 
 from .models import (
     DailyProductivity,
@@ -20,6 +21,8 @@ class PersonalScheduleItemSerializer(UUIDModelSerializer):
         fields = [
             "id",
             "user",
+            "source",
+            "planned_session_id",
             "title",
             "description",
             "item_type",
@@ -41,7 +44,14 @@ class PersonalScheduleItemSerializer(UUIDModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "created_at", "updated_at", "user"]
+        read_only_fields = [
+            "id",
+            "user",
+            "source",
+            "planned_session_id",
+            "created_at",
+            "updated_at",
+        ]
 
     def validate(self, attrs):
         request = self.context["request"]
@@ -200,6 +210,7 @@ SESSION_MODEL_FIELDS = [
     "status",
     "subject",
     "schedule_item",
+    "planned_session",
     "group",
     "source_type",
     "source_id",
@@ -225,6 +236,7 @@ class StudySessionListSerializer(UUIDModelSerializer):
     schedule_item_title = serializers.CharField(
         source="schedule_item.title", read_only=True, default=None
     )
+    planned_session = UUIDRelatedField(read_only=True)
 
     class Meta:
         model = StudySession
@@ -253,6 +265,9 @@ class StudySessionStartSerializer(serializers.Serializer):
     schedule_item = UUIDRelatedField(
         queryset=PersonalScheduleItem.objects.none(), required=False, allow_null=True
     )
+    planned_session = UUIDRelatedField(
+        queryset=PlannedSession.objects.none(), required=False, allow_null=True
+    )
     group = UUIDRelatedField(
         queryset=Group.objects.none(), required=False, allow_null=True
     )
@@ -276,6 +291,11 @@ class StudySessionStartSerializer(serializers.Serializer):
             return
         user = request.user
         self.fields["schedule_item"].queryset = PersonalScheduleItem.objects.filter(user=user)
+        student = getattr(user, "student", None)
+        if student is not None:
+            self.fields["planned_session"].queryset = PlannedSession.objects.filter(
+                student=student
+            )
         self.fields["group"].queryset = self._group_queryset(user)
 
     @staticmethod

@@ -7,6 +7,7 @@ import { Sheet } from '../ui/Sheet';
 import { subjectTint } from '../../constants/subjects';
 import { useTheme } from '../../hooks/useTheme';
 import { useTranslation } from '../../hooks/useTranslation';
+import { usePlannedSessionEvents } from '../../hooks/queries';
 import type { PlannedSession } from '../../services/api/planner';
 import { formatTime } from '../../utils/format';
 import { activityKey } from '../../utils/plannerReasons';
@@ -40,6 +41,8 @@ export function SessionActionsSheet({
   const { t } = useTranslation();
   const { tokens } = useTheme();
   const [showReasons, setShowReasons] = useState(false);
+  const { data: events = [], isLoading: eventsLoading, isError: eventsError } =
+    usePlannedSessionEvents(session?.id, visible);
 
   const durationMin = useMemo(() => {
     if (!session) return 0;
@@ -48,6 +51,20 @@ export function SessionActionsSheet({
   }, [session]);
 
   const tint = useMemo(() => subjectTint(session?.subject), [session?.subject]);
+
+  const meaningfulEvents = useMemo(
+    () => events.filter((event) =>
+      ['GENERATED', 'MOVED', 'STARTED', 'PARTIAL', 'COMPLETED', 'SKIPPED', 'CANCELLED'].includes(event.kind),
+    ),
+    [events],
+  );
+  const actualFocusMinutes = useMemo(
+    () => meaningfulEvents.reduce((total, event) => {
+      const minutes = Number(event.metadata.actual_focus_minutes ?? 0);
+      return Number.isFinite(minutes) ? Math.max(total, minutes) : total;
+    }, 0),
+    [meaningfulEvents],
+  );
 
   if (!session) return null;
 
@@ -70,6 +87,8 @@ export function SessionActionsSheet({
     );
   };
 
+  const eventLabel = (kind: string) => t(`plannerEvent${kind}`);
+
   return (
     <Sheet visible={visible} onClose={onClose} title={session.subject}>
       <Stack gap={16}>
@@ -89,6 +108,15 @@ export function SessionActionsSheet({
             <AppText variant="caption" tone="muted">
               {formatTime(startDate)} - {formatTime(endDate)} · {t('plannerDuration', { minutes: durationMin })}
             </AppText>
+            <Row gap={6} align="center" wrap>
+              <Badge label={t(`plannerStatus${session.state}`)} tone="neutral" />
+              <AppText variant="micro" tone="muted">
+                {t('plannerFocusSummary', {
+                  planned: session.focus_minutes ?? durationMin,
+                  actual: actualFocusMinutes,
+                })}
+              </AppText>
+            </Row>
           </Stack>
         </Row>
 
@@ -164,6 +192,40 @@ export function SessionActionsSheet({
             onPress={() => onDelete(session)}
           />
         </Row>
+
+        <View className="rounded-2xl border border-line/40 bg-surface2/30 p-3.5">
+          <Row justify="space-between" align="center" className="mb-2">
+            <AppText variant="micro" weight="medium" tone="subtle" className="uppercase tracking-widest">
+              {t('plannerHistory')}
+            </AppText>
+            {actualFocusMinutes > 0 ? (
+              <AppText variant="micro" tone="muted">
+                {t('plannerActualFocus', { minutes: actualFocusMinutes })}
+              </AppText>
+            ) : null}
+          </Row>
+          {eventsLoading ? (
+            <AppText variant="caption" tone="muted">{t('loadingData')}</AppText>
+          ) : eventsError ? (
+            <AppText variant="caption" tone="muted">{t('plannerHistoryUnavailable')}</AppText>
+          ) : meaningfulEvents.length === 0 ? (
+            <AppText variant="caption" tone="muted">{t('plannerNoHistory')}</AppText>
+          ) : (
+            <Stack gap={6}>
+              {meaningfulEvents.slice(-5).reverse().map((event) => (
+                <Row key={event.id} gap={8} align="center">
+                  <View className="h-1.5 w-1.5 rounded-full bg-brand" />
+                  <AppText variant="caption" className="flex-1">
+                    {eventLabel(event.kind)}
+                  </AppText>
+                  <AppText variant="micro" tone="muted">
+                    {formatTime(new Date(event.occurred_at))}
+                  </AppText>
+                </Row>
+              ))}
+            </Stack>
+          )}
+        </View>
 
         {/* Why this session was scheduled */}
         {session.reasons && session.reasons.length > 0 ? (

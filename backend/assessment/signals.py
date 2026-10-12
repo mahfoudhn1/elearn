@@ -35,5 +35,15 @@ def _evidence_saved(sender, instance, **kwargs):
                 student.pk,
                 topic.pk,
             )
+        try:
+            from planner.services.proficiency import recompute_subject_proficiency
+
+            recompute_subject_proficiency(student, topic.chapter.subject)
+        except Exception:  # noqa: BLE001 - proficiency tracking must not break evidence writes
+            logger.exception(
+                "subject proficiency recompute failed for student=%s topic=%s",
+                student.pk,
+                topic.pk,
+            )
 
     transaction.on_commit(_run)
