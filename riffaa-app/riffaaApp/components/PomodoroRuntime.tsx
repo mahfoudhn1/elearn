@@ -1,11 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
-import NetInfo from '@react-native-community/netinfo';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { usePomodoroStore, attachPomodoroNetworkRetry } from '../store/pomodoroStore';
 import { useTranslation } from '../hooks/useTranslation';
 import { loadNotifications } from '../services/notifications';
+
+export function invalidatePomodoroLinkedQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+  plannedSessionId?: string | null,
+) {
+  void queryClient.invalidateQueries({ queryKey: ['schedule'] });
+  void queryClient.invalidateQueries({ queryKey: ['planner'] });
+  if (plannedSessionId) {
+    void queryClient.invalidateQueries({
+      queryKey: ['planner', 'session-events', plannedSessionId],
+    });
+  }
+}
 
 export function PomodoroRuntime() {
   const queryClient = useQueryClient();
@@ -29,12 +41,8 @@ export function PomodoroRuntime() {
     const appState = AppState.addEventListener('change', (state) => {
       if (state === 'active') void reconcile();
     });
-    const network = NetInfo.addEventListener((state) => {
-      if (state.isConnected && state.isInternetReachable !== false) void reconcile();
-    });
     return () => {
       appState.remove();
-      network();
     };
   }, [hydrated, reconcile]);
 
@@ -119,13 +127,7 @@ export function PomodoroRuntime() {
     lastSessionIdRef.current = null;
     const plannedSessionId = lastPlannedSessionIdRef.current;
     lastPlannedSessionIdRef.current = null;
-    void queryClient.invalidateQueries({ queryKey: ['schedule'] });
-    void queryClient.invalidateQueries({ queryKey: ['planner'] });
-    if (plannedSessionId) {
-      void queryClient.invalidateQueries({
-        queryKey: ['planner', 'session-events', plannedSessionId],
-      });
-    }
+    invalidatePomodoroLinkedQueries(queryClient, plannedSessionId);
     void queryClient.invalidateQueries({ queryKey: ['study-stats'] });
     void queryClient.invalidateQueries({ queryKey: ['analytics'] });
     void queryClient.invalidateQueries({ queryKey: ['goals'] });

@@ -80,6 +80,15 @@ export function formatTime(value: DateInput): string {
 }
 
 /**
+ * Clock time for a minute-of-day value, e.g. `540` -> `09:00`. Used by the
+ * day timeline, which works in minutes rather than absolute timestamps.
+ */
+export function formatMinuteOfDay(minutes: number): string {
+  const safe = Math.max(0, Math.min(24 * 60 - 1, Math.round(minutes)));
+  return formatTime(new Date(2024, 0, 1, Math.floor(safe / 60), safe % 60));
+}
+
+/**
  * `MM:SS` under an hour, `H:MM:SS` above — the Pomodoro/session display format.
  */
 export function formatDuration(totalSeconds: number): string {

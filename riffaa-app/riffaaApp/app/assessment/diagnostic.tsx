@@ -19,6 +19,7 @@ import {
   Stack,
 } from '../../components/ui';
 import { useTranslation } from '../../hooks/useTranslation';
+import { invalidatePlannerEvidenceQueries } from '../../hooks/queries/usePlanner';
 import {
   answerQuestion,
   listQuizzes,
@@ -55,11 +56,7 @@ export default function DiagnosticScreen() {
       const next = await nextQuestion(active.id);
       if (next.stopped) {
         await submitAttempt(active.id);
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ['planner'] }),
-          queryClient.invalidateQueries({ queryKey: ['planner', 'subject-proficiency'] }),
-          queryClient.invalidateQueries({ queryKey: ['assessment'] }),
-        ]);
+        await invalidatePlannerEvidenceQueries(queryClient);
         router.replace({
           pathname: '/assessment/results/[attemptId]',
           params: { attemptId: active.id },

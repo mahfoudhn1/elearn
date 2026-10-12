@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, type QueryClient } from '@tanstack/react-query';
 
 import {
   getPlannedSessionEvents,
@@ -21,4 +21,13 @@ export function useSubjectProficiency(enabled = false) {
     queryFn: getSubjectProficiency,
     enabled,
   });
+}
+
+/** Shared invalidation used after assessment evidence is accepted. */
+export function invalidatePlannerEvidenceQueries(queryClient: QueryClient) {
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: ['planner'] }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.subjectProficiency() }),
+    queryClient.invalidateQueries({ queryKey: ['assessment'] }),
+  ]);
 }

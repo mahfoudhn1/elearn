@@ -20,6 +20,7 @@ import {
 } from '../../../components/ui';
 import { useTheme } from '../../../hooks/useTheme';
 import { useTranslation } from '../../../hooks/useTranslation';
+import { invalidatePlannerEvidenceQueries } from '../../../hooks/queries/usePlanner';
 import {
   answerQuestion,
   getAttemptResult,
@@ -174,11 +175,7 @@ export default function QuizPlayerScreen() {
     submittedRef.current = true;
     try {
       await submitAttempt(attempt.id);
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['planner'] }),
-        queryClient.invalidateQueries({ queryKey: ['planner', 'subject-proficiency'] }),
-        queryClient.invalidateQueries({ queryKey: ['assessment'] }),
-      ]);
+      await invalidatePlannerEvidenceQueries(queryClient);
       router.replace({
         pathname: '/assessment/results/[attemptId]',
         params: { attemptId: attempt.id },

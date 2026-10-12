@@ -231,7 +231,9 @@ export function attachPomodoroNetworkRetry() {
   networkListenerAttached = true;
   NetInfo.addEventListener((state) => {
     if (state.isConnected && state.isInternetReachable !== false) {
-      void usePomodoroStore.getState().flushCompletions();
+      // Re-fetch the server-clocked session as well as pending completions so
+      // a reconnect cannot leave a closed linked planner block stale.
+      void usePomodoroStore.getState().reconcile();
     }
   });
 }

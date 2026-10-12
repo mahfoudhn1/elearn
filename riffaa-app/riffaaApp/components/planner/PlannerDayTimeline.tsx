@@ -9,7 +9,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 import type { PlannedSession } from '../../services/api/planner';
 import type { ScheduleItem } from '../../services/api/schedule';
 import { activityKey, blockKindKey } from '../../utils/plannerReasons';
-import { formatTime } from '../../utils/format';
+import { formatMinuteOfDay } from '../../utils/format';
 
 export type TimelineEntryType = 'PLAN' | 'CLASS' | 'TASK';
 
@@ -26,11 +26,6 @@ export interface TimelineEntry {
   session?: PlannedSession;
   task?: ScheduleItem;
   completed?: boolean;
-}
-
-function formatMin(minute: number): string {
-  const date = new Date(2024, 0, 1, Math.floor(minute / 60), minute % 60);
-  return formatTime(date);
 }
 
 const TimelineRow = memo(function TimelineRow({
@@ -99,7 +94,7 @@ const TimelineRow = memo(function TimelineRow({
               </AppText>
               <Row gap={8} align="center">
                 <AppText variant="caption" tone="muted">
-                  {formatMin(entry.startMin)} - {formatMin(entry.endMin)}
+                  {formatMinuteOfDay(entry.startMin)} - {formatMinuteOfDay(entry.endMin)}
                 </AppText>
                 <View className="h-1 w-1 rounded-full bg-ink-subtle" />
                 <AppText variant="caption" tone="muted">
@@ -159,7 +154,7 @@ const TimelineRow = memo(function TimelineRow({
               {task.title}
             </AppText>
             <AppText variant="caption" tone="muted">
-              {formatMin(entry.startMin)} - {formatMin(entry.endMin)}
+              {formatMinuteOfDay(entry.startMin)} - {formatMinuteOfDay(entry.endMin)}
               {task.notes ? ` · ${task.notes}` : ''}
             </AppText>
           </Stack>
@@ -224,7 +219,7 @@ const TimelineRow = memo(function TimelineRow({
             {entry.title}
           </AppText>
           <AppText variant="caption" tone="muted">
-            {formatMin(entry.startMin)} - {formatMin(entry.endMin)}
+            {formatMinuteOfDay(entry.startMin)} - {formatMinuteOfDay(entry.endMin)}
           </AppText>
         </Stack>
       </Row>

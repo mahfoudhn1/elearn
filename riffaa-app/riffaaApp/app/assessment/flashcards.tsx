@@ -20,6 +20,7 @@ import {
 } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
 import { useTranslation } from '../../hooks/useTranslation';
+import { invalidatePlannerEvidenceQueries } from '../../hooks/queries/usePlanner';
 import {
   getDueCards,
   getFlashcardStats,
@@ -135,11 +136,7 @@ export default function FlashcardsScreen() {
       // Fire-and-forget flush; offline items stay queued.
       void flushFlashcardQueue().then(async (result) => {
         if (result.sent.length > 0) {
-          await Promise.all([
-            queryClient.invalidateQueries({ queryKey: ['planner'] }),
-            queryClient.invalidateQueries({ queryKey: ['planner', 'subject-proficiency'] }),
-            queryClient.invalidateQueries({ queryKey: ['assessment'] }),
-          ]);
+          await invalidatePlannerEvidenceQueries(queryClient);
           const nextStats = await getFlashcardStats().catch(() => null);
           if (nextStats) setStats(nextStats);
         }

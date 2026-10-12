@@ -1,6 +1,10 @@
 export { queryKeys } from './queryKeys';
 export { useSchedule, useScheduleMutations } from './useSchedule';
-export { usePlannedSessionEvents, useSubjectProficiency } from './usePlanner';
+export {
+  invalidatePlannerEvidenceQueries,
+  usePlannedSessionEvents,
+  useSubjectProficiency,
+} from './usePlanner';
 export {
   useGroup,
   useGroupClassSchedules,

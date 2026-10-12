@@ -41,33 +41,15 @@ import {
 } from '../../services/api/planner';
 import type { ScheduleEntry, ScheduleItem } from '../../services/api/schedule';
 import { startPlannerQueue, usePlannerStore } from '../../store/plannerStore';
-import { formatDate } from '../../utils/format';
-import { currentLocale } from '../../services/i18n';
+import { formatDate, formatNumber } from '../../utils/format';
+import {
+  addDaysIso,
+  busyEntriesForDay,
+  minutesSinceMidnight,
+  toDayIso,
+} from '../../utils/scheduleOverlay';
 
 type ScheduleViewMode = 'all' | 'plan' | 'tasks' | 'classes';
-
-function toDayIso(value: Date): string {
-  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(
-    value.getDate(),
-  ).padStart(2, '0')}`;
-}
-
-function timeToMinutes(value: string | null | undefined): number | null {
-  if (!value) return null;
-  const [hour, minute] = value.split(':').map(Number);
-  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return null;
-  return hour * 60 + minute;
-}
-
-function dateToMinutes(d: Date): number {
-  return d.getHours() * 60 + d.getMinutes();
-}
-
-function addDays(iso: string, days: number): string {
-  const date = new Date(`${iso}T00:00:00`);
-  date.setDate(date.getDate() + days);
-  return toDayIso(date);
-}
 
 function getWeekDates(selectedIso: string) {
   const selected = new Date(`${selectedIso}T00:00:00`);
@@ -79,72 +61,6 @@ function getWeekDates(selectedIso: string) {
     date.setDate(monday.getDate() + index);
     return { iso: toDayIso(date), dayNumber: date.getDate() };
   });
-}
-
-/** Busy blocks for one local day from the onboarding feed (school/class/private). */
-function busyEntriesForDay(state: OnboardingState | null, iso: string): TimelineEntry[] {
-  if (!state) return [];
-  const weekday = new Date(`${iso}T00:00:00`).getDay();
-  const backendWeekday = (weekday + 6) % 7;
-  const entries: TimelineEntry[] = [];
-
-  for (const commitment of state.school_commitments) {
-    if (commitment.weekday !== backendWeekday) continue;
-    if (commitment.valid_from && iso < commitment.valid_from) continue;
-    if (commitment.valid_to && iso > commitment.valid_to) continue;
-    const start = timeToMinutes(commitment.start_time);
-    const end = timeToMinutes(commitment.end_time);
-    if (start == null || end == null) continue;
-    entries.push({
-      key: `commitment-${commitment.id}`,
-      entryType: 'CLASS',
-      kind: commitment.kind,
-      title: commitment.title,
-      startMin: start,
-      endMin: end,
-      locked: true,
-    });
-  }
-
-  for (const raw of state.group_schedules as Record<string, unknown>[]) {
-    const start = timeToMinutes(raw.start_time as string);
-    const end = timeToMinutes(raw.end_time as string);
-    if (start == null || end == null) continue;
-    const dayOfWeek = String(raw.day_of_week ?? '').toLowerCase();
-    const locale = currentLocale() === 'ar' ? 'ar-DZ' : currentLocale() === 'fr' ? 'fr-FR' : 'en-GB';
-    const matches =
-      dayOfWeek ===
-        new Date(`${iso}T00:00:00`).toLocaleDateString(locale, { weekday: 'long' }).toLowerCase() ||
-      raw.scheduled_date === iso;
-    if (!matches) continue;
-    entries.push({
-      key: `group-${String(raw.id)}`,
-      entryType: 'CLASS',
-      kind: 'GROUP_LESSON',
-      title: String(raw.group_name ?? ''),
-      startMin: start,
-      endMin: end,
-      locked: true,
-    });
-  }
-
-  for (const raw of state.private_sessions as Record<string, unknown>[]) {
-    const sessionDate = String(raw.session_date ?? '').slice(0, 10);
-    if (sessionDate !== iso) continue;
-    const start = timeToMinutes(new Date(String(raw.session_date)).toTimeString().slice(0, 5));
-    if (start == null) continue;
-    entries.push({
-      key: `private-${String(raw.id)}`,
-      entryType: 'CLASS',
-      kind: 'PRIVATE_SESSION',
-      title: state.available_subjects[0] ?? '',
-      startMin: start,
-      endMin: start + 60,
-      locked: true,
-    });
-  }
-
-  return entries;
 }
 
 export default function ScheduleScreen() {
@@ -261,8 +177,8 @@ export default function ScheduleScreen() {
             kind: entry.topic ?? 'STUDY',
             title: entry.title,
             subject: entry.subject,
-            startMin: dateToMinutes(startDate),
-            endMin: dateToMinutes(endDate),
+            startMin: minutesSinceMidnight(startDate),
+            endMin: minutesSinceMidnight(endDate),
             locked: Boolean(entry.plannedSession?.is_locked),
             session: entry.plannedSession ?? undefined,
           };
@@ -285,8 +201,8 @@ export default function ScheduleScreen() {
           title: item.title,
           subtitle: item.notes || undefined,
           subject: item.subject,
-          startMin: dateToMinutes(startDate),
-          endMin: dateToMinutes(endDate),
+          startMin: minutesSinceMidnight(startDate),
+          endMin: minutesSinceMidnight(endDate),
           locked: false,
           task: item,
           completed: item.status === 'COMPLETED',
@@ -321,7 +237,7 @@ export default function ScheduleScreen() {
     try {
       await generate({
         window_start: selectedDate,
-        window_end: addDays(selectedDate, 6),
+        window_end: addDaysIso(selectedDate, 6),
         trigger: 'MANUAL',
       });
       await queryClient.invalidateQueries({ queryKey: ['schedule'] });
@@ -391,7 +307,7 @@ export default function ScheduleScreen() {
                         weight="medium"
                         className={active ? 'text-on-brand' : 'text-ink'}
                       >
-                        {date.dayNumber}
+                        {formatNumber(date.dayNumber)}
                       </AppText>
                     </View>
                   </Pressable>

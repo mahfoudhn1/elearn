@@ -22,89 +22,11 @@ import {
 import { PlannerDayTimeline, type TimelineEntry } from './PlannerDayTimeline';
 import { SessionActionsSheet } from './SessionActionsSheet';
 import { UnmetBanner, type UnmetDemandItem } from './UnmetBanner';
-import { currentLocale } from '../../services/i18n';
-
-function localDateIso(value: Date): string {
-  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(
-    value.getDate(),
-  ).padStart(2, '0')}`;
-}
-
-function timeToMinutes(value: string | null | undefined): number | null {
-  if (!value) return null;
-  const [hour, minute] = value.split(':').map(Number);
-  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return null;
-  return hour * 60 + minute;
-}
-
-function addDays(iso: string, days: number): string {
-  const date = new Date(`${iso}T00:00:00`);
-  date.setDate(date.getDate() + days);
-  return localDateIso(date);
-}
-
-/** Busy blocks for one local day, from the onboarding feed (school/class/private). */
-function busyEntriesForDay(state: OnboardingState | null, iso: string): TimelineEntry[] {
-  if (!state) return [];
-  const weekday = new Date(`${iso}T00:00:00`).getDay();
-  // Backend weekday: 0 = Monday ... 6 = Sunday; JS: 0 = Sunday.
-  const backendWeekday = (weekday + 6) % 7;
-  const entries: TimelineEntry[] = [];
-
-  for (const commitment of state.school_commitments) {
-    if (commitment.weekday !== backendWeekday) continue;
-    if (commitment.valid_from && iso < commitment.valid_from) continue;
-    if (commitment.valid_to && iso > commitment.valid_to) continue;
-    const start = timeToMinutes(commitment.start_time);
-    const end = timeToMinutes(commitment.end_time);
-    if (start == null || end == null) continue;
-    entries.push({
-      key: `commitment-${commitment.id}`,
-      kind: commitment.kind,
-      title: commitment.title,
-      startMin: start,
-      endMin: end,
-      locked: true,
-    });
-  }
-
-  for (const raw of state.group_schedules as Record<string, unknown>[]) {
-    const start = timeToMinutes(raw.start_time as string);
-    const end = timeToMinutes(raw.end_time as string);
-    if (start == null || end == null) continue;
-    const dayOfWeek = String(raw.day_of_week ?? '').toLowerCase();
-    const locale = currentLocale() === 'ar' ? 'ar-DZ' : currentLocale() === 'fr' ? 'fr-FR' : 'en-GB';
-    const matches =
-      dayOfWeek === new Date(`${iso}T00:00:00`).toLocaleDateString(locale, { weekday: 'long' }).toLowerCase() ||
-      raw.scheduled_date === iso;
-    if (!matches) continue;
-    entries.push({
-      key: `group-${String(raw.id)}`,
-      kind: 'GROUP_LESSON',
-      title: String(raw.group_name ?? ''),
-      startMin: start,
-      endMin: end,
-      locked: true,
-    });
-  }
-
-  for (const raw of state.private_sessions as Record<string, unknown>[]) {
-    const sessionDate = String(raw.session_date ?? '').slice(0, 10);
-    if (sessionDate !== iso) continue;
-    const start = timeToMinutes(new Date(String(raw.session_date)).toTimeString().slice(0, 5));
-    if (start == null) continue;
-    entries.push({
-      key: `private-${String(raw.id)}`,
-      kind: 'PRIVATE_SESSION',
-      title: state.available_subjects[0] ?? '',
-      startMin: start,
-      endMin: start + 60,
-      locked: true,
-    });
-  }
-
-  return entries;
-}
+import {
+  addDaysIso,
+  busyEntriesForDay,
+  toDayIso,
+} from '../../utils/scheduleOverlay';
 
 /**
  * The Plan surface inside the Schedule tab: that day's locked busy blocks plus
@@ -161,7 +83,7 @@ export function PlannerPlanPanel({ selectedDate }: { selectedDate: string }) {
     const busyEntries = busyEntriesForDay(onboarding, selectedDate);
     const plannedEntries: TimelineEntry[] = scheduleEntries
       .filter((entry) => entry.source === 'PLANNER' && entry.plannedSession)
-      .filter((entry) => entry.status !== 'CANCELLED' && localDateIso(new Date(entry.start)) === selectedDate)
+      .filter((entry) => entry.status !== 'CANCELLED' && toDayIso(new Date(entry.start)) === selectedDate)
       .map((entry) => {
         const session = entry.plannedSession!;
         const startDate = new Date(entry.start);
@@ -186,7 +108,7 @@ export function PlannerPlanPanel({ selectedDate }: { selectedDate: string }) {
     try {
       await generate({
         window_start: selectedDate,
-        window_end: addDays(selectedDate, 6),
+        window_end: addDaysIso(selectedDate, 6),
         trigger: 'MANUAL',
       });
       await queryClient.invalidateQueries({ queryKey: ['schedule'] });
