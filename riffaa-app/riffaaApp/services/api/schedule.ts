@@ -25,13 +25,15 @@ export type ScheduleStatus =
   | "MISSED";
 export type ScheduleSource = "MANUAL" | "PLANNER";
 
-/** The single row shape consumed by the Expo schedule surfaces. */
+/** Normalized planner session shape consumed by the Expo schedule surfaces. */
 export interface ScheduleEntry {
   id: string;
   source: ScheduleSource;
   title: string;
   subject: string | null;
   topic: string | null;
+  type?: "study" | "task" | "exam" | string;
+  label?: "STUDY" | string;
   status: ScheduleStatus | PlannedSession["state"];
   start: string;
   end: string;
@@ -164,27 +166,21 @@ export async function getSchedules(query: ScheduleQuery = {}) {
 }
 
 /**
- * Merge the legacy personal schedule and planner responses into the UI row
- * contract. Planner mirrors are deliberately never rendered as manual rows,
- * even when the related planner session is old or cancelled.
+ * Normalize generated planner sessions into the UI row contract. The legacy
+ * personal schedule is intentionally ignored to avoid duplicate/manual rows.
  */
 export function normalizeScheduleEntries(
-  scheduleItems: ScheduleItem[],
+  _scheduleItems: ScheduleItem[],
   plannedSessions: PlannedSession[],
 ): ScheduleEntry[] {
-  const plannerById = new Map(plannedSessions.map((session) => [String(session.id), session]));
-  const plannerByPersonalItem = new Map(
-    plannedSessions
-      .filter((session) => session.personal_item)
-      .map((session) => [String(session.personal_item), session]),
-  );
-
   const planned = plannedSessions.map((session): ScheduleEntry => ({
     id: `planner-${session.id}`,
     source: "PLANNER",
     title: session.subject,
     subject: session.subject,
     topic: session.activity_type,
+    type: session.type ?? "study",
+    label: session.label ?? "STUDY",
     status: session.state,
     start: session.start_dt,
     end: session.end_dt,
@@ -195,31 +191,7 @@ export function normalizeScheduleEntries(
     scheduleItem: null,
   }));
 
-  const manual = scheduleItems
-    .filter((item) => item.source !== "PLANNER")
-    .filter((item) => {
-      const linkedSession = item.planned_session_id
-        ? plannerById.get(String(item.planned_session_id))
-        : plannerByPersonalItem.get(String(item.id));
-      return !linkedSession;
-    })
-    .map((item): ScheduleEntry => ({
-      id: `schedule-${item.id}`,
-      source: "MANUAL",
-      title: item.title,
-      subject: item.subject,
-      topic: item.item_type,
-      status: item.status,
-      start: item.start_datetime,
-      end: item.end_datetime,
-      focusMinutes: item.estimated_duration_minutes,
-      scheduleItemId: String(item.id),
-      plannedSessionId: item.planned_session_id ?? null,
-      plannedSession: null,
-      scheduleItem: item,
-    }));
-
-  return [...planned, ...manual].sort((a, b) => a.start.localeCompare(b.start));
+  return planned.sort((a, b) => a.start.localeCompare(b.start));
 }
 /** Today's items only -- served by a dedicated endpoint, no client filtering. */
 export async function getTodaySchedules() {

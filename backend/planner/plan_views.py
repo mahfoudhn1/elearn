@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 
 from django.shortcuts import get_object_or_404
+from django.db import transaction
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -14,7 +15,7 @@ from rest_framework.views import APIView
 
 from courses.permissions import get_student
 
-from .models import PlannedSession, PlannedSessionEvent, StudyPlan
+from .models import PlannedSession, PlannedSessionEvent, StudyPlan, StudentPlannerProfile
 from .permissions import HasStudentProfile
 from .serializers import (
     GeneratePlanInputSerializer,
@@ -24,6 +25,7 @@ from .serializers import (
     StudyPlanSerializer,
 )
 from .services import plan_service, replan_service, report_service
+from .rule_based import generate_week
 
 
 class PlanGenerateView(APIView):
@@ -34,22 +36,72 @@ class PlanGenerateView(APIView):
         serializer = GeneratePlanInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        result = plan_service.generate_plan_for_student(
-            student,
-            (data["window_start"], data["window_end"]),
-            data["trigger"],
-            now=timezone.now(),
-        )
-        http_status = status.HTTP_201_CREATED if result.created else status.HTTP_200_OK
+        # This endpoint intentionally uses the deterministic rules planner.
+        profile, _ = StudentPlannerProfile.objects.get_or_create(student=student)
+        profile = StudentPlannerProfile.objects.select_related(
+            "student__grade", "student__field_of_study"
+        ).get(pk=profile.pk)
+        grade_name = profile.level or profile.student.grade.name
+        stream_name = profile.stream or profile.student.field_of_study.name
+        first_day = data["window_start"]
+        first_sunday = first_day - timedelta(days=(first_day.weekday() + 1) % 7)
+        generated = generate_week(grade=grade_name, stream=stream_name, week_start=first_sunday)
+        with transaction.atomic():
+            latest = StudyPlan.objects.filter(student=student).order_by("-version").first()
+            version = latest.version + 1 if latest else 1
+            old_sessions = PlannedSession.objects.filter(
+                student=student, state=PlannedSession.State.PLANNED
+            )
+            old_uuids = list(old_sessions.values_list("uuid", flat=True))
+            old_sessions.update(state=PlannedSession.State.CANCELLED)
+            from schedule.models import PersonalScheduleItem
+            PersonalScheduleItem.objects.filter(
+                planned_session_id__in=old_uuids
+            ).update(status=PersonalScheduleItem.Status.CANCELLED)
+            StudyPlan.objects.filter(student=student).delete()
+            plan = StudyPlan.objects.create(
+                student=student, version=version,
+                window_start=data["window_start"], window_end=data["window_end"],
+                input_hash=f"rule-based:{first_sunday.isoformat()}:{grade_name}:{stream_name}",
+                trigger=data["trigger"],
+                input_snapshot={"planner": "rule_based", "config_key": f"{grade_name}_{stream_name}"},
+                engine_diagnostics={
+                    "usable_minutes": generated["usable_minutes"],
+                    "unplaced": generated["unplaced"],
+                },
+            )
+            sessions = []
+            for row in generated["sessions"]:
+                if not data["window_start"] <= date.fromisoformat(row["day"]) <= data["window_end"]:
+                    continue
+                start_dt = row["start_dt"]
+                if timezone.is_naive(start_dt):
+                    start_dt = timezone.make_aware(start_dt, timezone.get_current_timezone())
+                end_dt = row["end_dt"]
+                if timezone.is_naive(end_dt):
+                    end_dt = timezone.make_aware(end_dt, timezone.get_current_timezone())
+                metadata = {
+                    key: row.get(key)
+                    for key in (
+                        "type", "label", "topic_id", "topic_title_ar", "phase",
+                        "part", "parts", "review_topic_id",
+                    )
+                }
+                session = PlannedSession.objects.create(
+                    plan=plan, student=student, subject=row["subject"], activity_type="STUDY",
+                    start_dt=start_dt, end_dt=end_dt, focus_minutes=row["minutes"],
+                    rule_metadata=metadata,
+                )
+                sessions.append(session)
+        http_status = status.HTTP_201_CREATED
         return Response(
             {
-                "plan": StudyPlanSerializer(result.plan).data,
-                "created": result.created,
-                "diff": {
-                    "added": result.added,
-                    "removed": result.removed,
-                    "moved": result.moved,
-                },
+                "plan": StudyPlanSerializer(plan).data,
+                "created": True,
+                "sessions": PlannedSessionSerializer(sessions, many=True).data,
+                "unplaced": generated["unplaced"],
+                "usable_minutes": generated["usable_minutes"],
+                "diff": {"added": [], "removed": [], "moved": []},
             },
             status=http_status,
         )

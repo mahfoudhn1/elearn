@@ -1,0 +1,99 @@
+{
+  "_dummy": true,
+  "verification": "TO VERIFY against the official Ministry tables",
+  "stream": "3AS_exp",
+  "subject": "math",
+  "coefficient": 5,
+  "topics": [
+    {
+      "id": "math-t1-1",
+      "title_ar": "[تجريبي] math - الفصل 1 - موضوع 1",
+      "title_fr": "[تجريبي] math - trimestre 1 - thème 1",
+      "trimester": 1,
+      "order": 1,
+      "est_minutes": 300,
+      "difficulty": 3,
+      "prerequisites": []
+    },
+    {
+      "id": "math-t1-2",
+      "title_ar": "[تجريبي] math - الفصل 1 - موضوع 2",
+      "title_fr": "[تجريبي] math - trimestre 1 - thème 2",
+      "trimester": 1,
+      "order": 2,
+      "est_minutes": 300,
+      "difficulty": 3,
+      "prerequisites": []
+    },
+    {
+      "id": "math-t1-3",
+      "title_ar": "[تجريبي] math - الفصل 1 - موضوع 3",
+      "title_fr": "[تجريبي] math - trimestre 1 - thème 3",
+      "trimester": 1,
+      "order": 3,
+      "est_minutes": 300,
+      "difficulty": 3,
+      "prerequisites": []
+    },
+    {
+      "id": "math-t2-1",
+      "title_ar": "[تجريبي] math - الفصل 2 - موضوع 1",
+      "title_fr": "[تجريبي] math - trimestre 2 - thème 1",
+      "trimester": 2,
+      "order": 4,
+      "est_minutes": 300,
+      "difficulty": 3,
+      "prerequisites": []
+    },
+    {
+      "id": "math-t2-2",
+      "title_ar": "[تجريبي] math - الفصل 2 - موضوع 2",
+      "title_fr": "[تجريبي] math - trimestre 2 - thème 2",
+      "trimester": 2,
+      "order": 5,
+      "est_minutes": 300,
+      "difficulty": 3,
+      "prerequisites": []
+    },
+    {
+      "id": "math-t2-3",
+      "title_ar": "[تجريبي] math - الفصل 2 - موضوع 3",
+      "title_fr": "[تجريبي] math - trimestre 2 - thème 3",
+      "trimester": 2,
+      "order": 6,
+      "est_minutes": 300,
+      "difficulty": 3,
+      "prerequisites": []
+    },
+    {
+      "id": "math-t3-1",
+      "title_ar": "[تجريبي] math - الفصل 3 - موضوع 1",
+      "title_fr": "[تجريبي] math - trimestre 3 - thème 1",
+      "trimester": 3,
+      "order": 7,
+      "est_minutes": 300,
+      "difficulty": 3,
+      "prerequisites": []
+    },
+    {
+      "id": "math-t3-2",
+      "title_ar": "[تجريبي] math - الفصل 3 - موضوع 2",
+      "title_fr": "[تجريبي] math - trimestre 3 - thème 2",
+      "trimester": 3,
+      "order": 8,
+      "est_minutes": 300,
+      "difficulty": 3,
+      "prerequisites": []
+    },
+    {
+      "id": "math-t3-3",
+      "title_ar": "[تجريبي] math - الفصل 3 - موضوع 3",
+      "title_fr": "[تجريبي] math - trimestre 3 - thème 3",
+      "trimester": 3,
+      "order": 9,
+      "est_minutes": 300,
+      "difficulty": 3,
+      "prerequisites": []
+    }
+  ]
+}

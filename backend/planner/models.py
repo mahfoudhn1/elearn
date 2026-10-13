@@ -774,6 +774,7 @@ class PlannedSession(UUIDModel):
     state = models.CharField(max_length=10, choices=State.choices, default=State.PLANNED)
     is_locked = models.BooleanField(default=False)
     reasons = models.JSONField(default=list, blank=True)
+    rule_metadata = models.JSONField(default=dict, blank=True)
     personal_item = models.OneToOneField(
         "schedule.PersonalScheduleItem",
         null=True,

@@ -30,7 +30,7 @@ import { SessionActionsSheet } from '../../components/planner/SessionActionsShee
 import { UnmetBanner, type UnmetDemandItem } from '../../components/planner/UnmetBanner';
 import { useDirection } from '../../hooks/useDirection';
 import { usePomodoro } from '../../hooks/usePomodoro';
-import { useSchedule, useScheduleMutations } from '../../hooks/queries';
+import { useSchedule } from '../../hooks/queries';
 import { useTheme } from '../../hooks/useTheme';
 import { useTranslation } from '../../hooks/useTranslation';
 import {
@@ -116,7 +116,6 @@ export default function ScheduleScreen() {
 
   // React-query owns fetching/refetching-on-focus; mutations invalidate it.
   const { data, isLoading, isError, error, refetch } = useSchedule();
-  const { update, remove } = useScheduleMutations();
 
   // The planner mirrors every smart-plan session into a PersonalScheduleItem
   // (source=PLANNER server-side), so `schedule/` returns them next to the
@@ -143,15 +142,6 @@ export default function ScheduleScreen() {
     const done = manual.filter((entry) => entry.status === 'COMPLETED').length;
     return { total, done, today: todayEntries.length };
   }, [entries, todayEntries]);
-
-  const toggleComplete = (item: ScheduleItem) => {
-    const nextStatus = item.status === 'COMPLETED' ? 'TODO' : 'COMPLETED';
-    update.mutate({ id: item.id, payload: { status: nextStatus } });
-  };
-
-  const removeItem = (item: ScheduleItem) => {
-    remove.mutate(item.id);
-  };
 
   // Build unified chronological entries for the selected day
   const unifiedEntries = useMemo<TimelineEntry[]>(() => {
@@ -480,8 +470,6 @@ export default function ScheduleScreen() {
                     }
                     onPressSession={setActiveSession}
                     onStartSession={handleStartSession}
-                    onToggleTask={toggleComplete}
-                    onDeleteTask={removeItem}
                   />
                 )}
               </View>

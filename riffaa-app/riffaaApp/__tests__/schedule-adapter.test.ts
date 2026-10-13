@@ -6,8 +6,7 @@ import type { PlannedSession } from '../services/api/planner';
 
 /**
  * The adapter is the single place that decides which rows the schedule UI sees.
- * These tests pin the three row kinds (smart plan / manual task / planner
- * mirror) and the de-duplication rules the screens rely on.
+ * These tests pin the generated-planner session mapping used by the schedule.
  */
 
 function plannedSession(overrides: Partial<PlannedSession> = {}): PlannedSession {
@@ -17,6 +16,14 @@ function plannedSession(overrides: Partial<PlannedSession> = {}): PlannedSession
     student: 'student-1',
     subject: 'Maths',
     activity_type: 'STUDY',
+    type: 'study',
+    label: 'STUDY',
+    topic_id: null,
+    topic_title_ar: null,
+    phase: 'learn',
+    part: null,
+    parts: null,
+    review_topic_id: null,
     start_dt: '2026-10-12T09:00:00.000Z',
     end_dt: '2026-10-12T10:00:00.000Z',
     focus_minutes: 45,
@@ -65,6 +72,8 @@ describe('normalizeScheduleEntries', () => {
       id: 'planner-session-1',
       source: 'PLANNER',
       title: 'Maths',
+      type: 'study',
+      label: 'STUDY',
       topic: 'STUDY',
       status: 'PLANNED',
       focusMinutes: 45,
@@ -74,22 +83,12 @@ describe('normalizeScheduleEntries', () => {
     expect(entries[0].scheduleItem).toBeNull();
   });
 
-  it('keeps a manual task that is not linked to any planner session', () => {
+  it('ignores manual schedule tasks', () => {
     const entries = normalizeScheduleEntries([scheduleItem()], []);
-
-    expect(entries).toHaveLength(1);
-    expect(entries[0]).toMatchObject({
-      id: 'schedule-item-1',
-      source: 'MANUAL',
-      title: 'Read chapter 3',
-      status: 'TODO',
-      focusMinutes: 60,
-      scheduleItemId: 'item-1',
-    });
-    expect(entries[0].scheduleItem?.id).toBe('item-1');
+    expect(entries).toEqual([]);
   });
 
-  it('never renders a planner mirror as a manual row', () => {
+  it('never includes legacy schedule items', () => {
     // A mirror can survive server-side cleanup with no matching session; it must
     // still be hidden rather than shown as a duplicate manual task.
     const mirror = scheduleItem({ id: 'mirror-1', source: 'PLANNER' });
@@ -97,7 +96,7 @@ describe('normalizeScheduleEntries', () => {
     expect(normalizeScheduleEntries([mirror], [])).toEqual([]);
   });
 
-  it('drops a mirror linked to its planner session by id', () => {
+  it('uses the generated planner session and ignores its mirror', () => {
     const mirror = scheduleItem({
       id: 'mirror-1',
       source: 'PLANNER',
@@ -111,7 +110,7 @@ describe('normalizeScheduleEntries', () => {
     expect(entries[0].plannedSessionId).toBe('session-1');
   });
 
-  it('drops a manual row linked through the session personal_item', () => {
+  it('does not add a linked personal schedule item as a second row', () => {
     const linked = scheduleItem({ id: 'linked-1', source: 'MANUAL' });
     const session = plannedSession({ personal_item: 'linked-1' });
 
@@ -137,7 +136,7 @@ describe('normalizeScheduleEntries', () => {
     expect(entries[0].plannedSessionId).toBe('session-2');
   });
 
-  it('coalesces a mixed day and sorts rows by start time', () => {
+  it('sorts generated planner rows by start time', () => {
     const manual = scheduleItem({
       id: 'task-late',
       start_datetime: '2026-10-12T16:00:00.000Z',
@@ -158,11 +157,8 @@ describe('normalizeScheduleEntries', () => {
 
     const entries = normalizeScheduleEntries([manual, mirror], [session]);
 
-    expect(entries.map((entry) => entry.id)).toEqual([
-      'planner-session-3',
-      'schedule-task-late',
-    ]);
-    expect(entries.map((entry) => entry.source)).toEqual(['PLANNER', 'MANUAL']);
+    expect(entries.map((entry) => entry.id)).toEqual(['planner-session-3']);
+    expect(entries.map((entry) => entry.source)).toEqual(['PLANNER']);
   });
 
   it('reports a missing focus_minutes as null rather than guessing', () => {

@@ -50,6 +50,14 @@ export interface PlannedSession {
   student: string;
   subject: string;
   activity_type: PlannerActivityType | string;
+  type?: "study" | string;
+  label?: "STUDY" | string;
+  topic_id?: string | null;
+  topic_title_ar?: string | null;
+  phase?: "learn" | "practice";
+  part?: number | null;
+  parts?: number | null;
+  review_topic_id?: string | null;
   start_dt: string;
   end_dt: string;
   /** Planned focus duration; the calendar span also includes Pomodoro breaks. */

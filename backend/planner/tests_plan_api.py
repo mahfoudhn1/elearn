@@ -19,9 +19,11 @@ PAYLOAD = {"window_start": "2099-09-06", "window_end": "2099-09-12", "trigger": 
 
 class PlanApiTests(APITestCase):
     def setUp(self):
-        self.student = factories.make_student()
+        self.student = factories.make_student(grade_name="3AS", stream_name="math")
         factories.make_profile(
             student=self.student,
+            level="3AS",
+            stream="math",
             session_length_preference="MEDIUM",
             preferred_period="EVENING",
             daily_study_target_minutes=120,
@@ -56,10 +58,13 @@ class PlanApiTests(APITestCase):
         self.assertGreater(len(current.data["sessions"]), 0)
 
     def test_generate_is_idempotent_via_api(self):
-        self._generate()
+        first = self._generate()
+        self.assertEqual(first.status_code, status.HTTP_201_CREATED)
         second = self._generate()
-        self.assertEqual(second.status_code, status.HTTP_200_OK)
-        self.assertFalse(second.data["created"])
+        self.assertEqual(second.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(second.data["created"])
+        self.assertEqual(StudyPlan.objects.filter(student=self.student).count(), 1)
+        self.assertTrue(all(row["type"] == "study" and row["label"] == "STUDY" for row in second.data["sessions"]))
 
     def test_move_overlap_returns_field_error_and_reason(self):
         self._generate()

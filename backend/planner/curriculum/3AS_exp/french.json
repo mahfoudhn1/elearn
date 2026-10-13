@@ -1,0 +1,39 @@
+{
+  "_dummy": true,
+  "verification": "TO VERIFY against the official Ministry tables",
+  "stream": "3AS_exp",
+  "subject": "french",
+  "coefficient": 2,
+  "topics": [
+    {
+      "id": "french-t1-1",
+      "title_ar": "[تجريبي] french - الفصل 1 - موضوع 1",
+      "title_fr": "[تجريبي] french - trimestre 1 - thème 1",
+      "trimester": 1,
+      "order": 1,
+      "est_minutes": 120,
+      "difficulty": 1,
+      "prerequisites": []
+    },
+    {
+      "id": "french-t2-1",
+      "title_ar": "[تجريبي] french - الفصل 2 - موضوع 1",
+      "title_fr": "[تجريبي] french - trimestre 2 - thème 1",
+      "trimester": 2,
+      "order": 2,
+      "est_minutes": 120,
+      "difficulty": 1,
+      "prerequisites": []
+    },
+    {
+      "id": "french-t3-1",
+      "title_ar": "[تجريبي] french - الفصل 3 - موضوع 1",
+      "title_fr": "[تجريبي] french - trimestre 3 - thème 1",
+      "trimester": 3,
+      "order": 3,
+      "est_minutes": 120,
+      "difficulty": 1,
+      "prerequisites": []
+    }
+  ]
+}

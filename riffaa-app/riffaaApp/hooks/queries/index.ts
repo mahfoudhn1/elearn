@@ -1,5 +1,5 @@
 export { queryKeys } from './queryKeys';
-export { useSchedule, useScheduleMutations } from './useSchedule';
+export { useSchedule } from './useSchedule';
 export {
   invalidatePlannerEvidenceQueries,
   usePlannedSessionEvents,

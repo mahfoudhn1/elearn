@@ -5,6 +5,7 @@ import { FlatList, Pressable, View } from 'react-native';
 import { AppText, Badge, Card, IconButton, Row, Stack } from '../ui';
 import { subjectTint } from '../../constants/subjects';
 import { useTheme } from '../../hooks/useTheme';
+import { useDirection } from '../../hooks/useDirection';
 import { useTranslation } from '../../hooks/useTranslation';
 import type { PlannedSession } from '../../services/api/planner';
 import type { ScheduleItem } from '../../services/api/schedule';
@@ -43,6 +44,7 @@ const TimelineRow = memo(function TimelineRow({
 }) {
   const { t } = useTranslation();
   const { tokens } = useTheme();
+  const { isRTL } = useDirection();
 
   // 1. SMART PLANNED STUDY SESSION
   if (entry.session) {
@@ -60,6 +62,9 @@ const TimelineRow = memo(function TimelineRow({
       >
         <Card variant="list" subject={session.subject} className="overflow-hidden">
           <Row gap={12} align="center">
+            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+              <Badge label={session.label ?? 'STUDY'} tone="brand" />
+            </View>
             {/* Subject Personality Accent Bar */}
             <View
               className="w-1.5 self-stretch rounded-pill"
@@ -92,15 +97,27 @@ const TimelineRow = memo(function TimelineRow({
               <AppText variant="body" weight="semibold" numberOfLines={1}>
                 {session.subject}
               </AppText>
+              {session.topic_title_ar ? (
+                <AppText variant="caption" tone="muted" numberOfLines={2}>
+                  {session.topic_title_ar}{session.part && session.parts ? ` · ${session.part}/${session.parts}` : ''} · {session.phase === 'practice' ? t('plannerPractice') : t('plannerLearn')}
+                </AppText>
+              ) : null}
               <Row gap={8} align="center">
                 <AppText variant="caption" tone="muted">
                   {formatMinuteOfDay(entry.startMin)} - {formatMinuteOfDay(entry.endMin)}
                 </AppText>
                 <View className="h-1 w-1 rounded-full bg-ink-subtle" />
+                {!session.topic_title_ar ? (
+                  <AppText variant="caption" tone="muted">
+                    {t('plannerFocusDuration', { minutes: duration })}
+                  </AppText>
+                ) : null}
+              </Row>
+              {session.topic_title_ar ? (
                 <AppText variant="caption" tone="muted">
                   {t('plannerFocusDuration', { minutes: duration })}
                 </AppText>
-              </Row>
+              ) : null}
             </Stack>
 
             {/* 1-Tap Start Study Button */}
@@ -127,7 +144,7 @@ const TimelineRow = memo(function TimelineRow({
 
     return (
       <Card variant="list" subject={task.subject} className="overflow-hidden">
-        <Row gap={12} align="center">
+          <Row gap={12} align="center" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
           <View
             className="w-1.5 self-stretch rounded-pill"
             style={{ backgroundColor: done ? tokens.success : (tint?.color || tokens.brand) }}

@@ -251,6 +251,42 @@ class StudyPlanSerializer(UUIDModelSerializer):
 
 
 class PlannedSessionSerializer(UUIDModelSerializer):
+    type = serializers.SerializerMethodField()
+    label = serializers.SerializerMethodField()
+    topic_id = serializers.SerializerMethodField()
+    topic_title_ar = serializers.SerializerMethodField()
+    phase = serializers.SerializerMethodField()
+    part = serializers.SerializerMethodField()
+    parts = serializers.SerializerMethodField()
+    review_topic_id = serializers.SerializerMethodField()
+
+    def _meta(self, obj):
+        return obj.rule_metadata or {}
+
+    def get_type(self, obj):
+        return self._meta(obj).get("type", "study")
+
+    def get_label(self, obj):
+        return self._meta(obj).get("label", "STUDY")
+
+    def get_topic_id(self, obj):
+        return self._meta(obj).get("topic_id")
+
+    def get_topic_title_ar(self, obj):
+        return self._meta(obj).get("topic_title_ar")
+
+    def get_phase(self, obj):
+        return self._meta(obj).get("phase", "learn")
+
+    def get_part(self, obj):
+        return self._meta(obj).get("part")
+
+    def get_parts(self, obj):
+        return self._meta(obj).get("parts")
+
+    def get_review_topic_id(self, obj):
+        return self._meta(obj).get("review_topic_id")
+
     class Meta:
         model = PlannedSession
         fields = [
@@ -259,7 +295,15 @@ class PlannedSessionSerializer(UUIDModelSerializer):
             "student",
             "subject",
             "activity_type",
+            "type",
+            "label",
             "topic",
+            "topic_id",
+            "topic_title_ar",
+            "phase",
+            "part",
+            "parts",
+            "review_topic_id",
             "practice_quiz",
             "start_dt",
             "end_dt",
@@ -268,6 +312,7 @@ class PlannedSessionSerializer(UUIDModelSerializer):
             "state",
             "is_locked",
             "reasons",
+            "rule_metadata",
             "personal_item",
             "replaced_by",
             "created_at",
@@ -285,6 +330,7 @@ class PlannedSessionSerializer(UUIDModelSerializer):
             "origin",
             "state",
             "reasons",
+            "rule_metadata",
             "personal_item",
             "replaced_by",
             "created_at",

@@ -1,0 +1,39 @@
+{
+  "_dummy": true,
+  "verification": "TO VERIFY against the official Ministry tables",
+  "stream": "3AS_math",
+  "subject": "english",
+  "coefficient": 2,
+  "topics": [
+    {
+      "id": "english-t1-1",
+      "title_ar": "[تجريبي] english - الفصل 1 - موضوع 1",
+      "title_fr": "[تجريبي] english - trimestre 1 - thème 1",
+      "trimester": 1,
+      "order": 1,
+      "est_minutes": 120,
+      "difficulty": 1,
+      "prerequisites": []
+    },
+    {
+      "id": "english-t2-1",
+      "title_ar": "[تجريبي] english - الفصل 2 - موضوع 1",
+      "title_fr": "[تجريبي] english - trimestre 2 - thème 1",
+      "trimester": 2,
+      "order": 2,
+      "est_minutes": 120,
+      "difficulty": 1,
+      "prerequisites": []
+    },
+    {
+      "id": "english-t3-1",
+      "title_ar": "[تجريبي] english - الفصل 3 - موضوع 1",
+      "title_fr": "[تجريبي] english - trimestre 3 - thème 1",
+      "trimester": 3,
+      "order": 3,
+      "est_minutes": 120,
+      "difficulty": 1,
+      "prerequisites": []
+    }
+  ]
+}

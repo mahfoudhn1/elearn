@@ -1,0 +1,69 @@
+{
+  "_dummy": true,
+  "verification": "TO VERIFY against the official Ministry tables",
+  "stream": "3AS_exp",
+  "subject": "arabic",
+  "coefficient": 3,
+  "topics": [
+    {
+      "id": "arabic-t1-1",
+      "title_ar": "[تجريبي] arabic - الفصل 1 - موضوع 1",
+      "title_fr": "[تجريبي] arabic - trimestre 1 - thème 1",
+      "trimester": 1,
+      "order": 1,
+      "est_minutes": 240,
+      "difficulty": 2,
+      "prerequisites": []
+    },
+    {
+      "id": "arabic-t1-2",
+      "title_ar": "[تجريبي] arabic - الفصل 1 - موضوع 2",
+      "title_fr": "[تجريبي] arabic - trimestre 1 - thème 2",
+      "trimester": 1,
+      "order": 2,
+      "est_minutes": 240,
+      "difficulty": 2,
+      "prerequisites": []
+    },
+    {
+      "id": "arabic-t2-1",
+      "title_ar": "[تجريبي] arabic - الفصل 2 - موضوع 1",
+      "title_fr": "[تجريبي] arabic - trimestre 2 - thème 1",
+      "trimester": 2,
+      "order": 3,
+      "est_minutes": 240,
+      "difficulty": 2,
+      "prerequisites": []
+    },
+    {
+      "id": "arabic-t2-2",
+      "title_ar": "[تجريبي] arabic - الفصل 2 - موضوع 2",
+      "title_fr": "[تجريبي] arabic - trimestre 2 - thème 2",
+      "trimester": 2,
+      "order": 4,
+      "est_minutes": 240,
+      "difficulty": 2,
+      "prerequisites": []
+    },
+    {
+      "id": "arabic-t3-1",
+      "title_ar": "[تجريبي] arabic - الفصل 3 - موضوع 1",
+      "title_fr": "[تجريبي] arabic - trimestre 3 - thème 1",
+      "trimester": 3,
+      "order": 5,
+      "est_minutes": 240,
+      "difficulty": 2,
+      "prerequisites": []
+    },
+    {
+      "id": "arabic-t3-2",
+      "title_ar": "[تجريبي] arabic - الفصل 3 - موضوع 2",
+      "title_fr": "[تجريبي] arabic - trimestre 3 - thème 2",
+      "trimester": 3,
+      "order": 6,
+      "est_minutes": 240,
+      "difficulty": 2,
+      "prerequisites": []
+    }
+  ]
+}
