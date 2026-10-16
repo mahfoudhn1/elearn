@@ -31,6 +31,10 @@ def stream_key(grade: str, stream: str) -> str:
         suffix = "math"
     elif "exp" in stream or "science" in stream or "علوم" in stream or "تجريب" in stream:
         suffix = "exp"
+    elif "liter" in stream or "art" in stream or "آداب" in stream or "فلسف" in stream:
+        suffix = "literature"
+    elif "lang" in stream or "لغ" in stream:
+        suffix = "languages"
     else:
         suffix = stream.replace(" ", "_")
     return f"{grade}_{suffix}"
@@ -229,6 +233,11 @@ def generate_week(
                 "subject": task["subject"], "minutes": task["minutes"],
                 "topic_id": topic.get("id") if topic else None,
                 "topic_title_ar": topic.get("title_ar") if topic else None,
+                "topic_title_fr": topic.get("title_fr") if topic else None,
+                "chapter_title_ar": topic.get("chapter_title_ar") if topic else None,
+                "chapter_title_fr": topic.get("chapter_title_fr") if topic else None,
+                "topic_order": topic.get("order") if topic else None,
+                "trimester": topic.get("trimester") if topic else None,
                 "phase": phase, "part": part, "parts": parts,
                 "review_topic_id": None,
                 "start_dt": start_dt,

@@ -255,6 +255,10 @@ class PlannedSessionSerializer(UUIDModelSerializer):
     label = serializers.SerializerMethodField()
     topic_id = serializers.SerializerMethodField()
     topic_title_ar = serializers.SerializerMethodField()
+    topic_title_fr = serializers.SerializerMethodField()
+    chapter_title_ar = serializers.SerializerMethodField()
+    chapter_title_fr = serializers.SerializerMethodField()
+    trimester = serializers.SerializerMethodField()
     phase = serializers.SerializerMethodField()
     part = serializers.SerializerMethodField()
     parts = serializers.SerializerMethodField()
@@ -274,6 +278,18 @@ class PlannedSessionSerializer(UUIDModelSerializer):
 
     def get_topic_title_ar(self, obj):
         return self._meta(obj).get("topic_title_ar")
+
+    def get_topic_title_fr(self, obj):
+        return self._meta(obj).get("topic_title_fr")
+
+    def get_chapter_title_ar(self, obj):
+        return self._meta(obj).get("chapter_title_ar")
+
+    def get_chapter_title_fr(self, obj):
+        return self._meta(obj).get("chapter_title_fr")
+
+    def get_trimester(self, obj):
+        return self._meta(obj).get("trimester")
 
     def get_phase(self, obj):
         return self._meta(obj).get("phase", "learn")
@@ -300,6 +316,10 @@ class PlannedSessionSerializer(UUIDModelSerializer):
             "topic",
             "topic_id",
             "topic_title_ar",
+            "topic_title_fr",
+            "chapter_title_ar",
+            "chapter_title_fr",
+            "trimester",
             "phase",
             "part",
             "parts",
@@ -356,6 +376,7 @@ class PlannedSessionEventSerializer(UUIDModelSerializer):
 class GeneratePlanInputSerializer(serializers.Serializer):
     window_start = serializers.DateField()
     window_end = serializers.DateField()
+    repeat_weekly = serializers.BooleanField(required=False, default=True)
     trigger = serializers.ChoiceField(
         choices=StudyPlan.Trigger.choices, required=False, default=StudyPlan.Trigger.MANUAL
     )

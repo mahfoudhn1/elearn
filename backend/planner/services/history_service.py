@@ -23,7 +23,7 @@ from planner.engine import (
     build_history_summary,
     load_pedagogy_rules,
 )
-from planner.models import PedagogyRuleSet, PlannedSession
+from planner.models import PedagogyRuleSet, PlannedSession, StudentTopicProgress
 from schedule.models import StudySession
 
 _TERMINAL = [
@@ -181,6 +181,7 @@ def sync_planned_session_from_study_session(study_session) -> PlannedSession | N
         planned.state = PlannedSession.State.PARTIAL
         event_kind = "PARTIAL"
     else:
+        _record_topic_progress(planned, actual_minutes)
         from planner.services.lifecycle import record_planned_session_event
 
         record_planned_session_event(
@@ -198,6 +199,7 @@ def sync_planned_session_from_study_session(study_session) -> PlannedSession | N
         )
         return planned
     planned.save(update_fields=["state", "updated_at"])
+    _record_topic_progress(planned, actual_minutes)
     from planner.services.lifecycle import record_planned_session_event
 
     record_planned_session_event(
@@ -215,6 +217,23 @@ def sync_planned_session_from_study_session(study_session) -> PlannedSession | N
     )
     _mirror_practice_evidence(planned, ratio)
     return planned
+
+
+def _record_topic_progress(planned: PlannedSession, actual_minutes: int) -> None:
+    """Credit completed focus time to the curriculum topic on the session."""
+    if not planned.topic_id or actual_minutes <= 0:
+        return
+    progress, _ = StudentTopicProgress.objects.get_or_create(
+        student=planned.student,
+        topic=planned.topic,
+    )
+    progress.minutes_studied += actual_minutes
+    if progress.minutes_studied >= planned.topic.estimated_minutes:
+        progress.status = StudentTopicProgress.Status.COVERED
+    elif progress.status == StudentTopicProgress.Status.NOT_STARTED:
+        progress.status = StudentTopicProgress.Status.IN_PROGRESS
+    progress.last_studied_at = timezone.now()
+    progress.save(update_fields=["minutes_studied", "status", "last_studied_at", "updated_at"])
 
 
 def _mirror_practice_evidence(planned: PlannedSession, ratio: float) -> None:

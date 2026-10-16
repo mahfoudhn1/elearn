@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
+from uuid import UUID
 
 from django.shortcuts import get_object_or_404
 from django.db import transaction
@@ -28,6 +29,41 @@ from .services import plan_service, replan_service, report_service
 from .rule_based import generate_week
 
 
+def _canonical_subject(name: str) -> str:
+    """Map the Arabic subject labels used by Student to planner identifiers."""
+    value = (name or "").strip().lower()
+    aliases = {
+        "رياضيات": "math", "math": "math", "فيزياء": "physics", "physics": "physics",
+        "عربية": "arabic", "العربية": "arabic", "arabic": "arabic",
+        "فلسفة": "philosophy", "philosophy": "philosophy", "فرنسية": "french", "french": "french",
+        "إنجليزية": "english", "انجليزية": "english", "english": "english",
+        "ألمانية": "german", "german": "german", "إسبانية": "spanish", "اسبانية": "spanish", "spanish": "spanish",
+        "علوم طبيعية": "svt", "علوم": "svt", "svt": "svt",
+        "تاريخ وجغرافيا": "history-geography", "history-geography": "history-geography",
+        "إسلامية": "islamic", "islamic": "islamic",
+    }
+    return aliases.get(value, value)
+
+
+def _weakness_from_scores(student) -> dict[str, float]:
+    """Turn low test/mastery results into more repetition for that subject."""
+    from django.db.models import Avg
+    from assessment.models import TopicMastery
+    from planner.models import SubjectConfidence, SubjectProficiency
+
+    pressure = {}
+    for row in SubjectProficiency.objects.filter(student=student):
+        pressure[_canonical_subject(row.subject)] = max(0.0, min(1.0, (100 - row.score) / 100))
+    confidence_pressure = {"WEAK": 1.0, "AVERAGE": 0.55, "GOOD": 0.2, "VERY_GOOD": 0.05}
+    for row in SubjectConfidence.objects.filter(student=student):
+        pressure.setdefault(_canonical_subject(row.subject), confidence_pressure.get(row.level, 0.55))
+    for row in TopicMastery.objects.filter(student=student).values("topic__chapter__subject").annotate(avg=Avg("mastery")):
+        if row["avg"] is not None:
+            subject = _canonical_subject(row["topic__chapter__subject"])
+            pressure[subject] = max(pressure.get(subject, 0.0), 1.0 - float(row["avg"]))
+    return pressure
+
+
 class PlanGenerateView(APIView):
     permission_classes = [IsAuthenticated, HasStudentProfile]
 
@@ -45,7 +81,25 @@ class PlanGenerateView(APIView):
         stream_name = profile.stream or profile.student.field_of_study.name
         first_day = data["window_start"]
         first_sunday = first_day - timedelta(days=(first_day.weekday() + 1) % 7)
-        generated = generate_week(grade=grade_name, stream=stream_name, week_start=first_sunday)
+        # A plan is a weekly template.  For a longer requested window, copy
+        # that template into every week so the schedule really repeats rather
+        # than silently planning only the first seven days.
+        generated_weeks = []
+        cursor = first_sunday
+        weakness = _weakness_from_scores(student)
+        while cursor <= data["window_end"]:
+            generated_weeks.append(generate_week(
+                grade=grade_name, stream=stream_name, week_start=cursor, weakness=weakness
+            ))
+            if not data["repeat_weekly"]:
+                break
+            cursor += timedelta(days=7)
+        generated = {
+            "sessions": [row for week in generated_weeks for row in week["sessions"]
+                         if data["window_start"] <= date.fromisoformat(row["day"]) <= data["window_end"]],
+            "unplaced": [row for week in generated_weeks for row in week["unplaced"]],
+            "usable_minutes": sum(week["usable_minutes"] for week in generated_weeks),
+        }
         with transaction.atomic():
             latest = StudyPlan.objects.filter(student=student).order_by("-version").first()
             version = latest.version + 1 if latest else 1
@@ -64,16 +118,56 @@ class PlanGenerateView(APIView):
                 window_start=data["window_start"], window_end=data["window_end"],
                 input_hash=f"rule-based:{first_sunday.isoformat()}:{grade_name}:{stream_name}",
                 trigger=data["trigger"],
-                input_snapshot={"planner": "rule_based", "config_key": f"{grade_name}_{stream_name}"},
+                input_snapshot={
+                    "planner": "rule_based",
+                    "config_key": f"{grade_name}_{stream_name}",
+                    "repeat_weekly": data["repeat_weekly"],
+                    "weekly_template": True,
+                },
                 engine_diagnostics={
                     "usable_minutes": generated["usable_minutes"],
                     "unplaced": generated["unplaced"],
                 },
             )
+            from .models import CurriculumVersion, StudentTopicProgress, SubjectCurrentTopic, Topic
+            db_topics = {}
+            curriculum_levels = [grade_name]
+            school_level = getattr(getattr(profile.student, "grade", None), "school_level", None)
+            if school_level is not None:
+                curriculum_levels.append(school_level.name)
+            for db_topic in Topic.objects.filter(
+                chapter__curriculum__level__in=curriculum_levels,
+                chapter__curriculum__stream=stream_name,
+                chapter__curriculum__status=CurriculumVersion.Status.ACTIVE,
+                is_published=True,
+            ).select_related("chapter").order_by("chapter__subject", "chapter__order", "order", "id"):
+                db_topics.setdefault(_canonical_subject(db_topic.chapter.subject), []).append(db_topic)
+
+            topic_progress = {
+                row.topic_id: row
+                for row in StudentTopicProgress.objects.filter(
+                    student=student, topic__in=[topic for topics in db_topics.values() for topic in topics]
+                )
+            }
+            current_topics = {
+                _canonical_subject(row.subject): row.topic
+                for row in SubjectCurrentTopic.objects.filter(student=student).select_related("topic")
+            }
+            topic_cursor = {}
+            for subject, topics in db_topics.items():
+                current = current_topics.get(subject)
+                start_index = next((i for i, topic in enumerate(topics) if current and topic.pk == current.pk), 0)
+                pending = [
+                    topic for topic in topics[start_index:] + topics[:start_index]
+                    if topic_progress.get(topic.pk) is None or topic_progress[topic.pk].status not in (
+                        StudentTopicProgress.Status.COVERED,
+                        StudentTopicProgress.Status.MASTERED,
+                    )
+                ]
+                topic_cursor[subject] = pending or topics
+
             sessions = []
             for row in generated["sessions"]:
-                if not data["window_start"] <= date.fromisoformat(row["day"]) <= data["window_end"]:
-                    continue
                 start_dt = row["start_dt"]
                 if timezone.is_naive(start_dt):
                     start_dt = timezone.make_aware(start_dt, timezone.get_current_timezone())
@@ -83,13 +177,40 @@ class PlanGenerateView(APIView):
                 metadata = {
                     key: row.get(key)
                     for key in (
-                        "type", "label", "topic_id", "topic_title_ar", "phase",
-                        "part", "parts", "review_topic_id",
+                        "type", "label", "topic_id", "topic_title_ar", "topic_title_fr",
+                        "chapter_title_ar", "topic_order", "phase", "part", "parts",
+                        "review_topic_id",
                     )
                 }
+                topic = None
+                if row.get("topic_id"):
+                    try:
+                        topic_uuid = UUID(str(row["topic_id"]))
+                    except (TypeError, ValueError):
+                        topic_uuid = None
+                    if topic_uuid:
+                        topic = Topic.objects.filter(uuid=topic_uuid).first()
+                    if topic is None:
+                        topic_order = row.get("topic_order")
+                        subject = _canonical_subject(row["subject"])
+                        candidates = topic_cursor.get(subject, [])
+                        if candidates:
+                            topic = candidates[topic_order - 1] if topic_order and 0 < int(topic_order) <= len(candidates) else candidates[0]
+                            topic_cursor[subject] = candidates[1:] + candidates[:1]
+                if topic is not None:
+                    metadata.update({
+                        "topic_id": str(topic.uuid),
+                        "topic_title_ar": topic.title_ar,
+                        "topic_title_fr": topic.title_fr,
+                        "chapter_title_ar": topic.chapter.title_ar,
+                        "chapter_title_fr": topic.chapter.title_fr,
+                        "topic_order": topic.order,
+                        "trimester": topic.trimester,
+                    })
                 session = PlannedSession.objects.create(
                     plan=plan, student=student, subject=row["subject"], activity_type="STUDY",
                     start_dt=start_dt, end_dt=end_dt, focus_minutes=row["minutes"],
+                    topic=topic,
                     rule_metadata=metadata,
                 )
                 sessions.append(session)

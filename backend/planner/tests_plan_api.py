@@ -8,7 +8,10 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from planner import factories
-from planner.models import PlannedSession, SessionTombstone, StudyPlan, SubjectConfig
+from planner.models import (
+    Chapter, CurriculumVersion, PlannedSession, SessionTombstone, StudentTopicProgress,
+    StudyPlan, SubjectConfig, Topic,
+)
 
 MATH = "رياضيات"
 TZ = ZoneInfo("Africa/Algiers")
@@ -56,6 +59,42 @@ class PlanApiTests(APITestCase):
         self.assertEqual(current.status_code, status.HTTP_200_OK)
         self.assertIsNotNone(current.data["plan"])
         self.assertGreater(len(current.data["sessions"]), 0)
+
+    def test_long_window_repeats_week_and_uses_next_uncovered_curriculum_topics(self):
+        curriculum = CurriculumVersion.objects.create(
+            academic_year=factories.make_academic_year(),
+            level="3AS",
+            stream="math",
+            status=CurriculumVersion.Status.ACTIVE,
+        )
+        chapter = Chapter.objects.create(
+            curriculum=curriculum, subject="math", order=1,
+            title_ar="الفصل الأول", title_fr="Chapitre 1",
+        )
+        topics = [
+            Topic.objects.create(
+                chapter=chapter, order=order, title_ar=f"درس {order}",
+                estimated_minutes=60, is_published=True,
+            )
+            for order in (1, 2)
+        ]
+        StudentTopicProgress.objects.create(
+            student=self.student, topic=topics[0],
+            status=StudentTopicProgress.Status.COVERED,
+        )
+        payload = {**PAYLOAD, "window_end": "2099-09-19"}
+
+        response = self.client.post(reverse("planner-plan-generate"), payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        sessions = response.data["sessions"]
+        week_one = [row for row in sessions if row["start_dt"][:10] <= "2099-09-12"]
+        week_two = [row for row in sessions if row["start_dt"][:10] >= "2099-09-13"]
+        self.assertEqual(len(week_one), len(week_two))
+        topic_sessions = [row for row in sessions if row["subject"] == "math"]
+        self.assertTrue(topic_sessions)
+        self.assertTrue(all(row["topic"] == str(topics[1].uuid) for row in topic_sessions))
+        self.assertTrue(all(row["chapter_title_fr"] == "Chapitre 1" for row in topic_sessions))
 
     def test_generate_is_idempotent_via_api(self):
         first = self._generate()

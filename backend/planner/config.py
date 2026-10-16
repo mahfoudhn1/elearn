@@ -29,6 +29,30 @@ SUBJECT_CONFIG = {
         "history-geography": {"coefficient": 2, "tier": "C"},
         "islamic": {"coefficient": 2, "tier": "C"},
     },
+    # The coefficients are intentionally explicit so the planner gives the
+    # student's stream a meaningful baseline even before the verified
+    # SubjectConfig rows are imported.  They should still be checked against
+    # the current Ministry tables before being treated as official.
+    "3AS_literature": {
+        "arabic": {"coefficient": 6, "tier": "A"},
+        "philosophy": {"coefficient": 5, "tier": "A"},
+        "history-geography": {"coefficient": 4, "tier": "B"},
+        "french": {"coefficient": 3, "tier": "B"},
+        "english": {"coefficient": 3, "tier": "B"},
+        "math": {"coefficient": 2, "tier": "C"},
+        "physics": {"coefficient": 1, "tier": "C"},
+        "islamic": {"coefficient": 2, "tier": "C"},
+    },
+    "3AS_languages": {
+        "arabic": {"coefficient": 4, "tier": "B"},
+        "french": {"coefficient": 6, "tier": "A"},
+        "english": {"coefficient": 6, "tier": "A"},
+        "german": {"coefficient": 4, "tier": "B"},
+        "spanish": {"coefficient": 4, "tier": "B"},
+        "history-geography": {"coefficient": 3, "tier": "B"},
+        "philosophy": {"coefficient": 2, "tier": "C"},
+        "math": {"coefficient": 1, "tier": "C"},
+    },
 }
 
 SUBJECT_COEFFICIENTS_REQUIRE_VERIFICATION = True
